@@ -1,0 +1,125 @@
+/**
+ Copyright IBM Corporation 2018
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
+
+import Foundation
+import KituraContracts
+import SwiftKuery
+
+open class DatabaseEncoder {
+  private var databaseEncoder = _DatabaseEncoder()
+
+  open func encode<T: Encodable>(_ value: T) throws -> [String: Any] {
+    try value.encode(to: databaseEncoder)
+    return databaseEncoder.values
+  }
+}
+
+fileprivate class _DatabaseEncoder: Encoder {
+  public var codingPath = [CodingKey]()
+
+  public var values: [String: Any] = [:]
+
+  public var userInfo: [CodingUserInfoKey: Any] = [:]
+  public func container<Key>(keyedBy: Key.Type) -> KeyedEncodingContainer<Key> {
+    let container = _DatabaseKeyedEncodingContainer<Key>(encoder: self, codingPath: codingPath)
+    return KeyedEncodingContainer(container)
+  }
+
+  public func unkeyedContainer() -> UnkeyedEncodingContainer {
+    return _DatabaseEncodingContainer(encoder: self, codingPath: codingPath, count: 0)
+  }
+
+  public func singleValueContainer() -> SingleValueEncodingContainer {
+    return _DatabaseEncodingContainer(encoder: self, codingPath: codingPath, count: 0)
+  }
+}
+
+fileprivate struct _DatabaseKeyedEncodingContainer<K: CodingKey> : KeyedEncodingContainerProtocol {
+  typealias Key = K
+  var encoder: _DatabaseEncoder
+
+  var codingPath = [CodingKey]()
+
+  public mutating func encodeNil(forKey key: Key) throws {}
+
+  public mutating func encode<T: Encodable>(_ value: T, forKey key: Key) throws {
+    if let dataValue = value as? Data {
+      encoder.values[key.stringValue] = dataValue.base64EncodedString()
+    } else if let urlValue = value as? URL {
+      encoder.values[key.stringValue] = urlValue.absoluteString
+    } else if value is [Any] {
+      throw RequestError(.ormDatabaseEncodingError, reason: "Encoding an array is not currently supported")
+    } else if value is [AnyHashable: Any] {
+      throw RequestError(.ormDatabaseEncodingError, reason: "Encoding a dictionary is not currently supported")
+    } else {
+      encoder.values[key.stringValue] = value
+    }
+  }
+/**
+  public mutating func encodeIfPresent<T: Encodable>(_ value: T, forKey key: Key) {
+    if let dataValue = value as? Data {
+      encoder.values[key.stringValue] = dataValue.base64EncodedString()
+    } else if value is [Any] {
+      throw RequestError(rawValue: 704, reason: "Encoding an array is not currently supported")
+    } else if value is [AnyHashable: Any] {
+      throw RequestError(rawValue: 704, reason: "Encoding a dictionary is not currently supported")
+    } else {
+      encoder.values[key.stringValue] = value
+    }
+  }*/
+
+  public mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
+    return encoder.container(keyedBy: keyType)
+  }
+
+  public mutating func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
+    return encoder.unkeyedContainer()
+  }
+
+  public mutating func superEncoder() -> Encoder {
+    return encoder
+  }
+
+  public mutating func superEncoder(forKey key: Key) -> Encoder {
+    return encoder
+  }
+}
+
+fileprivate struct _DatabaseEncodingContainer: UnkeyedEncodingContainer, SingleValueEncodingContainer {
+
+  var encoder: Encoder
+  var codingPath = [CodingKey]()
+  var count: Int = 0
+
+  public mutating func encodeNil() throws {}
+
+  public mutating func encode<T: Encodable>(_ value: T) {
+    // TODO when encoding Arrays ( not supported for now )
+  }
+
+  public mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
+    return encoder.container(keyedBy: keyType)
+  }
+
+  public mutating func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
+    return encoder.unkeyedContainer()
+  }
+
+  public mutating func superEncoder() -> Encoder {
+    return encoder
+  }
+
+}
