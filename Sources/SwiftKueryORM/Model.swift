@@ -28,6 +28,7 @@ public protocol Model: Codable {
   static func dropTableSync() throws -> Bool
   func save<I: Identifier>(using db: Database?, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void)
   static func find<I: Identifier>(id: I, using db: Database?, onCompletion: @escaping (I?, Self?, RequestError?) -> Void)
+  static func findAll(using db: Database?, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
   static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
   func update<I: Identifier>(id: I, using db: Database?, onCompletion: @escaping (Identifier?, Self?, RequestError?) -> Void)
   static func delete(id: Identifier, using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
@@ -274,6 +275,69 @@ public extension Model {
           }
 
           onCompletion(id, decodedModel, nil)
+        }
+      }
+    }
+  }
+
+  static func findAll(using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
+    guard let connection = db?.connection ?? Database.defaultConnection else {
+      onCompletion(nil, .ormConnectionNotInitialized)
+      return
+    }
+
+    var table: Table
+    do {
+      table = try Self.getTable()
+    } catch {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    let query = Select(from: table)
+    var dictionariesTitleToValue = [[String: Any?]]()
+
+    connection.connect { error in
+      if let error = error {
+        onCompletion(nil, Self.convertError(error))
+        return
+      } else {
+        connection.execute(query: query) { result in
+          guard result.success else {
+            guard let error = result.asError else {
+              onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
+              return
+            }
+            onCompletion(nil, Self.convertError(error))
+            return
+          }
+
+          if case QueryResult.successNoData = result {
+            onCompletion([], nil)
+            return
+          }
+
+          guard let rows = result.asRows else {
+            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve values from table: \(String(describing: Self.tableName))"))
+            return
+          }
+
+          for row in rows {
+            dictionariesTitleToValue.append(row)
+          }
+
+          var result = [Self]()
+          for dictionary in dictionariesTitleToValue {
+            var decodedModel: Self
+            do {
+              decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
+            } catch {
+              onCompletion(nil, Self.convertError(error))
+              return
+            }
+            result.append(decodedModel)
+          }
+          onCompletion(result, nil)
         }
       }
     }
