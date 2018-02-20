@@ -26,6 +26,7 @@ public protocol Model: Codable {
   static func createTable(using db: Database?, _ onCompletion: @escaping (Bool?, RequestError?) -> Void)
   static func dropTable(using db: Database?, _ onCompletion: @escaping (Bool?, RequestError?) -> Void)
   static func dropTableSync() throws -> Bool
+  func save(using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
   func save<I: Identifier>(using db: Database?, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void)
   static func find<I: Identifier>(id: I, using db: Database?, onCompletion: @escaping (I?, Self?, RequestError?) -> Void)
   static func findAll(using db: Database?, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
@@ -148,6 +149,52 @@ public extension Model {
             return
           }
           onCompletion(true, nil)
+        }
+      }
+    }
+  }
+
+  func save(using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
+    guard let connection = db?.connection ?? Database.defaultConnection else {
+      onCompletion(nil, .ormConnectionNotInitialized)
+      return
+    }
+
+    var table: Table
+    do {
+      table = try Self.getTable()
+    } catch {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    var values: [String : Any]
+    do {
+      values = try DatabaseEncoder().encode(self)
+    } catch {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    let columns = table.columns.filter({$0.name != Self.idColumnName})
+    let valueTuples = columns.filter({values[$0.name] != nil}).map({($0, values[$0.name]!)})
+    let query = Insert(into: table, valueTuples: valueTuples)
+
+    connection.connect { error in
+      if let error = error {
+        onCompletion(nil, Self.convertError(error))
+        return
+      } else {
+        connection.execute(query: query) { result in
+          guard result.success else {
+            guard let error = result.asError else {
+              onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
+              return
+            }
+            onCompletion(nil, Self.convertError(error))
+            return
+          }
+          onCompletion(self, nil)
         }
       }
     }
