@@ -1,5 +1,5 @@
 /**
- Copyright IBM Corporation 2016, 2018
+ Copyright IBM Corporation 2018
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -15,13 +15,29 @@
  */
 
 import SwiftKuery
+import KituraContracts
 
+public enum ConnectionStrategy {
+  case global(Connection)
+  case pool(ConnectionPool)
+  case generator(() -> Connection?)
+}
+
+public typealias ConnectionPoolOptions = SwiftKuery.ConnectionPoolOptions
 public class Database {
-  public static var defaultConnection: Connection?
+  public static var defaultConnection: ConnectionStrategy?
   public static var tableInfo = TableInfo()
-  public var connection: Connection
+  public var optionalConnection: Connection
+  public static var connection: Connection? {
+    switch defaultConnection {
+    case .global(let globalConnection)?: return globalConnection // don't use when multi-threaded
+    case .pool(let connectionPool)?: return connectionPool.getConnection() // boo, this can return nil, so connection needs to be optional above
+    case .generator(let generator)?: return generator()
+    default: return nil
+    }
+  }
 
   public init(connection: Connection) {
-    self.connection = connection
+    self.optionalConnection = connection
   }
 }

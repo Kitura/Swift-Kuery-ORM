@@ -24,8 +24,10 @@ let package = Package(
             name: "SwiftKueryORM",
             dependencies: ["SwiftKuery", "KituraContracts"]
         ),
-        //.testTarget(
-        //    name: "SwiftKueryORMTests",
-        //    dependencies: ["SwiftKueryORM"])
+        /**
+        .testTarget(
+            name: "SwiftKueryORMTests",
+            dependencies: ["SwiftKueryORM", "KituraContracts"]
+        )*/
     ]
 )

@@ -64,7 +64,7 @@ public extension Model {
   }
 
   static func createTable(using db: Database? = nil, _ onCompletion: @escaping (Bool?, RequestError?) -> Void) {
-    guard let connection = db?.connection ?? Database.defaultConnection else {
+    guard let connection = db?.optionalConnection ?? Database.connection else {
       onCompletion(nil, .ormConnectionNotInitialized)
       return
     }
@@ -121,7 +121,7 @@ public extension Model {
   }
 
   static func dropTable(using db : Database? = nil, _ onCompletion: @escaping (Bool?, RequestError?) -> Void) {
-    guard let connection = db?.connection ?? Database.defaultConnection else {
+    guard let connection = db?.optionalConnection ?? Database.connection else {
       onCompletion(nil, .ormConnectionNotInitialized)
       return
     }
@@ -155,7 +155,7 @@ public extension Model {
   }
 
   func save(using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
-    guard let connection = db?.connection ?? Database.defaultConnection else {
+    guard let connection = db?.optionalConnection ?? Database.connection else {
       onCompletion(nil, .ormConnectionNotInitialized)
       return
     }
@@ -201,7 +201,7 @@ public extension Model {
   }
 
   func save<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
-    guard let connection = db?.connection ?? Database.defaultConnection else {
+    guard let connection = db?.optionalConnection ?? Database.connection else {
       onCompletion(nil, nil, .ormConnectionNotInitialized)
       return
     }
@@ -241,6 +241,10 @@ public extension Model {
             return
           }
 
+          //let r = result.asRows
+          //print(r)
+          //print(r?.count)
+
           guard let rows = result.asRows, rows.count > 0 else {
             onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Could not retrieve id value for: \(String(describing: self))"))
             return
@@ -269,7 +273,7 @@ public extension Model {
   }
 
   static func find<I: Identifier>(id: I, using db: Database? = nil, onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
-    guard let connection = db?.connection ?? Database.defaultConnection else {
+    guard let connection = db?.optionalConnection ?? Database.connection else {
       onCompletion(nil, nil, .ormConnectionNotInitialized)
       return
     }
@@ -312,6 +316,7 @@ public extension Model {
           }
 
           dictionaryTitleToValue = rows[0]
+          print(dictionaryTitleToValue)
 
           var decodedModel: Self
           do {
@@ -320,6 +325,7 @@ public extension Model {
             onCompletion(nil, nil, Self.convertError(error))
             return
           }
+          print(decodedModel)
 
           onCompletion(id, decodedModel, nil)
         }
@@ -328,7 +334,7 @@ public extension Model {
   }
 
   static func findAll(using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
-    guard let connection = db?.connection ?? Database.defaultConnection else {
+    guard let connection = db?.optionalConnection ?? Database.connection else {
       onCompletion(nil, .ormConnectionNotInitialized)
       return
     }
@@ -391,7 +397,7 @@ public extension Model {
   }
 
   static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
-    guard let connection = db?.connection ?? Database.defaultConnection else {
+    guard let connection = db?.optionalConnection ?? Database.connection else {
       onCompletion(nil, .ormConnectionNotInitialized)
       return
     }
@@ -471,7 +477,7 @@ public extension Model {
   }
 
   func update<I: Identifier>(id: I, using db: Database? = nil, onCompletion: @escaping (Identifier?, Self?, RequestError?) -> Void) {
-    guard let connection = db?.connection ?? Database.defaultConnection else {
+    guard let connection = db?.optionalConnection ?? Database.connection else {
       onCompletion(nil, nil, .ormConnectionNotInitialized)
       return
     }
@@ -522,7 +528,7 @@ public extension Model {
   }
 
   static func delete(id: Identifier, using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void) {
-    guard let connection = db?.connection ?? Database.defaultConnection else {
+    guard let connection = db?.optionalConnection ?? Database.connection else {
       onCompletion(.ormConnectionNotInitialized)
       return
     }
@@ -563,7 +569,7 @@ public extension Model {
   }
 
   static func deleteAll(using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void) {
-    guard let connection = db?.connection ?? Database.defaultConnection else {
+    guard let connection = db?.optionalConnection ?? Database.connection else {
       onCompletion(.ormConnectionNotInitialized)
       return
     }
@@ -603,7 +609,7 @@ public extension Model {
   }
 
   static func executeQuery(query: Query, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
-    guard let connection = db?.connection ?? Database.defaultConnection else {
+    guard let connection = db?.optionalConnection ?? Database.connection else {
       onCompletion(nil, .ormConnectionNotInitialized)
       return
     }
@@ -647,7 +653,7 @@ public extension Model {
   }
 
   static func executeQuery(query: Query, using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?)-> Void ) {
-    guard let connection = db?.connection ?? Database.defaultConnection else {
+    guard let connection = db?.optionalConnection ?? Database.connection else {
       onCompletion(nil, .ormConnectionNotInitialized)
       return
     }
@@ -703,7 +709,7 @@ public extension Model {
   }
 
   static func executeQuery(using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void ) {
-    guard let connection = db?.connection ?? Database.defaultConnection else {
+    guard let connection = db?.optionalConnection ?? Database.connection else {
       onCompletion(.ormConnectionNotInitialized)
       return
     }
@@ -757,8 +763,7 @@ public extension Model {
 //TODO Kitura should update to convert 7XX into 500
 extension RequestError {
   init(_ base: RequestError, reason: String) {
-    self.rawValue = base.rawValue
-    self.reason = reason
+    self.init(rawValue: base.rawValue, reason: reason)
   }
   public static let ormConnectionNotInitialized = RequestError(rawValue: 700, reason: "Connection not Initialized")
   public static let ormTableCreationError = RequestError(rawValue: 701)
