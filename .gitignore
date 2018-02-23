@@ -1,0 +1,4 @@
+*.xcodeproj/
+.build
+build
+Package.resolved
