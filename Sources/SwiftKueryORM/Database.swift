@@ -34,7 +34,7 @@ public class Database {
     private let connectionStrategy: ConnectionStrategy
 
     /// Constructor for a single connection which becomes a connection pool
-    convenience init(single connection: Connection) {
+    public convenience init(single connection: Connection) {
         // Create single entry connection pool for thread safety
         let singleConnectionPool = ConnectionPool(options: ConnectionPoolOptions(initialCapacity: 1, maxCapacity: 1),
                                                   connectionGenerator: { connection },
@@ -43,12 +43,12 @@ public class Database {
     }
 
     /// Default constructor for a connection pool
-    init(_ pool: ConnectionPool) {
+    public init(_ pool: ConnectionPool) {
         self.connectionStrategy = .pool(pool)
     }
 
     /// Constructor for a custom generator
-    init(generator: @escaping () -> Connection?) {
+    public init(generator: @escaping () -> Connection?) {
         self.connectionStrategy = .generator(generator)
     }
 
