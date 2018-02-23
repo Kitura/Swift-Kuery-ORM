@@ -15,6 +15,7 @@
  */
 import SwiftKuery
 
+public typealias ConnectionPoolOptions = SwiftKuery.ConnectionPoolOptions
 public class Database {
 
     /// Global default Database of the Application
