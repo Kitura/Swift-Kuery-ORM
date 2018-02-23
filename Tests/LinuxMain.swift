@@ -16,7 +16,7 @@
 
 import XCTest
 import Glibc
-@testable import SwiftKueryTests
+@testable import SwiftKueryORMTests
 
 // http://stackoverflow.com/questions/24026510/how-do-i-shuffle-an-array-in-swift
 #if swift(>=4)
