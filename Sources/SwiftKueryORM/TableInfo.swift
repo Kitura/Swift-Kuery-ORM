@@ -18,6 +18,8 @@ import KituraContracts
 import SwiftKuery
 import Foundation
 
+/// Class caching all the tables for each model of the application
+/// Gets used once for every model
 public class TableInfo {
   private var codableMap = [String: (info: TypeInfo, table: Table)]()
 
@@ -74,26 +76,4 @@ public class TableInfo {
     }
     return Table(tableName: tableName, columns: columns)
   }
-/**
-    for (key, value) in typeInfo {
-      var valueType = value
-      if let optionalValue = value as? TypeOptional {
-        valueType = optionalValue.type
-      }
-      if valueType is Int.Type {
-        valueType = Int64.self
-      }
-      if valueType is Data.Type {
-        valueType = String.self
-      }
-      if let SQLType = valueType as? SQLDataType.Type {
-        columns.append(Column(key, SQLType))
-      } else {
-        throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: valueType)) of Key: \(String(describing: key)) is not a SQLDataType")
-      }
-    }
-
-    let table = Table(tableName: tableName, columns: columns)
-    return table
-  }*/
 }

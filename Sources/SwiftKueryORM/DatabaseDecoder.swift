@@ -18,7 +18,8 @@ import SwiftKuery
 import Foundation
 import KituraContracts
 
-open class DatabaseDecoder {
+/// Class used to construct a Model from a row in a table in the database
+open class DatabaseDecoder { 
   fileprivate let decoder = _DatabaseDecoder()
 
   open func decode<T : Decodable>(_ type: T.Type, _ values: [String : Any?]) throws -> T {
@@ -71,6 +72,7 @@ open class DatabaseDecoder {
       return true
     }
 
+    /// Check that value exists in the data return from the database
     private func checkValueExitence(_ key: Key) throws -> Any? {
       let keyName = key.stringValue.lowercased()
       guard let value = decoder.values[keyName] else {
@@ -82,7 +84,8 @@ open class DatabaseDecoder {
       return value
     }
 
-    private func unWrapValue(_ key: Key, _ value: Any?) throws -> Any? {
+    /// Unwrap value from database
+    private func unwrapValue(_ key: Key, _ value: Any?) throws -> Any? {
       guard let unwrappedValue = value as Any? else {
         throw DecodingError.valueNotFound(Any.self, DecodingError.Context(
           codingPath: [key],
@@ -92,6 +95,7 @@ open class DatabaseDecoder {
       return unwrappedValue
     }
 
+    /// Cast value from database to expect type in the model
     private func castedValue<T : Any>(_ value: Any?, _ type: T.Type, _ key: Key) throws -> T {
       guard let castedValue = value as? T else {
         throw DecodingError.typeMismatch(type, DecodingError.Context(
@@ -102,8 +106,9 @@ open class DatabaseDecoder {
       return castedValue
     }
 
+    /// Special case for integer, no integer type in database
     public func decode(_ type: Int.Type, forKey key: Key) throws -> Int {
-      let unwrappedValue = try unWrapValue(key, checkValueExitence(key))
+      let unwrappedValue = try unwrapValue(key, checkValueExitence(key))
       let returnValue: Int
       switch(unwrappedValue) {
       case let v as Int16: returnValue = Int(v)
@@ -118,72 +123,73 @@ open class DatabaseDecoder {
       return returnValue
     }
     public func decode(_ type: Int8.Type, forKey key: Key) throws -> Int8 {
-      let unwrappedValue = try unWrapValue(key, checkValueExitence(key))
+      let unwrappedValue = try unwrapValue(key, checkValueExitence(key))
       return try castedValue(unwrappedValue, type, key)
     }
     public func decode(_ type: Int16.Type, forKey key: Key) throws -> Int16 {
-      let unwrappedValue = try unWrapValue(key, checkValueExitence(key))
+      let unwrappedValue = try unwrapValue(key, checkValueExitence(key))
       return try castedValue(unwrappedValue, type, key)
     }
     public func decode(_ type: Int32.Type, forKey key: Key) throws -> Int32 {
-      let unwrappedValue = try unWrapValue(key, checkValueExitence(key))
+      let unwrappedValue = try unwrapValue(key, checkValueExitence(key))
       return try castedValue(unwrappedValue, type, key)
     }
     public func decode(_ type: Int64.Type, forKey key: Key) throws -> Int64 {
-      let unwrappedValue = try unWrapValue(key, checkValueExitence(key))
+      let unwrappedValue = try unwrapValue(key, checkValueExitence(key))
       return try castedValue(unwrappedValue, type, key)
     }
     public func decode(_ type: UInt.Type, forKey key: Key) throws -> UInt {
-      let unwrappedValue = try unWrapValue(key, checkValueExitence(key))
+      let unwrappedValue = try unwrapValue(key, checkValueExitence(key))
       return try castedValue(unwrappedValue, type, key)
     }
     public func decode(_ type: UInt8.Type, forKey key: Key) throws -> UInt8 {
-      let unwrappedValue = try unWrapValue(key, checkValueExitence(key))
+      let unwrappedValue = try unwrapValue(key, checkValueExitence(key))
       return try castedValue(unwrappedValue, type, key)
     }
     public func decode(_ type: UInt16.Type, forKey key: Key) throws -> UInt16 {
-      let unwrappedValue = try unWrapValue(key, checkValueExitence(key))
+      let unwrappedValue = try unwrapValue(key, checkValueExitence(key))
       return try castedValue(unwrappedValue, type, key)
     }
     public func decode(_ type: UInt32.Type, forKey key: Key) throws -> UInt32 {
-      let unwrappedValue = try unWrapValue(key, checkValueExitence(key))
+      let unwrappedValue = try unwrapValue(key, checkValueExitence(key))
       return try castedValue(unwrappedValue, type, key)
     }
     public func decode(_ type: UInt64.Type, forKey key: Key) throws -> UInt64 {
-      let unwrappedValue = try unWrapValue(key, checkValueExitence(key))
+      let unwrappedValue = try unwrapValue(key, checkValueExitence(key))
       return try castedValue(unwrappedValue, type, key)
     }
     public func decode(_ type: Double.Type, forKey key: Key) throws -> Double {
-      let unwrappedValue = try unWrapValue(key, checkValueExitence(key))
+      let unwrappedValue = try unwrapValue(key, checkValueExitence(key))
       return try castedValue(unwrappedValue, type, key)
     }
     public func decode(_ type: Float.Type, forKey key: Key) throws -> Float {
-      let unwrappedValue = try unWrapValue(key, checkValueExitence(key))
+      let unwrappedValue = try unwrapValue(key, checkValueExitence(key))
       return try castedValue(unwrappedValue, type, key)
     }
     public func decode(_ type: String.Type, forKey key: Key) throws -> String {
-      let unwrappedValue = try unWrapValue(key, checkValueExitence(key))
+      let unwrappedValue = try unwrapValue(key, checkValueExitence(key))
       return try castedValue(unwrappedValue, type, key)
     }
     public func decode(_ type: Bool.Type, forKey key: Key) throws -> Bool {
-      let unwrappedValue = try unWrapValue(key, checkValueExitence(key))
+      let unwrappedValue = try unwrapValue(key, checkValueExitence(key))
       return try castedValue(unwrappedValue, type, key)
     }
     public func decode<T : Decodable>(_ type: T.Type, forKey key: Key) throws -> T {
-      let unwrappedValue = try checkValueExitence(key)
-      if type is Data.Type && unwrappedValue != nil {
-        let castValue = try castedValue(unwrappedValue, String.self, key)
+      let value = try checkValueExitence(key)
+      if type is Data.Type && value != nil {
+        let castValue = try castedValue(value, String.self, key)
         guard NSData(base64Encoded: castValue) != nil else {
-          throw RequestError(.ormCodableDecodingError, reason: "Error decoding value of Data Type for Key: \(String(describing: key)) , value: \(String(describing: unwrappedValue)) is not base64encoded")
+          throw RequestError(.ormCodableDecodingError, reason: "Error decoding value of Data Type for Key: \(String(describing: key)) , value: \(String(describing: value)) is not base64encoded")
         }
         let data = Data(base64Encoded: castValue)
         return try castedValue(data, type, key)
-      } else if type is URL.Type {
-        let castValue = try castedValue(unwrappedValue, String.self, key)
+      } else if type is URL.Type  && value != nil {
+        let castValue = try castedValue(value, String.self, key)
         let url = URL(string: castValue)
         return try castedValue(url, type, key)
+      } else {
+        throw RequestError(.ormDatabaseDecodingError, reason: "Unsupported type: \(String(describing: type)) for value: \(String(describing: value))")
       }
-      return try T(from: decoder)
     }
 
     public func decodeIfPresent(_ type: Int.Type, forKey key: Key) throws -> Int? {
@@ -282,8 +288,9 @@ open class DatabaseDecoder {
         let castValue = try castedValue(value, String.self, key)
         let url = URL(string: castValue)
         return try castedValue(url, type, key)
+      } else {
+        throw RequestError(.ormDatabaseDecodingError, reason: "Unsupported type: \(String(describing: type)) for value: \(String(describing: value))")
       }
-      return try T(from: decoder)
     }
 
     public func nestedContainer<NestedKey>(keyedBy: NestedKey.Type, forKey: Key) throws -> KeyedDecodingContainer<NestedKey> {
@@ -320,48 +327,6 @@ open class DatabaseDecoder {
       return true
     }
 
-    public func decode(_ type: Int.Type) throws -> Int {
-      return 0
-    }
-    public func decode(_ type: Int8.Type) throws -> Int8 {
-      return 0
-    }
-    public func decode(_ type: Int16.Type) throws -> Int16 {
-      return 0
-    }
-    public func decode(_ type: Int32.Type) throws -> Int32 {
-      return 0
-    }
-    public func decode(_ type: Int64.Type) throws -> Int64 {
-      return 0
-    }
-    public func decode(_ type: UInt.Type) throws -> UInt {
-      return 0
-    }
-    public func decode(_ type: UInt8.Type) throws -> UInt8 {
-      return 0
-    }
-    public func decode(_ type: UInt16.Type) throws -> UInt16 {
-      return 0
-    }
-    public func decode(_ type: UInt32.Type) throws -> UInt32 {
-      return 0
-    }
-    public func decode(_ type: UInt64.Type) throws -> UInt64 {
-      return 0
-    }
-    public func decode(_ type: Double.Type) throws -> Double {
-      return 0
-    }
-    public func decode(_ type: Float.Type) throws -> Float {
-      return 0
-    }
-    public func decode(_ type: String.Type) throws -> String {
-      return ""
-    }
-    public func decode(_ type: Bool.Type) throws -> Bool {
-      return false
-    }
     public func decode<T: Decodable>(_ type: T.Type) throws -> T {
       let child = _DatabaseDecoder()
       let result = try T(from: child)
@@ -392,50 +357,6 @@ open class DatabaseDecoder {
     public func decodeNil() -> Bool {
       return true
     }
-
-    /**
-    public func decode(_ type: Int.Type) throws -> Int {
-      return 0
-    }
-    public func decode(_ type: Int8.Type) throws -> Int8 {
-      return 0
-    }
-    public func decode(_ type: Int16.Type) throws -> Int16 {
-      return 0
-    }
-    public func decode(_ type: Int32.Type) throws -> Int32 {
-      return 0
-    }
-    public func decode(_ type: Int64.Type) throws -> Int64 {
-      return 0
-    }
-    public func decode(_ type: UInt.Type) throws -> UInt {
-      return 0
-    }
-    public func decode(_ type: UInt8.Type) throws -> UInt8 {
-      return 0
-    }
-    public func decode(_ type: UInt16.Type) throws -> UInt16 {
-      return 0
-    }
-    public func decode(_ type: UInt32.Type) throws -> UInt32 {
-      return 0
-    }
-    public func decode(_ type: UInt64.Type) throws -> UInt64 {
-      return 0
-    }
-    public func decode(_ type: Double.Type) throws -> Double {
-      return 0
-    }
-    public func decode(_ type: Float.Type) throws -> Float {
-      return 0
-    }
-    public func decode(_ type: String.Type) throws -> String {
-      return ""
-    }
-    public func decode(_ type: Bool.Type) throws -> Bool {
-      return false
-    }*/
 
     public func decode<T: Decodable>(_ type: T.Type) throws -> T {
       return try T(from: decoder)

@@ -22,32 +22,42 @@ public protocol Model: Codable {
   static var tableName: String {get}
   static var idColumnName: String {get}
 
-  static func createTableSync() throws -> Bool
+  static func createTableSync(using db: Database?) throws -> Bool
   static func createTable(using db: Database?, _ onCompletion: @escaping (Bool?, RequestError?) -> Void)
+  static func dropTableSync(using db: Database?) throws -> Bool
   static func dropTable(using db: Database?, _ onCompletion: @escaping (Bool?, RequestError?) -> Void)
-  static func dropTableSync() throws -> Bool
+
   func save(using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
   func save<I: Identifier>(using db: Database?, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void)
+
   static func find<I: Identifier>(id: I, using db: Database?, onCompletion: @escaping (I?, Self?, RequestError?) -> Void)
   static func findAll(using db: Database?, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
   static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
   static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
+
   func update<I: Identifier>(id: I, using db: Database?, onCompletion: @escaping (Identifier?, Self?, RequestError?) -> Void)
+
   static func delete(id: Identifier, using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
   static func deleteAll(using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
+
   static func getTable() throws -> Table
 }
 
 public extension Model {
-  static var idColumnName: String { return "id" }
+  /// Default implementation of the table name
   static var tableName: String { return String(describing: self) + "s"}
 
+  /// Default implementation of id column name
+  static var idColumnName: String { return "id" }
+
+
+  /// Synchronous function creating the table in the database
   @discardableResult
-  static func createTableSync() throws -> Bool {
+  static func createTableSync(using db: Database? = nil) throws -> Bool {
     var result: Bool?
     var error: RequestError?
     let semaphore = DispatchSemaphore(value: 1)
-    createTable { res, err in
+    createTable(using: db) { res, err in
       result = res
       error = err
       semaphore.signal()
@@ -64,8 +74,9 @@ public extension Model {
     return resultUnwrapped
   }
 
+  /// Asynchronous function creating the table in the database
   static func createTable(using db: Database? = nil, _ onCompletion: @escaping (Bool?, RequestError?) -> Void) {
-    guard let connection = db?.optionalConnection ?? Database.connection else {
+    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
       onCompletion(nil, .ormConnectionNotInitialized)
       return
     }
@@ -99,12 +110,13 @@ public extension Model {
   }
 
 
+  /// Synchronous function droping the table from the database
   @discardableResult
-  static func dropTableSync() throws -> Bool {
+  static func dropTableSync(using db: Database? = nil) throws -> Bool {
     var result: Bool?
     var error: RequestError?
     let semaphore = DispatchSemaphore(value: 1)
-    dropTable { res, err in
+    dropTable(using: db) { res, err in
       result = res
       error = err
       semaphore.signal()
@@ -121,8 +133,9 @@ public extension Model {
     return resultUnwrapped
   }
 
+  /// Asynchronous function droping the table from the database
   static func dropTable(using db : Database? = nil, _ onCompletion: @escaping (Bool?, RequestError?) -> Void) {
-    guard let connection = db?.optionalConnection ?? Database.connection else {
+    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
       onCompletion(nil, .ormConnectionNotInitialized)
       return
     }
@@ -155,8 +168,9 @@ public extension Model {
     }
   }
 
+  /// Save a instance of model to the database : `model.save()`
   func save(using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
-    guard let connection = db?.optionalConnection ?? Database.connection else {
+    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
       onCompletion(nil, .ormConnectionNotInitialized)
       return
     }
@@ -201,8 +215,12 @@ public extension Model {
     }
   }
 
+  /// Save a instance of model to the database : `model.save()` and 
+  /// get back the auto incrementing id value
+  /// - Parameter using: Optional Database to use
+  /// - Returns: A tuple (Identifier, Model, RequestError)
   func save<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
-    guard let connection = db?.optionalConnection ?? Database.connection else {
+    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
       onCompletion(nil, nil, .ormConnectionNotInitialized)
       return
     }
@@ -242,10 +260,6 @@ public extension Model {
             return
           }
 
-          //let r = result.asRows
-          //print(r)
-          //print(r?.count)
-
           guard let rows = result.asRows, rows.count > 0 else {
             onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Could not retrieve id value for: \(String(describing: self))"))
             return
@@ -257,13 +271,13 @@ public extension Model {
             return
           }
 
-          guard let unWrappedValue: Any = value else {
+          guard let unwrappedValue: Any = value else {
             onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Return id is nil"))
             return
           }
 
           do {
-            let identifier = try I(value: String(describing: unWrappedValue))
+            let identifier = try I(value: String(describing: unwrappedValue))
             onCompletion(identifier, self, nil)
           } catch {
             onCompletion(nil, nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
@@ -273,8 +287,11 @@ public extension Model {
     }
   }
 
+  /// Find a model with an id
+  /// - Parameter using: Optional Database to use
+  /// - Returns: A tuple (Identifier, Model, RequestError)
   static func find<I: Identifier>(id: I, using db: Database? = nil, onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
-    guard let connection = db?.optionalConnection ?? Database.connection else {
+    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
       onCompletion(nil, nil, .ormConnectionNotInitialized)
       return
     }
@@ -317,7 +334,6 @@ public extension Model {
           }
 
           dictionaryTitleToValue = rows[0]
-          print(dictionaryTitleToValue)
 
           var decodedModel: Self
           do {
@@ -326,7 +342,6 @@ public extension Model {
             onCompletion(nil, nil, Self.convertError(error))
             return
           }
-          print(decodedModel)
 
           onCompletion(id, decodedModel, nil)
         }
@@ -334,8 +349,11 @@ public extension Model {
     }
   }
 
+  /// Find all the models
+  /// - Parameter using: Optional Database to use
+  /// - Returns: An array of model
   static func findAll(using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
-    guard let connection = db?.optionalConnection ?? Database.connection else {
+    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
       onCompletion(nil, .ormConnectionNotInitialized)
       return
     }
@@ -397,8 +415,11 @@ public extension Model {
     }
   }
 
+  /// Find all the models
+  /// - Parameter using: Optional Database to use
+  /// - Returns: An array of tuples (id, model)
   static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
-    guard let connection = db?.optionalConnection ?? Database.connection else {
+    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
       onCompletion(nil, .ormConnectionNotInitialized)
       return
     }
@@ -458,13 +479,13 @@ public extension Model {
               return
             }
 
-            guard let unWrappedValue: Any = value else {
+            guard let unwrappedValue: Any = value else {
               onCompletion(nil, RequestError(.ormNotFound, reason: "Return id is nil"))
               return
             }
 
             do {
-              let identifier = try I(value: String(describing: unWrappedValue))
+              let identifier = try I(value: String(describing: unwrappedValue))
               result.append((identifier, decodedModel))
             } catch {
               onCompletion(nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
@@ -477,8 +498,11 @@ public extension Model {
     }
   }
 
+  /// Find all the models
+  /// - Parameter using: Optional Database to use
+  /// - Returns: A dictionary [id: model]
   static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
-    guard let connection = db?.optionalConnection ?? Database.connection else {
+    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
       onCompletion(nil, .ormConnectionNotInitialized)
       return
     }
@@ -538,13 +562,13 @@ public extension Model {
               return
             }
 
-            guard let unWrappedValue: Any = value else {
+            guard let unwrappedValue: Any = value else {
               onCompletion(nil, RequestError(.ormNotFound, reason: "Return id is nil"))
               return
             }
 
             do {
-              let identifier = try I(value: String(describing: unWrappedValue))
+              let identifier = try I(value: String(describing: unwrappedValue))
               result[identifier] = decodedModel
             } catch {
               onCompletion(nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
@@ -557,8 +581,12 @@ public extension Model {
     }
   }
 
+  /// Update a model
+  /// - Parameter id: Identifier of the model to update
+  /// - Parameter using: Optional Database to use
+  /// - Returns: A tuple (id, model, error)
   func update<I: Identifier>(id: I, using db: Database? = nil, onCompletion: @escaping (Identifier?, Self?, RequestError?) -> Void) {
-    guard let connection = db?.optionalConnection ?? Database.connection else {
+    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
       onCompletion(nil, nil, .ormConnectionNotInitialized)
       return
     }
@@ -608,8 +636,12 @@ public extension Model {
     }
   }
 
+  /// Delete a model
+  /// - Parameter id: Identifier of the model to delete
+  /// - Parameter using: Optional Database to use
+  /// - Returns: An optional RequestError
   static func delete(id: Identifier, using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void) {
-    guard let connection = db?.optionalConnection ?? Database.connection else {
+    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
       onCompletion(.ormConnectionNotInitialized)
       return
     }
@@ -649,8 +681,11 @@ public extension Model {
     }
   }
 
+  /// Delete all the models
+  /// - Parameter using: Optional Database to use
+  /// - Returns: An optional RequestError
   static func deleteAll(using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void) {
-    guard let connection = db?.optionalConnection ?? Database.connection else {
+    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
       onCompletion(.ormConnectionNotInitialized)
       return
     }
@@ -689,8 +724,10 @@ public extension Model {
     return try Database.tableInfo.getTable(Self.idColumnName, Self.tableName, for: Self.self)
   }
 
+  /// - Parameter using: Optional Database to use
+  /// - Returns: A tuple (Model, RequestError)
   static func executeQuery(query: Query, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
-    guard let connection = db?.optionalConnection ?? Database.connection else {
+    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
       onCompletion(nil, .ormConnectionNotInitialized)
       return
     }
@@ -733,8 +770,10 @@ public extension Model {
     }
   }
 
+  /// - Parameter using: Optional Database to use
+  /// - Returns: A tuple ([Model], RequestError)
   static func executeQuery(query: Query, using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?)-> Void ) {
-    guard let connection = db?.optionalConnection ?? Database.connection else {
+    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
       onCompletion(nil, .ormConnectionNotInitialized)
       return
     }
@@ -789,8 +828,10 @@ public extension Model {
     }
   }
 
+  /// - Parameter using: Optional Database to use
+  /// - Returns: An optional RequestError
   static func executeQuery(using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void ) {
-    guard let connection = db?.optionalConnection ?? Database.connection else {
+    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
       onCompletion(.ormConnectionNotInitialized)
       return
     }

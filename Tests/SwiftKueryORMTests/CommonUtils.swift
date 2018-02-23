@@ -28,6 +28,7 @@ import SwiftKuery
 class TestConnection: Connection {
     let queryBuilder: QueryBuilder
     let result: Result
+    var query: Query? = nil
 
     enum Result {
         case returnEmpty
@@ -49,6 +50,7 @@ class TestConnection: Connection {
     func closeConnection() {}
 
     func execute(query: Query, onCompletion: @escaping ((QueryResult) -> ())) {
+        self.query = query
         returnResult(onCompletion)
     }
 
@@ -57,6 +59,7 @@ class TestConnection: Connection {
     }
 
     func execute(query: Query, parameters: [Any?], onCompletion: @escaping ((QueryResult) -> ())) {
+        self.query = query
         returnResult(onCompletion)
     }
 
@@ -65,12 +68,14 @@ class TestConnection: Connection {
     }
 
     func execute(query: Query, parameters: [String:Any?], onCompletion: @escaping ((QueryResult) -> ())) {
+        self.query = query
         returnResult(onCompletion)
     }
 
     func execute(_ raw: String, parameters: [String:Any?], onCompletion: @escaping ((QueryResult) -> ()))  {
         returnResult(onCompletion)
     }
+
 
     func descriptionOf(query: Query) -> String {
         do {

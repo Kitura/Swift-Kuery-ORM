@@ -13,31 +13,50 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-
 import SwiftKuery
-import KituraContracts
 
-public enum ConnectionStrategy {
-  case global(Connection)
-  case pool(ConnectionPool)
-  case generator(() -> Connection?)
-}
-
-public typealias ConnectionPoolOptions = SwiftKuery.ConnectionPoolOptions
 public class Database {
-  public static var defaultConnection: ConnectionStrategy?
-  public static var tableInfo = TableInfo()
-  public var optionalConnection: Connection
-  public static var connection: Connection? {
-    switch defaultConnection {
-    case .global(let globalConnection)?: return globalConnection // don't use when multi-threaded
-    case .pool(let connectionPool)?: return connectionPool.getConnection() // boo, this can return nil, so connection needs to be optional above
-    case .generator(let generator)?: return generator()
-    default: return nil
-    }
-  }
 
-  public init(connection: Connection) {
-    self.optionalConnection = connection
-  }
+    /// Global default Database of the Application
+    public static var `default`: Database?
+
+    /// Instance of TableInfo containing cached Tables
+    public static var tableInfo = TableInfo()
+
+    /// Enum defining the connection strategy: a connection pool or custom
+    /// connection generator
+    private enum ConnectionStrategy {
+        case pool(ConnectionPool)
+        case generator(() -> Connection?)
+    }
+
+    private let connectionStrategy: ConnectionStrategy
+
+    /// Constructor for a single connection which becomes a connection pool
+    convenience init(single connection: Connection) {
+        // Create single entry connection pool for thread safety
+        let singleConnectionPool = ConnectionPool(options: ConnectionPoolOptions(initialCapacity: 1, maxCapacity: 1),
+                                                  connectionGenerator: { connection },
+                                                  connectionReleaser: { _ in connection.closeConnection() })
+        self.init(singleConnectionPool)
+    }
+
+    /// Default constructor for a connection pool
+    init(_ pool: ConnectionPool) {
+        self.connectionStrategy = .pool(pool)
+    }
+
+    /// Constructor for a custom generator
+    init(generator: @escaping () -> Connection?) {
+        self.connectionStrategy = .generator(generator)
+    }
+
+    /// Connection getter: either new connection from pool
+    /// or call the custom generator
+    public func getConnection() -> Connection? {
+        switch connectionStrategy {
+        case .pool(let pool): return pool.getConnection()
+        case .generator(let generator): return generator()
+        }
+    }
 }

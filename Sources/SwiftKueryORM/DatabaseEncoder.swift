@@ -68,18 +68,6 @@ fileprivate struct _DatabaseKeyedEncodingContainer<K: CodingKey> : KeyedEncoding
       encoder.values[key.stringValue] = value
     }
   }
-/**
-  public mutating func encodeIfPresent<T: Encodable>(_ value: T, forKey key: Key) {
-    if let dataValue = value as? Data {
-      encoder.values[key.stringValue] = dataValue.base64EncodedString()
-    } else if value is [Any] {
-      throw RequestError(rawValue: 704, reason: "Encoding an array is not currently supported")
-    } else if value is [AnyHashable: Any] {
-      throw RequestError(rawValue: 704, reason: "Encoding a dictionary is not currently supported")
-    } else {
-      encoder.values[key.stringValue] = value
-    }
-  }*/
 
   public mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey: CodingKey {
     return encoder.container(keyedBy: keyType)
@@ -90,14 +78,16 @@ fileprivate struct _DatabaseKeyedEncodingContainer<K: CodingKey> : KeyedEncoding
   }
 
   public mutating func superEncoder() -> Encoder {
-    return encoder
+    return _DatabaseEncoder()
   }
 
   public mutating func superEncoder(forKey key: Key) -> Encoder {
-    return encoder
+    return _DatabaseEncoder()
   }
 }
 
+/// Default implenations of UnkeyedEncodingContainer and SingleValueEncodingContainer
+/// Should never go into these containers. Types are checked in the TypeDecoder
 fileprivate struct _DatabaseEncodingContainer: UnkeyedEncodingContainer, SingleValueEncodingContainer {
 
   var encoder: Encoder

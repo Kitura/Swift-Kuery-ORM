@@ -13,15 +13,23 @@ class TestFind: XCTestCase {
     }
 
     struct Person: Model {
+        static var tableName = "People"
         var name: String
         var age: Int
     }
 
     func testFind() {
-        Database.defaultConnection = .global(createConnection(.returnOneRow))
+        let connection: TestConnection = createConnection(.returnOneRow)
+        Database.default = Database(single: connection)
         performTest(asyncTasks: { expectation in
             Person.find(id: 1) { id, p, error in
                 XCTAssertNil(error, "Find Failed: \(String(describing: error))")
+                XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
+                if let query = connection.query {
+                  let expectedQuery = "SELECT * FROM People WHERE People.id = '1'"
+                  let resultQuery = connection.descriptionOf(query: query)
+                  XCTAssertEqual(resultQuery, expectedQuery, "Find Failed: Invalid query")
+                }
                 XCTAssertNotNil(p, "Find Failed: No model returned")
                 if let p = p {
                     XCTAssertEqual(p.name, "Joe", "Find Failed: \(String(describing: p.name)) is not equal to Joe")
@@ -33,10 +41,17 @@ class TestFind: XCTestCase {
     }
 
     func testFindAll() {
-        Database.defaultConnection = .global(createConnection(.returnThreeRows))
+        let connection: TestConnection = createConnection(.returnThreeRows)
+        Database.default = Database(single: connection)
         performTest(asyncTasks: { expectation in
             Person.findAll { array, error in
                 XCTAssertNil(error, "Find Failed: \(String(describing: error))")
+                XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
+                if let query = connection.query {
+                  let expectedQuery = "SELECT * FROM People"
+                  let resultQuery = connection.descriptionOf(query: query)
+                  XCTAssertEqual(resultQuery, expectedQuery, "Find Failed: Invalid query")
+                }
                 XCTAssertNotNil(array, "Find Failed: No array of models returned")
                 if let array = array {
                   XCTAssertEqual(array.count, 3, "Find Failed: \(String(describing: array.count)) is not equal to 3")
