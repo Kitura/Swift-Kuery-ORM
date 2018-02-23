@@ -17,6 +17,7 @@
 import SwiftKuery
 import KituraContracts
 import Foundation
+import Dispatch
 
 public protocol Model: Codable {
   static var tableName: String {get}
