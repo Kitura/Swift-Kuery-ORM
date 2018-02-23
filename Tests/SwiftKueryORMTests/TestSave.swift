@@ -29,7 +29,6 @@ class TestSave: XCTestCase {
                 if let query = connection.query {
                   let expectedQuery = "INSERT INTO People (name, age) VALUES ('Joe', 38)"
                   let resultQuery = connection.descriptionOf(query: query)
-                  print(resultQuery)
                   XCTAssertEqual(resultQuery, expectedQuery, "Find Failed: Invalid query")
                 }
                 XCTAssertNotNil(p, "Save Failed: No model returned")

@@ -76,8 +76,12 @@ public extension Model {
 
   /// Asynchronous function creating the table in the database
   static func createTable(using db: Database? = nil, _ onCompletion: @escaping (Bool?, RequestError?) -> Void) {
-    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
-      onCompletion(nil, .ormConnectionNotInitialized)
+    guard let database = db ?? Database.default else {
+      onCompletion(nil, .ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(nil, .ormConnectionFailed)
       return
     }
 
@@ -135,8 +139,12 @@ public extension Model {
 
   /// Asynchronous function droping the table from the database
   static func dropTable(using db : Database? = nil, _ onCompletion: @escaping (Bool?, RequestError?) -> Void) {
-    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
-      onCompletion(nil, .ormConnectionNotInitialized)
+    guard let database = db ?? Database.default else {
+      onCompletion(nil, .ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(nil, .ormConnectionFailed)
       return
     }
 
@@ -170,8 +178,12 @@ public extension Model {
 
   /// Save a instance of model to the database : `model.save()`
   func save(using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
-    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
-      onCompletion(nil, .ormConnectionNotInitialized)
+    guard let database = db ?? Database.default else {
+      onCompletion(nil, .ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(nil, .ormConnectionFailed)
       return
     }
 
@@ -220,8 +232,12 @@ public extension Model {
   /// - Parameter using: Optional Database to use
   /// - Returns: A tuple (Identifier, Model, RequestError)
   func save<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
-    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
-      onCompletion(nil, nil, .ormConnectionNotInitialized)
+    guard let database = db ?? Database.default else {
+      onCompletion(nil, nil, .ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(nil, nil, .ormConnectionFailed)
       return
     }
 
@@ -291,8 +307,12 @@ public extension Model {
   /// - Parameter using: Optional Database to use
   /// - Returns: A tuple (Identifier, Model, RequestError)
   static func find<I: Identifier>(id: I, using db: Database? = nil, onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
-    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
-      onCompletion(nil, nil, .ormConnectionNotInitialized)
+    guard let database = db ?? Database.default else {
+      onCompletion(nil, nil, .ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(nil, nil, .ormConnectionFailed)
       return
     }
 
@@ -353,8 +373,12 @@ public extension Model {
   /// - Parameter using: Optional Database to use
   /// - Returns: An array of model
   static func findAll(using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
-    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
-      onCompletion(nil, .ormConnectionNotInitialized)
+    guard let database = db ?? Database.default else {
+      onCompletion(nil, .ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(nil, .ormConnectionFailed)
       return
     }
 
@@ -419,8 +443,12 @@ public extension Model {
   /// - Parameter using: Optional Database to use
   /// - Returns: An array of tuples (id, model)
   static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
-    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
-      onCompletion(nil, .ormConnectionNotInitialized)
+    guard let database = db ?? Database.default else {
+      onCompletion(nil, .ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(nil, .ormConnectionFailed)
       return
     }
 
@@ -502,8 +530,12 @@ public extension Model {
   /// - Parameter using: Optional Database to use
   /// - Returns: A dictionary [id: model]
   static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
-    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
-      onCompletion(nil, .ormConnectionNotInitialized)
+    guard let database = db ?? Database.default else {
+      onCompletion(nil, .ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(nil, .ormConnectionFailed)
       return
     }
 
@@ -586,8 +618,12 @@ public extension Model {
   /// - Parameter using: Optional Database to use
   /// - Returns: A tuple (id, model, error)
   func update<I: Identifier>(id: I, using db: Database? = nil, onCompletion: @escaping (Identifier?, Self?, RequestError?) -> Void) {
-    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
-      onCompletion(nil, nil, .ormConnectionNotInitialized)
+    guard let database = db ?? Database.default else {
+      onCompletion(nil, nil, .ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(nil, nil, .ormConnectionFailed)
       return
     }
 
@@ -641,8 +677,12 @@ public extension Model {
   /// - Parameter using: Optional Database to use
   /// - Returns: An optional RequestError
   static func delete(id: Identifier, using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void) {
-    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
-      onCompletion(.ormConnectionNotInitialized)
+    guard let database = db ?? Database.default else {
+      onCompletion(.ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(.ormConnectionFailed)
       return
     }
 
@@ -685,8 +725,12 @@ public extension Model {
   /// - Parameter using: Optional Database to use
   /// - Returns: An optional RequestError
   static func deleteAll(using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void) {
-    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
-      onCompletion(.ormConnectionNotInitialized)
+    guard let database = db ?? Database.default else {
+      onCompletion(.ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(.ormConnectionFailed)
       return
     }
 
@@ -727,8 +771,12 @@ public extension Model {
   /// - Parameter using: Optional Database to use
   /// - Returns: A tuple (Model, RequestError)
   static func executeQuery(query: Query, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
-    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
-      onCompletion(nil, .ormConnectionNotInitialized)
+    guard let database = db ?? Database.default else {
+      onCompletion(nil, .ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(nil, .ormConnectionFailed)
       return
     }
 
@@ -773,8 +821,12 @@ public extension Model {
   /// - Parameter using: Optional Database to use
   /// - Returns: A tuple ([Model], RequestError)
   static func executeQuery(query: Query, using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?)-> Void ) {
-    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
-      onCompletion(nil, .ormConnectionNotInitialized)
+    guard let database = db ?? Database.default else {
+      onCompletion(nil, .ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(nil, .ormConnectionFailed)
       return
     }
 
@@ -831,8 +883,12 @@ public extension Model {
   /// - Parameter using: Optional Database to use
   /// - Returns: An optional RequestError
   static func executeQuery(using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void ) {
-    guard let connection = db?.getConnection() ?? Database.default?.getConnection() else {
-      onCompletion(.ormConnectionNotInitialized)
+    guard let database = db ?? Database.default else {
+      onCompletion(.ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(.ormConnectionFailed)
       return
     }
 
@@ -887,7 +943,7 @@ extension RequestError {
   init(_ base: RequestError, reason: String) {
     self.init(rawValue: base.rawValue, reason: reason)
   }
-  public static let ormConnectionNotInitialized = RequestError(rawValue: 700, reason: "Connection not Initialized")
+  public static let ormDatabaseNotInitialized = RequestError(rawValue: 700, reason: "Database not Initialized")
   public static let ormTableCreationError = RequestError(rawValue: 701)
   public static let ormCodableDecodingError = RequestError(rawValue: 702)
   public static let ormDatabaseDecodingError = RequestError(rawValue: 703)
@@ -897,4 +953,5 @@ extension RequestError {
   public static let ormInvalidTableDefinition = RequestError(rawValue: 708)
   public static let ormIdentifierError = RequestError(rawValue: 709)
   public static let ormInternalError = RequestError(rawValue: 710)
+  public static let ormConnectionFailed = RequestError(rawValue: 711, reason: "Failed to retrieve a connection from the database")
 }
