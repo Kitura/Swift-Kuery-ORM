@@ -27,9 +27,10 @@ class TestSave: XCTestCase {
                 XCTAssertNil(error, "Save Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedQuery = "INSERT INTO People (name, age) VALUES ('Joe', 38)"
+                  let expectedQuery1 = "INSERT INTO People (name, age) VALUES ('Joe', 38)"
+                  let expectedQuery2 = "INSERT INTO People (age, name) VALUES (38, 'Joe')"
                   let resultQuery = connection.descriptionOf(query: query)
-                  XCTAssertEqual(resultQuery, expectedQuery, "Find Failed: Invalid query")
+                  XCTAssert(resultQuery == expectedQuery1 || resultQuery == expectedQuery2)
                 }
                 XCTAssertNotNil(p, "Save Failed: No model returned")
                 if let p = p {
@@ -50,9 +51,10 @@ class TestSave: XCTestCase {
                 XCTAssertNil(error, "Save Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedQuery = "INSERT INTO People (name, age) VALUES ('Joe', 38)"
+                  let expectedQuery1 = "INSERT INTO People (name, age) VALUES ('Joe', 38)"
+                  let expectedQuery2 = "INSERT INTO People (age, name) VALUES (38, 'Joe')"
                   let resultQuery = connection.descriptionOf(query: query)
-                  XCTAssertEqual(resultQuery, expectedQuery, "Find Failed: Invalid query")
+                  XCTAssert(resultQuery == expectedQuery1 || resultQuery == expectedQuery2)
                 }
                 XCTAssertNotNil(p, "Save Failed: No model returned")
                 XCTAssertEqual(id, 1, "Save Failed: \(String(describing: id)) is not equal to 1)")
