@@ -46,7 +46,13 @@ public protocol Model: Codable {
 
 public extension Model {
   /// Default implementation of the table name
-  static var tableName: String { return String(describing: self) + "s"}
+  static var tableName: String {
+    let structName = String(describing: self)
+    if structName.last == "s" {
+      return structName
+    }
+    return structName + "s"
+  }
 
   /// Default implementation of id column name
   static var idColumnName: String { return "id" }
