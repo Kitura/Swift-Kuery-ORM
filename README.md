@@ -127,7 +127,7 @@ extension Grade : Model {
 }
 ```
 
-Now, you can create a table sync in your database like so:
+Now, you need to create your table. If you are configuring your database while you start up your server, you can use `createTableSync()`, which runs synchronously. If you want to use an asynchronous function, you can use `createTable()` elsewhere. You can implement either of these functions like so:
 
 ```swift
 do {
