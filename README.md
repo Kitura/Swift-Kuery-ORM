@@ -132,10 +132,12 @@ Now, you can create a table sync in your database like so:
 ```swift
 do {
   try Grade.createTableSync()
-} catch {
+} catch let error {
   // Error
 }
 ```
+
+It's important to point out that if you've already created your table, this will throw an error here.
 
 Your application is now ready to make use of all the functions available in the `Model` protocol. If you'd like to see a fully working example of the ORM using [Codable Routing](https://www.ibm.com/blogs/bluemix/2018/01/kitura-2-0-taking-advantage-of-codable-routes/), visit our [FoodTracker](https://github.com/IBM/foodtrackerbackend) example.
 
@@ -159,6 +161,8 @@ grade.save { (id: Int?, grade: Grade?, error: RequestError?) in
   ...
 }
 ```
+
+**NB**: If you want to use `RequestError`, you'll need to import `KituraContracts` at the top of your swift file.
 
 ### Updating
 
