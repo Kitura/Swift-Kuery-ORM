@@ -23,17 +23,54 @@
 # Swift-Kuery-ORM
 
 ## Summary
-Swift-Kuery-ORM is an Object-relational Mapping build on top of [Swift-Kuery](http://github.com/IBM-Swift/Swift-Kuery). Using Codable it provides an easy way of persisting your data.
+Swift-Kuery-ORM is an ORM (Object Relational Mapping) library built for Swift on the server. Using it allows you to simplify persistence of model objects with your server.
 
-## Example
-This example demonstrates how to persist data from a struct using [Swift-Kuery-PostgreSQL](http://github.com/IBM-Swift/Swift-Kuery-PostgreSQL). It assumes there is a PostgreSQL server running at localhost:5432.
+For the sake of convenience, we've built the ORM on top of [Swift-Kuery](http://github.com/IBM-Swift/Swift-Kuery). This lets us offer developers the flexibility to customize queries made to the database, if the functionality of the ORM is insufficient.
 
-### Import
+## The Model Protocol
+The key component of Swift-Kuery-ORM is the protocol `Model`. 
 
-Add Swift-Kuery-ORM and Swift-Kuery-PostgreSQL to your `Package.swift`:
+Let's propose a struct to use as an example. We can declare an object that looks like so:
 
 ```swift
-  dependencies: [
+struct Grade: Model {
+  var course: String
+  var grade: Int
+}
+```
+
+Thanks to [Codable Routing](https://developer.ibm.com/swift/2017/10/30/codable-routing/) in Kitura 2.0, we declare our struct to be `Codable` to simplify our RESTful routes for these objects on our server. The `Model` protocol extends what `Codable` does to work with the ORM. In your server application, you would extend your object like so:
+
+```swift
+extension Grade : Model { }
+```
+
+Now that your `Grade` struct conforms to `Model`, after you [set up]() your database connection pool and create a table sync, you automatically have access to a slew of convenience functions for your object.
+
+Need to retrieve all instances of `Grade`? You can implement:
+
+```swift
+Grade.retrieveAll()
+```
+
+Need to add a new instance of `Grade`? Here's how:
+
+```swift
+grade.save()
+```
+
+The `Model` protocol is the key to using the ORM. Let's walk through how to fully set up an application to make use of the ORM.
+
+## Example
+
+You'll want to go [here](http://www.kitura.io/en/starter/gettingstarted.html) to create a server from the CLI to get started. You'll be using the [PostGreSQL plugin of Swift Kuery](https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL), so you will want to make sure that you have PostGreSQL running on your local machine, which you can install with `brew install postgresql`. The default port for PostGreSQL is 5432.
+
+### Update your Package.swift file
+
+Go to your Add Swift-Kuery-ORM and Swift-Kuery-PostgreSQL to your `Package.swift`:
+
+```swift
+dependencies: [
     ...
     // Add these two lines
     .package(url: "https://github.com/IBM-Swift/Swift-Kuery-ORM.git", from: "0.0.1"),
@@ -47,40 +84,50 @@ Add Swift-Kuery-ORM and Swift-Kuery-PostgreSQL to your `Package.swift`:
   ]
 ```
 
-Import Swift-Kuery-ORM and Swift-Kuery-PostgreSQL in your `*.swift`:
+Let's assume you want to add ORM functionality to a file called `Application.swift`. You'll need to make the following import statements at the top of the file:
 
 ```swift
 import SwiftKueryORM
 import SwiftKueryPostgreSQL
 ```
 
-### Database
+### Create Your Database
 
-After installing [PostgreSQL](http://github.com/IBM-Swift/Swift-Kuery-PostgreSQL), in your terminal create a database:
+As mentioned before, we recommend you use [Homebrew](https://brew.sh) to set up PostGreSQL on your machine. You can install PostGreSQL and set up your table like so:
 
 ```bash
+brew install postgresql
+brew services start postgresql
 createdb school
 ```
 
-Initialise your database in your `*.swift`:
+Initialize your database in your `Application.swift` file:
 
 ```swift
 let pool = PostgreSQLConnection.createPool(host: "localhost", port: 5432, options: [.databaseName("school")], poolOptions: ConnectionPoolOptions(initialCapacity: 10, maxCapacity: 50, timeout: 10000))
 Database.default = Database(pool)
 ```
 
-### Model
+### Set Up Your Object
 
-Define a Model:
+Like before, assume you will work with a struct that looks like so:
 
 ```swift
-struct Grade: Model {
+struct Grade : Codable {
   var course: String
   var grade: Int
 }
 ```
 
-Create the table in the database:
+In your `Application.swift` file, extend `Grade` to conform to `Model`
+
+```swift
+extension Grade : Model { 
+    // here, you can add any server-side specific logic to your object
+}
+```
+
+Now, you can create a table sync in your database like so:
 
 ```swift
 do {
@@ -90,19 +137,22 @@ do {
 }
 ```
 
+Your application is now ready to make use of all the functions available in the `Model` protocol. If you'd like to see a fully working example of the ORM using [Codable Routing](https://www.ibm.com/blogs/bluemix/2018/01/kitura-2-0-taking-advantage-of-codable-routes/), visit our [FoodTracker](https://github.com/IBM/foodtrackerbackend) example.
+
+Let's cover all the functionality you have available to you now.
+
 ### Saving
 
-Save a grade:
+If you'd like to save a new object to your database, you have to create the object and use the `save()` function:
 
 ```swift
 let grade = Grade(course: "physics", grade: 80)
-
 grade.save { grade, error in
   ...
 }
 ```
 
-Save your grade and get back it's id:
+You also optionally have the ability to pass the ID of the newly saved object into your closure. Add it to the collection of parameters like so:
 
 ```swift
 grade.save { (id: Int?, grade: Grade?, error: RequestError?) in
@@ -112,7 +162,7 @@ grade.save { (id: Int?, grade: Grade?, error: RequestError?) in
 
 ### Updating
 
-Update a grade:
+If you have the id for an existing record of your object, and you'd like to update the record with an object, you can use the `update()` function to do so:
 
 ```swift
 let grade = Grade(course: "physics", grade: 80)
@@ -123,9 +173,9 @@ grade.update(id: 1) { id, grade, error in
 }
 ```
 
-### Finding
+### Retrieving
 
-Find a grade:
+If you'd like to find a specific object, and you have its id, you can use the `find()` function to retrieve it:
 
 ```swift
 Grade.find(id: 1) {id, result, error in
@@ -133,21 +183,21 @@ Grade.find(id: 1) {id, result, error in
 }
 ```
 
-Find all the grades:
+If you'd like to retrieve all instances of a particular object, you can make use of `findAll()` as a static function on the type you are trying to retrieve:
 
 ```swift
-Grade.findAll { result, error in
+Grade.findAll { (result: [Grade]?, error: RequestError?) in
   ...
 }
 ```
+
+You also have the ability to form your results in different ways and formats, like so:
 
 ```swift
 Grade.findAll { (result: [(Int, Grade)]?, error: RequestError?) in
   ...
 }
-```
 
-```swift
 Grade.findAll { (result: [Int: Grade]?, error: RequestError?) in
   ...
 }
@@ -155,7 +205,7 @@ Grade.findAll { (result: [Int: Grade]?, error: RequestError?) in
 
 ### Deleting
 
-Delete a grade:
+If you'd like to delete an object, and you have its id, you can use the `delete()` function like so:
 
 ```swift
 Grade.delete(id: 1) { error in
@@ -163,7 +213,7 @@ Grade.delete(id: 1) { error in
 }
 ```
 
-Delete all the grades:
+If you're feeling bold, and you'd like to remove all instances of an object from your database, you can use the static function `deleteAll()` with your type:
 
 ```swift
 Grade.deleteAll { error in
@@ -171,11 +221,9 @@ Grade.deleteAll { error in
 }
 ```
 
-### Customise
+### Customization
 
-Using [Swift-Kuery](http://github.com/IBM-Swift/Swift-Kuery) in the ORM.
-
-#### Get the table of your Model
+The ORM uses [Swift-Kuery](https://github.com/IBM-Swift/Swift-Kuery) which allows you to customize and execute your own queries without breaking any existing ORM functionality. You'll want to have access to the table for your object, which you can get with the `getTable()` function:
 
 ```swift
 do {
@@ -185,35 +233,27 @@ do {
 }
 ```
 
-#### Create a query
+After you retrieve your table, you can create a `Query` object to specify what you want to execute on your database, and perform it like so:
 
-Following [SwiftKuery](https://github.com/IBM-Swift/Swift-Kuery#query-examples)
+```swift
+executeQuery(query: Query) { (grade: Grade?, error: RequestError?) in
+  ...
+}
+```
 
-#### Execute a query
-
-Executing a query that returns a optional grade or an optional error:
+You can customize the parameters passed into your closure after you execute a `Query` like so:
 
 ```swift
 executeQuery(query: Query) { grade, error in
   ...
 }
-```
 
-Executing a query that returns an optional array of grades or an optional error:
-
-```swift
-executeQuery(query: Query) { grade, error in
-  ...
-}
-```
-
-Executing a query that returns an optional error:
-
-```swift
 executeQuery(query: Query) { error in
   ...
 }
 ```
+
+If you'd like to learn more about how you can customize queries, check out the [Swift-Kuery](https://github.com/IBM-Swift/Swift-Kuery) repository for more information.
 
 ## List of plugins:
 
