@@ -19,6 +19,8 @@ import KituraContracts
 import Foundation
 import Dispatch
 
+public typealias RequestError = KituraContracts.RequestError
+
 public protocol Model: Codable {
   static var tableName: String {get}
   static var idColumnName: String {get}
