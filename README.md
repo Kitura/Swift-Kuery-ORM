@@ -25,7 +25,7 @@
 ## Summary
 Swift-Kuery-ORM is an ORM (Object Relational Mapping) library built for Swift. Using it allows you to simplify persistence of model objects with your server.
 
-Swift-Kuery-ORM is built on top of [Swift-Kuery](http://github.com/IBM-Swift/Swift-Kuery), which means that its possible to use Swift-Kuery to customize the queries made to the database, if the functionality of the ORM is insufficient.
+Swift-Kuery-ORM is built on top of [Swift-Kuery](http://github.com/IBM-Swift/Swift-Kuery), which means that its possible to use Swift-Kuery to customize SQL queries made to the database, if the functionality of the ORM is insufficient.
 
 ## The Model Protocol
 The key component of Swift-Kuery-ORM is the protocol `Model`. 
