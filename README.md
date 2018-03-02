@@ -42,15 +42,15 @@ struct Grade: Codable {
 Thanks to [Codable Routing](https://developer.ibm.com/swift/2017/10/30/codable-routing/) in Kitura 2.0, we declare our struct to be `Codable` to simplify our RESTful routes for these objects on our server. The `Model` protocol extends what `Codable` does to work with the ORM. In your server application, you would extend your object like so:
 
 ```swift
-extension Grade : Model { }
+extension Grade: Model { }
 ```
 
-Now that your `Grade` struct conforms to `Model`, after you [set up]() your database connection pool and create a table sync, you automatically have access to a slew of convenience functions for your object.
+Now that your `Grade` struct conforms to `Model`, after you [set up](#Create-Your-Database) your database connection pool and create a table sync, you automatically have access to a slew of convenience functions for your object.
 
 Need to retrieve all instances of `Grade`? You can implement:
 
 ```swift
-Grade.retrieveAll()
+Grade.findAll()
 ```
 
 Need to add a new instance of `Grade`? Here's how:
@@ -63,11 +63,11 @@ The `Model` protocol is the key to using the ORM. Let's walk through how to full
 
 ## Example
 
-You'll want to go [here](http://www.kitura.io/en/starter/gettingstarted.html) to create a server from the CLI to get started. You'll be using the [PostGreSQL plugin of Swift Kuery](https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL), so you will want to make sure that you have PostGreSQL running on your local machine, which you can install with `brew install postgresql`. The default port for PostGreSQL is 5432.
+You'll want to go [here](http://www.kitura.io/en/starter/gettingstarted.html) to create a server from the CLI to get started. You'll be using the [PostgreSQL plugin of Swift Kuery](https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL), so you will want to make sure that you have PostgreSQL running on your local machine, which you can install with `brew install postgresql`. The default port for PostgreSQL is 5432.
 
 ### Update your Package.swift file
 
-Go to your Add Swift-Kuery-ORM and Swift-Kuery-PostgreSQL to your `Package.swift`:
+Add Swift-Kuery-ORM and Swift-Kuery-PostgreSQL to your `Package.swift`:
 
 ```swift
 dependencies: [
@@ -93,7 +93,7 @@ import SwiftKueryPostgreSQL
 
 ### Create Your Database
 
-As mentioned before, we recommend you use [Homebrew](https://brew.sh) to set up PostGreSQL on your machine. You can install PostGreSQL and set up your table like so:
+As mentioned before, we recommend you use [Homebrew](https://brew.sh) to set up PostgreSQL on your machine. You can install PostgreSQL and set up your table like so:
 
 ```bash
 brew install postgresql
