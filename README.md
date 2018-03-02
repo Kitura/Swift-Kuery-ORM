@@ -23,9 +23,9 @@
 # Swift-Kuery-ORM
 
 ## Summary
-Swift-Kuery-ORM is an ORM (Object Relational Mapping) library built for Swift on the server. Using it allows you to simplify persistence of model objects with your server.
+Swift-Kuery-ORM is an ORM (Object Relational Mapping) library built for Swift. Using it allows you to simplify persistence of model objects with your server.
 
-For the sake of convenience, we've built the ORM on top of [Swift-Kuery](http://github.com/IBM-Swift/Swift-Kuery). This lets us offer developers the flexibility to customize queries made to the database, if the functionality of the ORM is insufficient.
+Swift-Kuery-ORM is built on top of [Swift-Kuery](http://github.com/IBM-Swift/Swift-Kuery), which means that its possible to use Swift-Kuery to customize SQL queries made to the database, if the functionality of the ORM is insufficient.
 
 ## The Model Protocol
 The key component of Swift-Kuery-ORM is the protocol `Model`. 
@@ -33,7 +33,7 @@ The key component of Swift-Kuery-ORM is the protocol `Model`.
 Let's propose a struct to use as an example. We can declare an object that looks like so:
 
 ```swift
-struct Grade: Model {
+struct Grade: Codable {
   var course: String
   var grade: Int
 }
@@ -127,15 +127,17 @@ extension Grade : Model {
 }
 ```
 
-Now, you can create a table sync in your database like so:
+Now, you need to create your table. If you are configuring your database while you start up your server, you can use `createTableSync()`, which runs synchronously. If you want to use an asynchronous function, you can use `createTable()` elsewhere. You can implement either of these functions like so:
 
 ```swift
 do {
   try Grade.createTableSync()
-} catch {
+} catch let error {
   // Error
 }
 ```
+
+It's important to point out that if you've already created your table, this will throw an error here.
 
 Your application is now ready to make use of all the functions available in the `Model` protocol. If you'd like to see a fully working example of the ORM using [Codable Routing](https://www.ibm.com/blogs/bluemix/2018/01/kitura-2-0-taking-advantage-of-codable-routes/), visit our [FoodTracker](https://github.com/IBM/foodtrackerbackend) example.
 
@@ -159,6 +161,8 @@ grade.save { (id: Int?, grade: Grade?, error: RequestError?) in
   ...
 }
 ```
+
+**NB**: If you want to use `RequestError`, you'll need to import `KituraContracts` at the top of your swift file.
 
 ### Updating
 
