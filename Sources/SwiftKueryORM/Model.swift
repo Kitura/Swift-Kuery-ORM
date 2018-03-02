@@ -38,7 +38,7 @@ public protocol Model: Codable {
   static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
   static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
 
-  func update<I: Identifier>(id: I, using db: Database?, onCompletion: @escaping (Identifier?, Self?, RequestError?) -> Void)
+  func update<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Identifier?, Self?, RequestError?) -> Void)
 
   static func delete(id: Identifier, using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
   static func deleteAll(using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
@@ -626,7 +626,7 @@ public extension Model {
   /// - Parameter id: Identifier of the model to update
   /// - Parameter using: Optional Database to use
   /// - Returns: A tuple (id, model, error)
-  func update<I: Identifier>(id: I, using db: Database? = nil, onCompletion: @escaping (Identifier?, Self?, RequestError?) -> Void) {
+  func update<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Identifier?, Self?, RequestError?) -> Void) {
     guard let database = db ?? Database.default else {
       onCompletion(nil, nil, .ormDatabaseNotInitialized)
       return
