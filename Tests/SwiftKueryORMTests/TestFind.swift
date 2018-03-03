@@ -22,7 +22,7 @@ class TestFind: XCTestCase {
         let connection: TestConnection = createConnection(.returnOneRow)
         Database.default = Database(single: connection)
         performTest(asyncTasks: { expectation in
-            Person.find(id: 1) { id, p, error in
+            Person.find(id: 1) { p, error in
                 XCTAssertNil(error, "Find Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
                 if let query = connection.query {
