@@ -314,7 +314,7 @@ public extension Model {
 
   /// Find a model with an id
   /// - Parameter using: Optional Database to use
-  /// - Returns: A tuple (Identifier, Model, RequestError)
+  /// - Returns: A tuple (Model, RequestError)
   static func find<I: Identifier>(id: I, using db: Database? = nil, onCompletion: @escaping (Self?, RequestError?) -> Void) {
     guard let database = db ?? Database.default else {
       onCompletion(nil, .ormDatabaseNotInitialized)
@@ -625,7 +625,7 @@ public extension Model {
   /// Update a model
   /// - Parameter id: Identifier of the model to update
   /// - Parameter using: Optional Database to use
-  /// - Returns: A tuple (id, model, error)
+  /// - Returns: A tuple (model, error)
   func update<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
     guard let database = db ?? Database.default else {
       onCompletion(nil, .ormDatabaseNotInitialized)
