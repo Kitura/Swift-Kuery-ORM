@@ -33,12 +33,12 @@ public protocol Model: Codable {
   func save(using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
   func save<I: Identifier>(using db: Database?, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void)
 
-  static func find<I: Identifier>(id: I, using db: Database?, onCompletion: @escaping (I?, Self?, RequestError?) -> Void)
+  static func find<I: Identifier>(id: I, using db: Database?, onCompletion: @escaping (Self?, RequestError?) -> Void)
   static func findAll(using db: Database?, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
   static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
   static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
 
-  func update<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Identifier?, Self?, RequestError?) -> Void)
+  func update<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
 
   static func delete(id: Identifier, using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
   static func deleteAll(using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
@@ -314,14 +314,14 @@ public extension Model {
 
   /// Find a model with an id
   /// - Parameter using: Optional Database to use
-  /// - Returns: A tuple (Identifier, Model, RequestError)
-  static func find<I: Identifier>(id: I, using db: Database? = nil, onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
+  /// - Returns: A tuple (Model, RequestError)
+  static func find<I: Identifier>(id: I, using db: Database? = nil, onCompletion: @escaping (Self?, RequestError?) -> Void) {
     guard let database = db ?? Database.default else {
-      onCompletion(nil, nil, .ormDatabaseNotInitialized)
+      onCompletion(nil, .ormDatabaseNotInitialized)
       return
     }
     guard let connection = database.getConnection() else {
-      onCompletion(nil, nil, .ormConnectionFailed)
+      onCompletion(nil, .ormConnectionFailed)
       return
     }
 
@@ -330,12 +330,12 @@ public extension Model {
     do {
       table = try Self.getTable()
     } catch {
-      onCompletion(nil, nil, Self.convertError(error))
+      onCompletion(nil, Self.convertError(error))
       return
     }
 
     guard let idColumn = table.columns.first(where: {$0.name == Self.idColumnName}) else {
-      onCompletion(nil, nil, RequestError(.ormInvalidTableDefinition, reason: "Could not find id column"))
+      onCompletion(nil, RequestError(.ormInvalidTableDefinition, reason: "Could not find id column"))
       return
     }
 
@@ -344,21 +344,21 @@ public extension Model {
 
     connection.connect { error in
       if let error = error {
-        onCompletion(nil, nil, Self.convertError(error))
+        onCompletion(nil, Self.convertError(error))
         return
       } else {
         connection.execute(query: query) { result in
           guard result.success else {
             guard let error = result.asError else {
-              onCompletion(nil, nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
+              onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
               return
             }
-            onCompletion(nil, nil, Self.convertError(error))
+            onCompletion(nil, Self.convertError(error))
             return
           }
 
           guard let rows = result.asRows, rows.count > 0 else {
-            onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Could not retrieve value for id: " + String(describing: id)))
+            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve value for id: " + String(describing: id)))
             return
           }
 
@@ -368,11 +368,11 @@ public extension Model {
           do {
             decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
           } catch {
-            onCompletion(nil, nil, Self.convertError(error))
+            onCompletion(nil, Self.convertError(error))
             return
           }
 
-          onCompletion(id, decodedModel, nil)
+          onCompletion(decodedModel, nil)
         }
       }
     }
@@ -625,14 +625,14 @@ public extension Model {
   /// Update a model
   /// - Parameter id: Identifier of the model to update
   /// - Parameter using: Optional Database to use
-  /// - Returns: A tuple (id, model, error)
-  func update<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Identifier?, Self?, RequestError?) -> Void) {
+  /// - Returns: A tuple (model, error)
+  func update<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
     guard let database = db ?? Database.default else {
-      onCompletion(nil, nil, .ormDatabaseNotInitialized)
+      onCompletion(nil, .ormDatabaseNotInitialized)
       return
     }
     guard let connection = database.getConnection() else {
-      onCompletion(nil, nil, .ormConnectionFailed)
+      onCompletion(nil, .ormConnectionFailed)
       return
     }
 
@@ -640,7 +640,7 @@ public extension Model {
     do {
       table = try Self.getTable()
     } catch {
-      onCompletion(nil, nil, Self.convertError(error))
+      onCompletion(nil, Self.convertError(error))
       return
     }
 
@@ -648,14 +648,14 @@ public extension Model {
     do {
       values = try DatabaseEncoder().encode(self)
     } catch {
-      onCompletion(nil, nil, Self.convertError(error))
+      onCompletion(nil, Self.convertError(error))
       return
     }
 
     let columns = table.columns.filter({$0.name != Self.idColumnName})
     let valueTuples = columns.filter({values[$0.name] != nil}).map({($0, values[$0.name]!)})
     guard let idColumn = table.columns.first(where: {$0.name == Self.idColumnName}) else {
-      onCompletion(nil, nil, RequestError(rawValue: 708, reason: "Could not find id column"))
+      onCompletion(nil, RequestError(rawValue: 708, reason: "Could not find id column"))
       return
     }
 
@@ -663,19 +663,19 @@ public extension Model {
 
     connection.connect {error in
       if let error = error {
-        onCompletion(nil, nil, Self.convertError(error))
+        onCompletion(nil, Self.convertError(error))
         return
       } else {
         connection.execute(query: query) { result in
           guard result.success else {
             guard let error = result.asError else {
-              onCompletion(nil, nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
+              onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
               return
             }
-            onCompletion(nil, nil, Self.convertError(error))
+            onCompletion(nil, Self.convertError(error))
             return
           }
-          onCompletion(id, self,nil)
+          onCompletion(self,nil)
         }
       }
     }
