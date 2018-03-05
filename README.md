@@ -162,8 +162,6 @@ grade.save { (id: Int?, grade: Grade?, error: RequestError?) in
 }
 ```
 
-**NB**: If you want to use `RequestError`, you'll need to import `KituraContracts` at the top of your swift file.
-
 ### Updating
 
 If you have the id for an existing record of your object, and you'd like to update the record with an object, you can use the `update()` function to do so:
