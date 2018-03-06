@@ -45,7 +45,7 @@ Thanks to [Codable Routing](https://developer.ibm.com/swift/2017/10/30/codable-r
 extension Grade: Model { }
 ```
 
-Now that your Grade struct conforms to Model, after you have set up your database connection pool and created a database table, you automatically have access to a slew of convenience functions for your object.
+Now that your `Grade` struct conforms to `Model`, after you have set up your database connection pool and created a database table, you automatically have access to a slew of convenience functions for your object.
 
 Need to retrieve all instances of `Grade`? You can implement:
 
