@@ -170,7 +170,7 @@ If you have the id for an existing record of your object, and you'd like to upda
 let grade = Grade(course: "physics", grade: 80)
 grade.course = "maths"
 
-grade.update(id: 1) { id, grade, error in
+grade.update(id: 1) { grade, error in
   ...
 }
 ```
@@ -180,7 +180,7 @@ grade.update(id: 1) { id, grade, error in
 If you'd like to find a specific object, and you have its id, you can use the `find()` function to retrieve it:
 
 ```swift
-Grade.find(id: 1) {id, result, error in
+Grade.find(id: 1) { result, error in
   ...
 }
 ```
