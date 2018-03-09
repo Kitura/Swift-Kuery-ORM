@@ -178,10 +178,9 @@ open class DatabaseDecoder {
       let value = try checkValueExitence(key)
       if type is Data.Type && value != nil {
         let castValue = try castedValue(value, String.self, key)
-        guard NSData(base64Encoded: castValue) != nil else {
+        guard let data = Data(base64Encoded: castValue) else {
           throw RequestError(.ormCodableDecodingError, reason: "Error decoding value of Data Type for Key: \(String(describing: key)) , value: \(String(describing: value)) is not base64encoded")
         }
-        let data = Data(base64Encoded: castValue)
         return try castedValue(data, type, key)
       } else if type is URL.Type  && value != nil {
         let castValue = try castedValue(value, String.self, key)
@@ -279,11 +278,11 @@ open class DatabaseDecoder {
       if value == nil {return nil}
       if type is Data.Type {
         let castValue = try castedValue(value, String.self, key)
-        guard NSData(base64Encoded: castValue) != nil else {
+        guard let data = Data(base64Encoded: castValue) else {
           throw RequestError(.ormCodableDecodingError, reason: "Error decoding value of Data Type for Key: \(String(describing: key)) , value: \(String(describing: value)) is not base64encoded")
         }
 
-        return Data(base64Encoded: castValue) as? T
+        return data as? T
       } else if type is URL.Type {
         let castValue = try castedValue(value, String.self, key)
         let url = URL(string: castValue)
