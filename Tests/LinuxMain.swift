@@ -66,4 +66,6 @@ extension Sequence {
 XCTMain([
     testCase(TestSave.allTests.shuffled()),
     testCase(TestFind.allTests.shuffled()),
+    testCase(TestUpdate.allTests.shuffled()),
+    testCase(TestDelete.allTests.shuffled()),
     ])

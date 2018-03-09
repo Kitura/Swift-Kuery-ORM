@@ -25,7 +25,7 @@ class TestSave: XCTestCase {
             let person = Person(name: "Joe", age: 38)
             person.save { p, error in
                 XCTAssertNil(error, "Save Failed: \(String(describing: error))")
-                XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
+                XCTAssertNotNil(connection.query, "Save Failed: Query is nil")
                 if let query = connection.query {
                   let expectedQuery1 = "INSERT INTO People (name, age) VALUES ('Joe', 38)"
                   let expectedQuery2 = "INSERT INTO People (age, name) VALUES (38, 'Joe')"
@@ -49,7 +49,7 @@ class TestSave: XCTestCase {
             let person = Person(name: "Joe", age: 38)
             person.save { (id: Int?, p: Person?, error: RequestError?) in
                 XCTAssertNil(error, "Save Failed: \(String(describing: error))")
-                XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
+                XCTAssertNotNil(connection.query, "Save Failed: Query is nil")
                 if let query = connection.query {
                   let expectedQuery1 = "INSERT INTO People (name, age) VALUES ('Joe', 38)"
                   let expectedQuery2 = "INSERT INTO People (age, name) VALUES (38, 'Joe')"
