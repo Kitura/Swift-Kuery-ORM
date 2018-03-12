@@ -27,7 +27,7 @@ class TestUpdate: XCTestCase {
                 XCTAssertNotNil(connection.query, "Update Failed: Query is nil")
                 if let query = connection.query {
                   let expectedQuery1 = "UPDATE People SET name = 'Joe', age = 38 WHERE People.id = '1'"
-                  let expectedQuery2 = "UPDATE People SET age = 38 , name = 'Joe' WHERE People.id = '1'"
+                  let expectedQuery2 = "UPDATE People SET age = 38, name = 'Joe' WHERE People.id = '1'"
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssert(resultQuery == expectedQuery1 || resultQuery == expectedQuery2)
                 }
