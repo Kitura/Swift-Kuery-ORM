@@ -17,6 +17,9 @@ class TestUpdate: XCTestCase {
         var age: Int
     }
 
+    /**
+      Testing that the correct SQL Query is created to update a specific model.
+    */
     func testUpdate() {
         let connection: TestConnection = createConnection()
         Database.default = Database(single: connection)
@@ -26,10 +29,15 @@ class TestUpdate: XCTestCase {
                 XCTAssertNil(error, "Update Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Update Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedQuery1 = "UPDATE People SET name = 'Joe', age = 38 WHERE People.id = '1'"
-                  let expectedQuery2 = "UPDATE People SET age = 38, name = 'Joe' WHERE People.id = '1'"
+                  let expectedPrefix = "UPDATE People SET"
+                  let expectedSuffix = "WHERE People.id = '1'"
+                  let expectedUpdates = ["name = 'Joe'", "age = 38"]
                   let resultQuery = connection.descriptionOf(query: query)
-                  XCTAssert(resultQuery == expectedQuery1 || resultQuery == expectedQuery2)
+                  XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
+                  XCTAssertTrue(resultQuery.hasSuffix(expectedSuffix))
+                  for update in expectedUpdates {
+                      XCTAssertTrue(resultQuery.contains(update))
+                  }
                 }
                 XCTAssertNotNil(p, "Update Failed: No model returned")
                 if let p = p {

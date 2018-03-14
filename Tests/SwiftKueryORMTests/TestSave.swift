@@ -18,6 +18,9 @@ class TestSave: XCTestCase {
         var age: Int
     }
 
+    /**
+      Testing that the correct SQL Query is created to save a Model
+    */
     func testSave() {
         let connection: TestConnection = createConnection()
         Database.default = Database(single: connection)
@@ -27,10 +30,17 @@ class TestSave: XCTestCase {
                 XCTAssertNil(error, "Save Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Save Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedQuery1 = "INSERT INTO People (name, age) VALUES ('Joe', 38)"
-                  let expectedQuery2 = "INSERT INTO People (age, name) VALUES (38, 'Joe')"
+                  let expectedPrefix = "INSERT INTO People"
+                  let expectedSQLStatement = "VALUES"
+                  let expectedColumns = ["name", "age"]
+                  let expectedValues = ["'Joe'", "38"]
                   let resultQuery = connection.descriptionOf(query: query)
-                  XCTAssert(resultQuery == expectedQuery1 || resultQuery == expectedQuery2)
+                  XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
+                  XCTAssertTrue(resultQuery.contains(expectedSQLStatement))
+                  for (column, value) in zip(expectedColumns, expectedValues) {
+                      XCTAssertTrue(resultQuery.contains(column))
+                      XCTAssertTrue(resultQuery.contains(value))
+                  }
                 }
                 XCTAssertNotNil(p, "Save Failed: No model returned")
                 if let p = p {
@@ -42,6 +52,10 @@ class TestSave: XCTestCase {
         })
     }
 
+    /**
+      Testing that the correct SQL Query is created to save a Model
+      Testing that an id is correcly returned
+    */
     func testSaveWithId() {
         let connection: TestConnection = createConnection(.returnOneRow)
         Database.default = Database(single: connection)
@@ -51,10 +65,17 @@ class TestSave: XCTestCase {
                 XCTAssertNil(error, "Save Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Save Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedQuery1 = "INSERT INTO People (name, age) VALUES ('Joe', 38)"
-                  let expectedQuery2 = "INSERT INTO People (age, name) VALUES (38, 'Joe')"
+                  let expectedPrefix = "INSERT INTO People"
+                  let expectedSQLStatement = "VALUES"
+                  let expectedColumns = ["name", "age"]
+                  let expectedValues = ["'Joe'", "38"]
                   let resultQuery = connection.descriptionOf(query: query)
-                  XCTAssert(resultQuery == expectedQuery1 || resultQuery == expectedQuery2)
+                  XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
+                  XCTAssertTrue(resultQuery.contains(expectedSQLStatement))
+                  for (column, value) in zip(expectedColumns, expectedValues) {
+                      XCTAssertTrue(resultQuery.contains(column))
+                      XCTAssertTrue(resultQuery.contains(value))
+                  }
                 }
                 XCTAssertNotNil(p, "Save Failed: No model returned")
                 XCTAssertEqual(id, 1, "Save Failed: \(String(describing: id)) is not equal to 1)")

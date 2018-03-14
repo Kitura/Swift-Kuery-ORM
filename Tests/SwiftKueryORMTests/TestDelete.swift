@@ -18,6 +18,9 @@ class TestDelete: XCTestCase {
         var age: Int
     }
 
+    /**
+      Testing that the correct SQL Query is created to delete a specific model
+    */
     func testDeleteWithId() {
         let connection: TestConnection = createConnection()
         Database.default = Database(single: connection)
@@ -35,6 +38,9 @@ class TestDelete: XCTestCase {
         })
     }
 
+    /**
+      Testing that the correct SQL Query is created to delete all model
+    */
     func testDeleteAll() {
         let connection: TestConnection = createConnection()
         Database.default = Database(single: connection)
