@@ -28,7 +28,8 @@ extension String {
 
         for i in 1...lastRangeIndex {
             let capturedGroupIndex = match.range(at: i)
-            let matchedString = (self as NSString).substring(with: capturedGroupIndex)
+            let nsString = NSString(string: self)
+            let matchedString = nsString.substring(with: capturedGroupIndex)
             results.append(matchedString)
         }
 
