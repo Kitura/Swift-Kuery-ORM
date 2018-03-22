@@ -36,7 +36,8 @@ public class TableInfo {
   }
 
   func constructTable(_ idColumnName: String, _ tableName: String, _ typeInfo: TypeInfo) throws -> Table {
-    var columns: [Column] = [Column(idColumnName, Int64.self, autoIncrement: true, primaryKey: true)]
+    var columns: [Column] = []
+    var idColumnIsSet = false
     switch typeInfo {
     case .keyed(_, let dict):
       for (key, value) in dict {
@@ -65,7 +66,12 @@ public class TableInfo {
           throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: keyedTypeInfo)) is not supported")
         }
         if let SQLType = valueType as? SQLDataType.Type {
-          columns.append(Column(key, SQLType, notNull: !optionalBool))
+          if key == idColumnName && !idColumnIsSet {
+            columns.append(Column(key, SQLType, primaryKey: true, notNull: !optionalBool))
+            idColumnIsSet = true
+          } else {
+            columns.append(Column(key, SQLType, notNull: !optionalBool))
+          }
         } else {
           throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: valueType)) of Key: \(String(describing: key)) is not a SQLDataType")
         }
@@ -73,6 +79,9 @@ public class TableInfo {
     default:
       //TODO enhance error message
       throw RequestError(.ormTableCreationError, reason: "Can only save a struct to the database")
+    }
+    if !idColumnIsSet {
+     columns.append(Column(idColumnName, Int64.self, autoIncrement: true, primaryKey: true))
     }
     return Table(tableName: tableName, columns: columns)
   }

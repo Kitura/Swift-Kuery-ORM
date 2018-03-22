@@ -212,7 +212,7 @@ public extension Model {
       return
     }
 
-    let columns = table.columns.filter({$0.name != Self.idColumnName})
+    let columns = table.columns.filter({$0.autoIncrement != true})
     let valueTuples = columns.filter({values[$0.name] != nil}).map({($0, values[$0.name]!)})
     let query = Insert(into: table, valueTuples: valueTuples)
 
@@ -266,7 +266,7 @@ public extension Model {
       return
     }
 
-    let columns = table.columns.filter({$0.name != Self.idColumnName})
+    let columns = table.columns.filter({$0.autoIncrement != true})
     let valueTuples = columns.filter({values[$0.name] != nil}).map({($0, values[$0.name]!)})
     let query = Insert(into: table, valueTuples: valueTuples, returnID: true)
 
@@ -652,7 +652,7 @@ public extension Model {
       return
     }
 
-    let columns = table.columns.filter({$0.name != Self.idColumnName})
+    let columns = table.columns.filter({$0.autoIncrement != true})
     let valueTuples = columns.filter({values[$0.name] != nil}).map({($0, values[$0.name]!)})
     guard let idColumn = table.columns.first(where: {$0.name == Self.idColumnName}) else {
       onCompletion(nil, RequestError(rawValue: 708, reason: "Could not find id column"))
