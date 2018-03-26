@@ -64,12 +64,12 @@ class TestSave: XCTestCase {
                 if let query = connection.query {
                   let expectedPrefix = "INSERT INTO People"
                   let expectedSQLStatement = "VALUES"
-                  let expectedTuples = [("name", "Joe"), ("age", "38")]
+                  let expectedDictionary = ["name": "Joe", "age": "38"]
 
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
                   XCTAssertTrue(resultQuery.contains(expectedSQLStatement))
-                  self.verifyColumnsAndValues(resultQuery: resultQuery, expectedTuples: expectedTuples)
+                  self.verifyColumnsAndValues(resultQuery: resultQuery, expectedDictionary: expectedDictionary)
                 }
                 XCTAssertNotNil(p, "Save Failed: No model returned")
                 if let p = p {
@@ -96,12 +96,12 @@ class TestSave: XCTestCase {
                 if let query = connection.query {
                   let expectedPrefix = "INSERT INTO People"
                   let expectedSQLStatement = "VALUES"
-                  let expectedTuples = [("name", "Joe"), ("age", "38")]
+                  let expectedDictionary = ["name": "Joe", "age": "38"]
 
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
                   XCTAssertTrue(resultQuery.contains(expectedSQLStatement))
-                  self.verifyColumnsAndValues(resultQuery: resultQuery, expectedTuples: expectedTuples)
+                  self.verifyColumnsAndValues(resultQuery: resultQuery, expectedDictionary: expectedDictionary)
                 }
                 XCTAssertNotNil(p, "Save Failed: No model returned")
                 XCTAssertEqual(id, 1, "Save Failed: \(String(describing: id)) is not equal to 1)")
@@ -114,7 +114,7 @@ class TestSave: XCTestCase {
         })
     }
 
-    private func verifyColumnsAndValues(resultQuery: String, expectedTuples: [(String, String)]) {
+    private func verifyColumnsAndValues(resultQuery: String, expectedDictionary: [String: String]) {
       //Regex to extract the columns and values of an insert
       //statement, such as:
       //INSERT into table (columns) VALUES (values)
@@ -125,17 +125,17 @@ class TestSave: XCTestCase {
       // Extracting the columns and values from the captured groups
       let columns = groups[0].filter { $0 != " " }.split(separator: ",")
       let values = groups[1].filter { $0 != " " && $0 != "'" }.split(separator: ",")
-      // Creating the result tuples (Column, Value)
-      var resultTuples: [(String, String)] = []
+      // Creating the result dictionary [Column: Value]
+      var resultDictionary: [String: String] = [:]
       for (column, value) in zip(columns, values) {
-        resultTuples.append((String(column), String(value)))
+        resultDictionary[String(column)] = String(value)
       }
 
       // Asserting the results which the expectations
-      XCTAssertEqual(resultTuples.count, expectedTuples.count)
-      for i in 0..<expectedTuples.count {
-        XCTAssertEqual(resultTuples[i].0, expectedTuples[i].0)
-        XCTAssertEqual(resultTuples[i].1, expectedTuples[i].1)
+      XCTAssertEqual(resultDictionary.count, expectedDictionary.count)
+      for key in expectedDictionary.keys {
+        XCTAssertNotNil(resultDictionary[key], "Value for key: \(String(describing: key)) is nil in the result dictionary")
+        XCTAssertEqual(resultDictionary[key], expectedDictionary[key])
       }
     }
 }
