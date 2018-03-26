@@ -4,6 +4,39 @@ import XCTest
 import Foundation
 import KituraContracts
 
+/*
+  Function to extract the captured groups from a Regex match operation:
+  https://samwize.com/2016/07/21/how-to-capture-multiple-groups-in-a-regex-with-swift/
+**/
+extension String {
+    func capturedGroups(withRegex pattern: String) -> [String] {
+        var results = [String]()
+
+        var regex: NSRegularExpression
+        do {
+            regex = try NSRegularExpression(pattern: pattern, options: [])
+        } catch {
+            return results
+        }
+
+        let matches = regex.matches(in: self, options: [], range: NSRange(location:0, length: self.count))
+
+        guard let match = matches.first else { return results }
+
+        let lastRangeIndex = match.numberOfRanges - 1
+        guard lastRangeIndex >= 1 else { return results }
+
+        for i in 1...lastRangeIndex {
+            let capturedGroupIndex = match.range(at: i)
+            let nsString = NSString(string: self)
+            let matchedString = nsString.substring(with: capturedGroupIndex)
+            results.append(matchedString)
+        }
+
+        return results
+    }
+}
+
 class TestSave: XCTestCase {
     static var allTests: [(String, (TestSave) -> () throws -> Void)] {
         return [
@@ -17,7 +50,9 @@ class TestSave: XCTestCase {
         var name: String
         var age: Int
     }
-
+    /**
+      Testing that the correct SQL Query is created to save a Model
+    */
     func testSave() {
         let connection: TestConnection = createConnection()
         Database.default = Database(single: connection)
@@ -25,12 +60,16 @@ class TestSave: XCTestCase {
             let person = Person(name: "Joe", age: 38)
             person.save { p, error in
                 XCTAssertNil(error, "Save Failed: \(String(describing: error))")
-                XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
+                XCTAssertNotNil(connection.query, "Save Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedQuery1 = "INSERT INTO People (name, age) VALUES ('Joe', 38)"
-                  let expectedQuery2 = "INSERT INTO People (age, name) VALUES (38, 'Joe')"
+                  let expectedPrefix = "INSERT INTO People"
+                  let expectedSQLStatement = "VALUES"
+                  let expectedDictionary = ["name": "Joe", "age": "38"]
+
                   let resultQuery = connection.descriptionOf(query: query)
-                  XCTAssert(resultQuery == expectedQuery1 || resultQuery == expectedQuery2)
+                  XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
+                  XCTAssertTrue(resultQuery.contains(expectedSQLStatement))
+                  self.verifyColumnsAndValues(resultQuery: resultQuery, expectedDictionary: expectedDictionary)
                 }
                 XCTAssertNotNil(p, "Save Failed: No model returned")
                 if let p = p {
@@ -42,6 +81,10 @@ class TestSave: XCTestCase {
         })
     }
 
+    /**
+      Testing that the correct SQL Query is created to save a Model
+      Testing that an id is correcly returned
+    */
     func testSaveWithId() {
         let connection: TestConnection = createConnection(.returnOneRow)
         Database.default = Database(single: connection)
@@ -49,12 +92,16 @@ class TestSave: XCTestCase {
             let person = Person(name: "Joe", age: 38)
             person.save { (id: Int?, p: Person?, error: RequestError?) in
                 XCTAssertNil(error, "Save Failed: \(String(describing: error))")
-                XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
+                XCTAssertNotNil(connection.query, "Save Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedQuery1 = "INSERT INTO People (name, age) VALUES ('Joe', 38)"
-                  let expectedQuery2 = "INSERT INTO People (age, name) VALUES (38, 'Joe')"
+                  let expectedPrefix = "INSERT INTO People"
+                  let expectedSQLStatement = "VALUES"
+                  let expectedDictionary = ["name": "Joe", "age": "38"]
+
                   let resultQuery = connection.descriptionOf(query: query)
-                  XCTAssert(resultQuery == expectedQuery1 || resultQuery == expectedQuery2)
+                  XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
+                  XCTAssertTrue(resultQuery.contains(expectedSQLStatement))
+                  self.verifyColumnsAndValues(resultQuery: resultQuery, expectedDictionary: expectedDictionary)
                 }
                 XCTAssertNotNil(p, "Save Failed: No model returned")
                 XCTAssertEqual(id, 1, "Save Failed: \(String(describing: id)) is not equal to 1)")
@@ -65,5 +112,30 @@ class TestSave: XCTestCase {
                 expectation.fulfill()
             }
         })
+    }
+
+    private func verifyColumnsAndValues(resultQuery: String, expectedDictionary: [String: String]) {
+      //Regex to extract the columns and values of an insert
+      //statement, such as:
+      //INSERT into table (columns) VALUES (values)
+      let regexPattern = ".*\\((.*)\\)[^\\(\\)]*\\((.*)\\)"
+      let groups = resultQuery.capturedGroups(withRegex: regexPattern)
+      XCTAssertEqual(groups.count, 2)
+
+      // Extracting the columns and values from the captured groups
+      let columns = groups[0].filter { $0 != " " }.split(separator: ",")
+      let values = groups[1].filter { $0 != " " && $0 != "'" }.split(separator: ",")
+      // Creating the result dictionary [Column: Value]
+      var resultDictionary: [String: String] = [:]
+      for (column, value) in zip(columns, values) {
+        resultDictionary[String(column)] = String(value)
+      }
+
+      // Asserting the results which the expectations
+      XCTAssertEqual(resultDictionary.count, expectedDictionary.count)
+      for key in expectedDictionary.keys {
+        XCTAssertNotNil(resultDictionary[key], "Value for key: \(String(describing: key)) is nil in the result dictionary")
+        XCTAssertEqual(resultDictionary[key], expectedDictionary[key])
+      }
     }
 }

@@ -18,6 +18,10 @@ class TestFind: XCTestCase {
         var age: Int
     }
 
+    /**
+      Testing that the correct SQL Query is created to retrieve a specific model.
+      Testing that the model can be retrieved
+    */
     func testFind() {
         let connection: TestConnection = createConnection(.returnOneRow)
         Database.default = Database(single: connection)
@@ -40,6 +44,10 @@ class TestFind: XCTestCase {
         })
     }
 
+    /**
+      Testing that the correct SQL Query is created to retrieve all the models.
+      Testing that correct amount of models are retrieved
+    */
     func testFindAll() {
         let connection: TestConnection = createConnection(.returnThreeRows)
         Database.default = Database(single: connection)
