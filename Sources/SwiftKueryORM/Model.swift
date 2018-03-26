@@ -24,6 +24,7 @@ public typealias RequestError = KituraContracts.RequestError
 public protocol Model: Codable {
   static var tableName: String {get}
   static var idColumnName: String {get}
+  static var idColumnType: SQLDataType.Type {get}
 
   static func createTableSync(using db: Database?) throws -> Bool
   static func createTable(using db: Database?, _ onCompletion: @escaping (Bool?, RequestError?) -> Void)
@@ -58,6 +59,7 @@ public extension Model {
 
   /// Default implementation of id column name
   static var idColumnName: String { return "id" }
+  static var idColumnType: SQLDataType.Type { return Int64.self }
 
 
   /// Synchronous function creating the table in the database
@@ -774,7 +776,7 @@ public extension Model {
   }
 
   static func getTable() throws -> Table {
-    return try Database.tableInfo.getTable(Self.idColumnName, Self.tableName, for: Self.self)
+    return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType), Self.tableName, for: Self.self)
   }
 
   /// - Parameter using: Optional Database to use
