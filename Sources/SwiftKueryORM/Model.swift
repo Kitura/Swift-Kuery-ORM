@@ -705,7 +705,7 @@ public extension Model {
       return
     }
 
-    guard let idColumn = table.columns.first(where: {$0.name == "id"}) else {
+    guard let idColumn = table.columns.first(where: {$0.name == idColumnName}) else {
       onCompletion(RequestError(.ormNotFound, reason: "Could not find id column"))
       return
     }
