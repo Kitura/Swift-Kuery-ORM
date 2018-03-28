@@ -68,4 +68,5 @@ XCTMain([
     testCase(TestFind.allTests.shuffled()),
     testCase(TestUpdate.allTests.shuffled()),
     testCase(TestDelete.allTests.shuffled()),
+    testCase(TestId.allTests.shuffled()),
     ])

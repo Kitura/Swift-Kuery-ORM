@@ -24,6 +24,7 @@ public typealias RequestError = KituraContracts.RequestError
 public protocol Model: Codable {
   static var tableName: String {get}
   static var idColumnName: String {get}
+  static var idColumnType: SQLDataType.Type {get}
 
   static func createTableSync(using db: Database?) throws -> Bool
   static func createTable(using db: Database?, _ onCompletion: @escaping (Bool?, RequestError?) -> Void)
@@ -58,6 +59,7 @@ public extension Model {
 
   /// Default implementation of id column name
   static var idColumnName: String { return "id" }
+  static var idColumnType: SQLDataType.Type { return Int64.self }
 
 
   /// Synchronous function creating the table in the database
@@ -212,7 +214,7 @@ public extension Model {
       return
     }
 
-    let columns = table.columns.filter({$0.name != Self.idColumnName})
+    let columns = table.columns.filter({$0.autoIncrement != true})
     let valueTuples = columns.filter({values[$0.name] != nil}).map({($0, values[$0.name]!)})
     let query = Insert(into: table, valueTuples: valueTuples)
 
@@ -266,7 +268,7 @@ public extension Model {
       return
     }
 
-    let columns = table.columns.filter({$0.name != Self.idColumnName})
+    let columns = table.columns.filter({$0.autoIncrement != true})
     let valueTuples = columns.filter({values[$0.name] != nil}).map({($0, values[$0.name]!)})
     let query = Insert(into: table, valueTuples: valueTuples, returnID: true)
 
@@ -652,7 +654,7 @@ public extension Model {
       return
     }
 
-    let columns = table.columns.filter({$0.name != Self.idColumnName})
+    let columns = table.columns.filter({$0.autoIncrement != true})
     let valueTuples = columns.filter({values[$0.name] != nil}).map({($0, values[$0.name]!)})
     guard let idColumn = table.columns.first(where: {$0.name == Self.idColumnName}) else {
       onCompletion(nil, RequestError(rawValue: 708, reason: "Could not find id column"))
@@ -703,7 +705,7 @@ public extension Model {
       return
     }
 
-    guard let idColumn = table.columns.first(where: {$0.name == "id"}) else {
+    guard let idColumn = table.columns.first(where: {$0.name == idColumnName}) else {
       onCompletion(RequestError(.ormNotFound, reason: "Could not find id column"))
       return
     }
@@ -774,7 +776,7 @@ public extension Model {
   }
 
   static func getTable() throws -> Table {
-    return try Database.tableInfo.getTable(Self.idColumnName, Self.tableName, for: Self.self)
+    return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType), Self.tableName, for: Self.self)
   }
 
   /// - Parameter using: Optional Database to use

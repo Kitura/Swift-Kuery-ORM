@@ -23,20 +23,21 @@ import Foundation
 public class TableInfo {
   private var codableMap = [String: (info: TypeInfo, table: Table)]()
 
-  func getTable<T: Decodable>(_ idColumnName: String, _ tableName: String, for type: T.Type) throws -> Table {
-    return try getInfo(idColumnName, tableName, type).table
+  func getTable<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, for type: T.Type) throws -> Table {
+    return try getInfo(idColumn, tableName, type).table
   }
 
-  func getInfo<T: Decodable>(_ idColumnName: String, _ tableName: String, _ type: T.Type) throws -> (info: TypeInfo, table: Table) {
+  func getInfo<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, _ type: T.Type) throws -> (info: TypeInfo, table: Table) {
     if codableMap["\(type)"] == nil {
       let typeInfo = try TypeDecoder.decode(type)
-      codableMap["\(type)"] = (info: typeInfo, table: try constructTable(idColumnName, tableName, typeInfo))
+      codableMap["\(type)"] = (info: typeInfo, table: try constructTable(idColumn, tableName, typeInfo))
     }
     return codableMap["\(type)"]!
   }
 
-  func constructTable(_ idColumnName: String, _ tableName: String, _ typeInfo: TypeInfo) throws -> Table {
-    var columns: [Column] = [Column(idColumnName, Int64.self, autoIncrement: true, primaryKey: true)]
+  func constructTable(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, _ typeInfo: TypeInfo) throws -> Table {
+    var columns: [Column] = []
+    var idColumnIsSet = false
     switch typeInfo {
     case .keyed(_, let dict):
       for (key, value) in dict {
@@ -65,7 +66,12 @@ public class TableInfo {
           throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: keyedTypeInfo)) is not supported")
         }
         if let SQLType = valueType as? SQLDataType.Type {
-          columns.append(Column(key, SQLType, notNull: !optionalBool))
+          if key == idColumn.name && !idColumnIsSet {
+            columns.append(Column(key, SQLType, primaryKey: true, notNull: !optionalBool))
+            idColumnIsSet = true
+          } else {
+            columns.append(Column(key, SQLType, notNull: !optionalBool))
+          }
         } else {
           throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: valueType)) of Key: \(String(describing: key)) is not a SQLDataType")
         }
@@ -73,6 +79,9 @@ public class TableInfo {
     default:
       //TODO enhance error message
       throw RequestError(.ormTableCreationError, reason: "Can only save a struct to the database")
+    }
+    if !idColumnIsSet {
+     columns.append(Column(idColumn.name, idColumn.type, autoIncrement: true, primaryKey: true))
     }
     return Table(tableName: tableName, columns: columns)
   }

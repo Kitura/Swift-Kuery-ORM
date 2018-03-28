@@ -7,8 +7,8 @@ import KituraContracts
 class TestFind: XCTestCase {
     static var allTests: [(String, (TestFind) -> () throws -> Void)] {
         return [
-            ("testSave", testFind),
-            ("testSave", testFindAll),
+            ("testFind", testFind),
+            ("testFindAll", testFindAll),
         ]
     }
 
