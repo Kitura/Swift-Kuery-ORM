@@ -81,7 +81,7 @@ public class TableInfo {
       throw RequestError(.ormTableCreationError, reason: "Can only save a struct to the database")
     }
     if !idColumnIsSet {
-     columns.append(Column(idColumn.name, idColumn.type, autoIncrement: true, primaryKey: true))
+      columns.append(Column(idColumn.name, idColumn.type, autoIncrement: true, primaryKey: true))
     }
     return Table(tableName: tableName, columns: columns)
   }

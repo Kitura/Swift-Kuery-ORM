@@ -20,6 +20,7 @@ import Foundation
 import Dispatch
 
 public typealias RequestError = KituraContracts.RequestError
+public typealias SQLDataType = SwiftKuery.SQLDataType
 
 public protocol Model: Codable {
   static var tableName: String {get}
