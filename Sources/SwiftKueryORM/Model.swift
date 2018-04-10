@@ -39,9 +39,9 @@ public protocol Model: Codable {
   static func findAll(using db: Database?, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
   static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
   static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
-  static func findAll<Q: QueryParams>(using db: Database?, filterOn queryParams: Q, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
-  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, filterOn queryParams: Q, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
-  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, filterOn queryParams: Q, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
+  static func findAll<Q: QueryParams>(using db: Database?, matching queryParams: Q, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
 
   func update<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
 
@@ -629,9 +629,9 @@ public extension Model {
 
   /// Find all the models matching the QueryParams
   /// - Parameter using: Optional Database to use
-  /// - Parameter filterOn: Optional QueryParams to use
+  /// - Parameter matching: Optional QueryParams to use
   /// - Returns: An array of model
-  static func findAll<Q: QueryParams>(using db: Database? = nil, filterOn queryParams: Q, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
+  static func findAll<Q: QueryParams>(using db: Database? = nil, matching queryParams: Q, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
     guard let database = db ?? Database.default else {
       onCompletion(nil, .ormDatabaseNotInitialized)
       return
@@ -709,7 +709,7 @@ public extension Model {
   /// Find all the models matching the QueryParams
   /// - Parameter using: Optional Database to use
   /// - Returns: An array of tuples (id, model) 
-  static func findAll<Q: QueryParams, I: Identifier>(using db: Database? = nil, filterOn queryParams: Q, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
     guard let database = db ?? Database.default else {
       onCompletion(nil, .ormDatabaseNotInitialized)
       return
@@ -804,7 +804,7 @@ public extension Model {
   /// Find all the models matching the QueryParams
   /// - Parameter using: Optional Database to use
   /// - Returns: A dictionary [id: model]
-  static func findAll<Q:QueryParams, I: Identifier>(using db: Database? = nil, filterOn queryParams: Q, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
+  static func findAll<Q:QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
     guard let database = db ?? Database.default else {
       onCompletion(nil, .ormDatabaseNotInitialized)
       return
