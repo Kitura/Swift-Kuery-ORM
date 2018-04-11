@@ -20,6 +20,7 @@ import Foundation
 import Dispatch
 
 public typealias RequestError = KituraContracts.RequestError
+public typealias QueryParams = KituraContracts.QueryParams
 
 public protocol Model: Codable {
   static var tableName: String {get}
@@ -34,15 +35,19 @@ public protocol Model: Codable {
   func save(using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
   func save<I: Identifier>(using db: Database?, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void)
 
-  static func find<I: Identifier>(id: I, using db: Database?, onCompletion: @escaping (Self?, RequestError?) -> Void)
+  static func find<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
   static func findAll(using db: Database?, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
   static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
   static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
+  static func findAll<Q: QueryParams>(using db: Database?, matching queryParams: Q, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
 
   func update<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
 
   static func delete(id: Identifier, using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
   static func deleteAll(using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
+  static func deleteAll<Q: QueryParams>(using db: Database?, matching queryParams:Q, _ onCompletion: @escaping (RequestError?) -> Void)
 
   static func getTable() throws -> Table
 }
@@ -317,7 +322,7 @@ public extension Model {
   /// Find a model with an id
   /// - Parameter using: Optional Database to use
   /// - Returns: A tuple (Model, RequestError)
-  static func find<I: Identifier>(id: I, using db: Database? = nil, onCompletion: @escaping (Self?, RequestError?) -> Void) {
+  static func find<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
     guard let database = db ?? Database.default else {
       onCompletion(nil, .ormDatabaseNotInitialized)
       return
@@ -452,7 +457,7 @@ public extension Model {
 
   /// Find all the models
   /// - Parameter using: Optional Database to use
-  /// - Returns: An array of tuples (id, model)
+  /// - Returns: An array of tuples (id, model) 
   static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
     guard let database = db ?? Database.default else {
       onCompletion(nil, .ormDatabaseNotInitialized)
@@ -616,7 +621,274 @@ public extension Model {
             } catch {
               onCompletion(nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
             }
+          }
+          onCompletion(result, nil)
+        }
+      }
+    }
+  }
 
+  /// Find all the models matching the QueryParams
+  /// - Parameter using: Optional Database to use
+  /// - Parameter matching: Optional QueryParams to use
+  /// - Returns: An array of model
+  static func findAll<Q: QueryParams>(using db: Database? = nil, matching queryParams: Q, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
+    guard let database = db ?? Database.default else {
+      onCompletion(nil, .ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(nil, .ormConnectionFailed)
+      return
+    }
+
+    var table: Table
+    do {
+      table = try Self.getTable()
+    } catch {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    var filter: Filter
+    do {
+      filter = try Self.getFilter(queryParams: queryParams, table: table)
+    } catch {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    let query = Select(from: table).where(filter)
+    var dictionariesTitleToValue = [[String: Any?]]()
+
+    connection.connect { error in
+      if let error = error {
+        onCompletion(nil, Self.convertError(error))
+        return
+      } else {
+        connection.execute(query: query) { result in
+          guard result.success else {
+            guard let error = result.asError else {
+              onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
+              return
+            }
+            onCompletion(nil, Self.convertError(error))
+            return
+          }
+
+          if case QueryResult.successNoData = result {
+            onCompletion([], nil)
+            return
+          }
+
+          guard let rows = result.asRows else {
+            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve values from table: \(String(describing: Self.tableName))"))
+            return
+          }
+
+          for row in rows {
+            dictionariesTitleToValue.append(row)
+          }
+
+          var result = [Self]()
+          for dictionary in dictionariesTitleToValue {
+            var decodedModel: Self
+            do {
+              decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
+            } catch {
+              onCompletion(nil, Self.convertError(error))
+              return
+            }
+            result.append(decodedModel)
+          }
+          onCompletion(result, nil)
+        }
+      }
+    }
+  }
+
+  /// Find all the models matching the QueryParams
+  /// - Parameter using: Optional Database to use
+  /// - Returns: An array of tuples (id, model) 
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
+    guard let database = db ?? Database.default else {
+      onCompletion(nil, .ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(nil, .ormConnectionFailed)
+      return
+    }
+
+    var table: Table
+    do {
+      table = try Self.getTable()
+    } catch {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    var filter: Filter
+    do {
+      filter = try Self.getFilter(queryParams: queryParams, table: table)
+    } catch {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    let query = Select(from: table).where(filter)
+    var dictionariesTitleToValue = [[String: Any?]]()
+
+    connection.connect { error in
+      if let error = error {
+        onCompletion(nil, Self.convertError(error))
+        return
+      } else {
+        connection.execute(query: query) { result in
+          guard result.success else {
+            guard let error = result.asError else {
+              onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
+              return
+            }
+            onCompletion(nil, Self.convertError(error))
+            return
+          }
+
+          if case QueryResult.successNoData = result {
+            onCompletion([], nil)
+            return
+          }
+
+          guard let rows = result.asRows else {
+            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve values from table: \(String(describing: Self.tableName))"))
+            return
+          }
+
+          for row in rows {
+            dictionariesTitleToValue.append(row)
+          }
+
+          var result = [(I,Self)]()
+          for dictionary in dictionariesTitleToValue {
+            var decodedModel: Self
+            do {
+              decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
+            } catch {
+              onCompletion(nil, Self.convertError(error))
+              return
+            }
+
+            guard let value = dictionary[idColumnName] else {
+              onCompletion(nil, RequestError(.ormNotFound, reason: "Could not find return id"))
+              return
+            }
+
+            guard let unwrappedValue: Any = value else {
+              onCompletion(nil, RequestError(.ormNotFound, reason: "Return id is nil"))
+              return
+            }
+
+            do {
+              let identifier = try I(value: String(describing: unwrappedValue))
+              result.append((identifier, decodedModel))
+            } catch {
+              onCompletion(nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
+            }
+
+          }
+          onCompletion(result, nil)
+        }
+      }
+    }
+  }
+
+  /// Find all the models matching the QueryParams
+  /// - Parameter using: Optional Database to use
+  /// - Returns: A dictionary [id: model]
+  static func findAll<Q:QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
+    guard let database = db ?? Database.default else {
+      onCompletion(nil, .ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(nil, .ormConnectionFailed)
+      return
+    }
+
+    var table: Table
+    do {
+      table = try Self.getTable()
+    } catch {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    var filter: Filter
+    do {
+      filter = try Self.getFilter(queryParams: queryParams, table: table)
+    } catch {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    let query = Select(from: table).where(filter)
+    var dictionariesTitleToValue = [[String: Any?]]()
+
+    connection.connect { error in
+      if let error = error {
+        onCompletion(nil, Self.convertError(error))
+        return
+      } else {
+        connection.execute(query: query) { result in
+          guard result.success else {
+            guard let error = result.asError else {
+              onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
+              return
+            }
+            onCompletion(nil, Self.convertError(error))
+            return
+          }
+
+          if case QueryResult.successNoData = result {
+            onCompletion([:], nil)
+            return
+          }
+
+          guard let rows = result.asRows else {
+            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve values from table: \(String(describing: Self.tableName))"))
+            return
+          }
+
+          for row in rows {
+            dictionariesTitleToValue.append(row)
+          }
+
+          var result = [I: Self]()
+          for dictionary in dictionariesTitleToValue {
+            var decodedModel: Self
+            do {
+              decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
+            } catch {
+              onCompletion(nil, Self.convertError(error))
+              return
+            }
+
+            guard let value = dictionary[idColumnName] else {
+              onCompletion(nil, RequestError(.ormNotFound, reason: "Could not find return id"))
+              return
+            }
+
+            guard let unwrappedValue: Any = value else {
+              onCompletion(nil, RequestError(.ormNotFound, reason: "Return id is nil"))
+              return
+            }
+
+            do {
+              let identifier = try I(value: String(describing: unwrappedValue))
+              result[identifier] = decodedModel
+            } catch {
+              onCompletion(nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
+            }
           }
           onCompletion(result, nil)
         }
@@ -775,6 +1047,56 @@ public extension Model {
     }
   }
 
+  /// Delete all the models matching the QueryParams
+  /// - Parameter using: Optional Database to use
+  /// - Returns: An optional RequestError
+  static func deleteAll<Q: QueryParams>(using db: Database? = nil, matching queryParams: Q, _ onCompletion: @escaping (RequestError?) -> Void) {
+    guard let database = db ?? Database.default else {
+      onCompletion(.ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(.ormConnectionFailed)
+      return
+    }
+
+    var table: Table
+    do {
+      table = try Self.getTable()
+    } catch {
+      onCompletion(Self.convertError(error))
+      return
+    }
+
+    var filter: Filter
+    do {
+      filter = try Self.getFilter(queryParams: queryParams, table: table)
+    } catch {
+      onCompletion(Self.convertError(error))
+      return
+    }
+
+    let query = Delete(from: table).where(filter)
+
+    connection.connect {error in
+      if let error = error {
+        onCompletion(Self.convertError(error))
+        return
+      } else {
+        connection.execute(query: query) { result in
+          guard result.success else {
+            guard let error = result.asError else {
+              onCompletion(Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
+              return
+            }
+            onCompletion(Self.convertError(error))
+            return
+          }
+          onCompletion(nil)
+        }
+      }
+    }
+  }
   static func getTable() throws -> Table {
     return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType), Self.tableName, for: Self.self)
   }
@@ -931,6 +1253,36 @@ public extension Model {
         }
       }
     }
+  }
+
+  /// This function converts the Query Parameter into a Filter used in SwiftKuery
+  /// Parameters:
+  /// - A generic QueryParams instance
+  /// - A Table instance
+  /// Steps:
+  /// 1 - Convert the values in the QueryParams to a dictionary of String to String
+  /// 2 - Get the columns matching the field names from the QueryParams and convert the values of the dictionary to an array
+  /// 3 - Verify that we have at least one column and one value
+  /// 4 - Zip together the two arrays into an array of tuples (column, value) and iterate through them
+  /// 5 - If there is no Filter, create one such as (column == value)
+  /// 6 - If a filter already exists, append a new filter (column == value) with an AND operator
+  /// 7 - Finally, return the Filter
+
+  private static func getFilter<Q: QueryParams>(queryParams: Q, table: Table) throws -> Filter {
+    var queryDictionary: [String: String] = try QueryEncoder().encode(queryParams)
+
+    var columns = table.columns.filter { queryDictionary[$0.name] != nil }
+    var values = Array(queryDictionary.values)
+
+    if columns.count < 1 && values.count < 1 {
+      throw RequestError(.ormQueryError, reason: "Could not extract values for Query Parameters")
+    }
+
+    var filter: Filter = (columns.removeFirst() == values.removeFirst())
+    for (column, value) in zip(columns, values) {
+      filter = filter && (column == value)
+    }
+    return filter
   }
 
   private static func convertError(_ error: Error) -> RequestError {
