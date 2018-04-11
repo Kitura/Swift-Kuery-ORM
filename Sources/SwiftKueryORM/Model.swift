@@ -1255,6 +1255,19 @@ public extension Model {
     }
   }
 
+  /// This function converts the Query Parameter into a Filter used in SwiftKuery
+  /// Parameters:
+  /// - A generic QueryParams instance
+  /// - A Table instance
+  /// Steps:
+  /// 1 - Convert the values in the QueryParams to a dictionary of String to String
+  /// 2 - Get the columns matching the field names from the QueryParams and convert the values of the dictionary to an array
+  /// 3 - Verify that we have at least one column and one value
+  /// 4 - Zip together the two arrays into an array of tuples (column, value) and iterate through them
+  /// 5 - If there is no Filter, create one such as (column == value)
+  /// 6 - If a filter already exists, append a new filter (column == value) with an AND operator
+  /// 7 - Finally, return the Filter
+
   private static func getFilter<Q: QueryParams>(queryParams: Q, table: Table) throws -> Filter {
     var queryDictionary: [String: String] = try QueryEncoder().encode(queryParams)
 
