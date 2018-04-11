@@ -1271,20 +1271,16 @@ public extension Model {
   private static func getFilter<Q: QueryParams>(queryParams: Q, table: Table) throws -> Filter {
     var queryDictionary: [String: String] = try QueryEncoder().encode(queryParams)
 
-    let columns = table.columns.filter { queryDictionary[$0.name] != nil }
-    let values = Array(queryDictionary.values)
+    var columns = table.columns.filter { queryDictionary[$0.name] != nil }
+    var values = Array(queryDictionary.values)
 
     if columns.count < 1 && values.count < 1 {
       throw RequestError(.ormQueryError, reason: "Could not extract values for Query Parameters")
     }
 
-    var filter: Filter! = nil
+    var filter: Filter = (columns.removeFirst() == values.removeFirst())
     for (column, value) in zip(columns, values) {
-      if filter == nil {
-        filter = (column == value)
-      } else {
-        filter = filter && (column == value)
-      }
+      filter = filter && (column == value)
     }
     return filter
   }
