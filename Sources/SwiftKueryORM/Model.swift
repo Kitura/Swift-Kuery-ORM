@@ -1256,12 +1256,7 @@ public extension Model {
   }
 
   private static func getFilter<Q: QueryParams>(queryParams: Q, table: Table) throws -> Filter {
-    var queryDictionary: [String: String]
-    do {
-      queryDictionary = try QueryEncoder().encode(queryParams)
-    } catch {
-      throw error
-    }
+    var queryDictionary: [String: String] = try QueryEncoder().encode(queryParams)
 
     let columns = table.columns.filter { queryDictionary[$0.name] != nil }
     let values = Array(queryDictionary.values)
