@@ -47,6 +47,7 @@ public protocol Model: Codable {
 
   static func delete(id: Identifier, using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
   static func deleteAll(using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
+  static func deleteAll<Q: QueryParams>(using db: Database?, matching queryParams:Q, _ onCompletion: @escaping (RequestError?) -> Void)
 
   static func getTable() throws -> Table
 }
@@ -1046,6 +1047,56 @@ public extension Model {
     }
   }
 
+  /// Delete all the models matching the QueryParams
+  /// - Parameter using: Optional Database to use
+  /// - Returns: An optional RequestError
+  static func deleteAll<Q: QueryParams>(using db: Database? = nil, matching queryParams: Q, _ onCompletion: @escaping (RequestError?) -> Void) {
+    guard let database = db ?? Database.default else {
+      onCompletion(.ormDatabaseNotInitialized)
+      return
+    }
+    guard let connection = database.getConnection() else {
+      onCompletion(.ormConnectionFailed)
+      return
+    }
+
+    var table: Table
+    do {
+      table = try Self.getTable()
+    } catch {
+      onCompletion(Self.convertError(error))
+      return
+    }
+
+    var filter: Filter
+    do {
+      filter = try Self.getFilter(queryParams: queryParams, table: table)
+    } catch {
+      onCompletion(Self.convertError(error))
+      return
+    }
+
+    let query = Delete(from: table).where(filter)
+
+    connection.connect {error in
+      if let error = error {
+        onCompletion(Self.convertError(error))
+        return
+      } else {
+        connection.execute(query: query) { result in
+          guard result.success else {
+            guard let error = result.asError else {
+              onCompletion(Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
+              return
+            }
+            onCompletion(Self.convertError(error))
+            return
+          }
+          onCompletion(nil)
+        }
+      }
+    }
+  }
   static func getTable() throws -> Table {
     return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType), Self.tableName, for: Self.self)
   }

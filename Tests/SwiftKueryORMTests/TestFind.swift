@@ -9,7 +9,7 @@ class TestFind: XCTestCase {
         return [
             ("testFind", testFind),
             ("testFindAll", testFindAll),
-            ("testFindAllWhere", testFindAllWhere),
+            ("testFindAllMatching", testFindAllMatching),
         ]
     }
 
@@ -79,12 +79,12 @@ class TestFind: XCTestCase {
       Testing that the correct SQL Query is created to retrieve all the models.
       Testing that correct amount of models are retrieved
     */
-    func testFindAllWhere() {
+    func testFindAllMatching() {
         let connection: TestConnection = createConnection(.returnOneRow)
         Database.default = Database(single: connection)
         let filter = Filter(name: "Joe", age: 38)
         performTest(asyncTasks: { expectation in
-            Person.findAll(filterOn: filter) { array, error in
+            Person.findAll(matching: filter) { array, error in
                 XCTAssertNil(error, "Find Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
                 if let query = connection.query {
