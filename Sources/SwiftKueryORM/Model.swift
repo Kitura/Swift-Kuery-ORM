@@ -1261,25 +1261,30 @@ public extension Model {
   /// - A Table instance
   /// Steps:
   /// 1 - Convert the values in the QueryParams to a dictionary of String to String
-  /// 2 - Get the columns matching the field names from the QueryParams and convert the values of the dictionary to an array
-  /// 3 - Verify that we have at least one column and one value
-  /// 4 - Zip together the two arrays into an array of tuples (column, value) and iterate through them
-  /// 5 - If there is no Filter, create one such as (column == value)
-  /// 6 - If a filter already exists, append a new filter (column == value) with an AND operator
+  /// 2 - Construct an array of tuples (Column, Value)
+  /// 3 - Verify that we have at least one tuple
+  /// 4 - Iterate through the tuples
+  /// 5 - Remove the first tuple and create a filter
+  /// 6 - If the array still as tuples, iterate through them and append a new filter (column == value) with an AND operator
   /// 7 - Finally, return the Filter
 
   private static func getFilter<Q: QueryParams>(queryParams: Q, table: Table) throws -> Filter {
     var queryDictionary: [String: String] = try QueryEncoder().encode(queryParams)
 
-    var columns = table.columns.filter { queryDictionary[$0.name] != nil }
-    var values = Array(queryDictionary.values)
+    var columnsToValues: [(column: Column, value: String)] = []
+    for column in table.columns {
+      if let value = queryDictionary[column.name] {
+        columnsToValues.append((column, value))
+      }
+    }
 
-    if columns.count < 1 && values.count < 1 {
+    if columnsToValues.count < 1 {
       throw RequestError(.ormQueryError, reason: "Could not extract values for Query Parameters")
     }
 
-    var filter: Filter = (columns.removeFirst() == values.removeFirst())
-    for (column, value) in zip(columns, values) {
+    var firstTuple = columnsToValues.removeFirst()
+    var filter: Filter = (firstTuple.column == firstTuple.value)
+    for (column, value) in columnsToValues {
       filter = filter && (column == value)
     }
     return filter
