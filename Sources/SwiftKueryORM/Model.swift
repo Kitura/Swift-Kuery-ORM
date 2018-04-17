@@ -1282,7 +1282,7 @@ public extension Model {
       throw RequestError(.ormQueryError, reason: "Could not extract values for Query Parameters")
     }
 
-    var firstTuple = columnsToValues.removeFirst()
+    let firstTuple = columnsToValues.removeFirst()
     var filter: Filter = (firstTuple.column == firstTuple.value)
     for (column, value) in columnsToValues {
       filter = filter && (column == value)
