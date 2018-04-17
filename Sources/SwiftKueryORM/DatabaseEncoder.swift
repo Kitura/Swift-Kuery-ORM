@@ -18,9 +18,11 @@ import Foundation
 import KituraContracts
 import SwiftKuery
 
+/// Class used to construct a dictionary [String: Any] from a Model
 open class DatabaseEncoder {
   private var databaseEncoder = _DatabaseEncoder()
 
+  /// Encode a Encodable type to a dictionary [String: Any]
   open func encode<T: Encodable>(_ value: T) throws -> [String: Any] {
     try value.encode(to: databaseEncoder)
     return databaseEncoder.values

@@ -18,11 +18,12 @@ import KituraContracts
 import SwiftKuery
 import Foundation
 
-/// Class caching all the tables for each model of the application
-/// Gets used once for every model
+/// Class caching the tables for the models of the application
+
 public class TableInfo {
   private var codableMap = [String: (info: TypeInfo, table: Table)]()
 
+  /// Get the table for a model
   func getTable<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, for type: T.Type) throws -> Table {
     return try getInfo(idColumn, tableName, type).table
   }
@@ -35,6 +36,7 @@ public class TableInfo {
     return codableMap["\(type)"]!
   }
 
+  /// Construct the table for a Model
   func constructTable(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, _ typeInfo: TypeInfo) throws -> Table {
     var columns: [Column] = []
     var idColumnIsSet = false
