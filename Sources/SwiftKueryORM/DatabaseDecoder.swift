@@ -18,10 +18,11 @@ import SwiftKuery
 import Foundation
 import KituraContracts
 
-/// Class used to construct a Model from a row in a table in the database
-open class DatabaseDecoder { 
+/// Class used to construct a Model from a row in the database
+open class DatabaseDecoder {
   fileprivate let decoder = _DatabaseDecoder()
 
+  /// Decode from a dictionary [String: Any] to a Decodable type
   open func decode<T : Decodable>(_ type: T.Type, _ values: [String : Any?]) throws -> T {
     decoder.values = values
     return try T(from: decoder)
