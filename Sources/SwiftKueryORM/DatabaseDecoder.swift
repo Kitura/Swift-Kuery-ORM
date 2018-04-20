@@ -182,10 +182,14 @@ open class DatabaseDecoder {
           throw RequestError(.ormCodableDecodingError, reason: "Error decoding value of Data Type for Key: \(String(describing: key)) , value: \(String(describing: value)) is not base64encoded")
         }
         return try castedValue(data, type, key)
-      } else if type is URL.Type  && value != nil {
+      } else if type is URL.Type && value != nil {
         let castValue = try castedValue(value, String.self, key)
         let url = URL(string: castValue)
         return try castedValue(url, type, key)
+      } else if type is UUID.Type && value != nil {
+        let castValue = try castedValue(value, String.self, key)
+        let uuid = UUID(uuidString: castValue)
+        return try castedValue(uuid, type, key)
       } else {
         throw RequestError(.ormDatabaseDecodingError, reason: "Unsupported type: \(String(describing: type)) for value: \(String(describing: value))")
       }

@@ -49,6 +49,8 @@ public class TableInfo {
         }
         var valueType: Any? = nil
         switch keyedTypeInfo {
+        case .single(_ as UUID.Type, _):
+          valueType = UUID.self
         case .single(_, let singleType):
           valueType = singleType
           if valueType is Int.Type {

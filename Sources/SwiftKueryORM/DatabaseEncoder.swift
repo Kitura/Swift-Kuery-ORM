@@ -60,6 +60,8 @@ fileprivate struct _DatabaseKeyedEncodingContainer<K: CodingKey> : KeyedEncoding
       encoder.values[key.stringValue] = dataValue.base64EncodedString()
     } else if let urlValue = value as? URL {
       encoder.values[key.stringValue] = urlValue.absoluteString
+    } else if let uuidValue = value as? UUID {
+      encoder.values[key.stringValue] = uuidValue.uuidString
     } else if value is [Any] {
       throw RequestError(.ormDatabaseEncodingError, reason: "Encoding an array is not currently supported")
     } else if value is [AnyHashable: Any] {
