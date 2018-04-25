@@ -153,12 +153,12 @@ public extension Model {
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
 
-    connection.connect() { error in
+    connection.connect { error in
       if let error = error {
         onCompletion(nil, Self.convertError(error))
         return
@@ -213,7 +213,7 @@ public extension Model {
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -249,17 +249,11 @@ public extension Model {
     }
 
     var table: Table
-    do {
-      table = try Self.getTable()
-    } catch {
-      onCompletion(nil, Self.convertError(error))
-      return
-    }
-
     var values: [String : Any]
     do {
+      table = try Self.getTable()
       values = try DatabaseEncoder().encode(self)
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -299,17 +293,11 @@ public extension Model {
     }
 
     var table: Table
-    do {
-      table = try Self.getTable()
-    } catch {
-      onCompletion(nil, nil, Self.convertError(error))
-      return
-    }
-
     var values: [String : Any]
     do {
+      table = try Self.getTable()
       values = try DatabaseEncoder().encode(self)
-    } catch {
+    } catch let error {
       onCompletion(nil, nil, Self.convertError(error))
       return
     }
@@ -374,10 +362,9 @@ public extension Model {
     }
 
     var table: Table
-
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -415,7 +402,7 @@ public extension Model {
           var decodedModel: Self
           do {
             decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
-          } catch {
+          } catch let error {
             onCompletion(nil, Self.convertError(error))
             return
           }
@@ -440,7 +427,7 @@ public extension Model {
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -482,7 +469,7 @@ public extension Model {
             var decodedModel: Self
             do {
               decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
-            } catch {
+            } catch let error {
               onCompletion(nil, Self.convertError(error))
               return
             }
@@ -510,7 +497,7 @@ public extension Model {
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -552,7 +539,7 @@ public extension Model {
             var decodedModel: Self
             do {
               decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
-            } catch {
+            } catch let error {
               onCompletion(nil, Self.convertError(error))
               return
             }
@@ -595,7 +582,7 @@ public extension Model {
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -637,7 +624,7 @@ public extension Model {
             var decodedModel: Self
             do {
               decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
-            } catch {
+            } catch let error {
               onCompletion(nil, Self.convertError(error))
               return
             }
@@ -680,17 +667,11 @@ public extension Model {
     }
 
     var table: Table
-    do {
-      table = try Self.getTable()
-    } catch {
-      onCompletion(nil, Self.convertError(error))
-      return
-    }
-
     var filter: Filter
     do {
+      table = try Self.getTable()
       filter = try Self.getFilter(queryParams: queryParams, table: table)
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -732,7 +713,7 @@ public extension Model {
             var decodedModel: Self
             do {
               decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
-            } catch {
+            } catch let error {
               onCompletion(nil, Self.convertError(error))
               return
             }
@@ -758,17 +739,11 @@ public extension Model {
     }
 
     var table: Table
-    do {
-      table = try Self.getTable()
-    } catch {
-      onCompletion(nil, Self.convertError(error))
-      return
-    }
-
     var filter: Filter
     do {
+      table = try Self.getTable()
       filter = try Self.getFilter(queryParams: queryParams, table: table)
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -810,7 +785,7 @@ public extension Model {
             var decodedModel: Self
             do {
               decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
-            } catch {
+            } catch let error {
               onCompletion(nil, Self.convertError(error))
               return
             }
@@ -853,17 +828,11 @@ public extension Model {
     }
 
     var table: Table
-    do {
-      table = try Self.getTable()
-    } catch {
-      onCompletion(nil, Self.convertError(error))
-      return
-    }
-
     var filter: Filter
     do {
+      table = try Self.getTable()
       filter = try Self.getFilter(queryParams: queryParams, table: table)
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -905,7 +874,7 @@ public extension Model {
             var decodedModel: Self
             do {
               decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
-            } catch {
+            } catch let error {
               onCompletion(nil, Self.convertError(error))
               return
             }
@@ -944,17 +913,11 @@ public extension Model {
     }
 
     var table: Table
-    do {
-      table = try Self.getTable()
-    } catch {
-      onCompletion(nil, Self.convertError(error))
-      return
-    }
-
     var values: [String: Any]
     do {
+      table = try Self.getTable()
       values = try DatabaseEncoder().encode(self)
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -1001,7 +964,7 @@ public extension Model {
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(Self.convertError(error))
       return
     }
@@ -1046,7 +1009,7 @@ public extension Model {
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(Self.convertError(error))
       return
     }
@@ -1089,7 +1052,7 @@ public extension Model {
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(Self.convertError(error))
       return
     }
@@ -1097,7 +1060,7 @@ public extension Model {
     var filter: Filter
     do {
       filter = try Self.getFilter(queryParams: queryParams, table: table)
-    } catch {
+    } catch let error {
       onCompletion(Self.convertError(error))
       return
     }
@@ -1164,7 +1127,7 @@ public extension Model {
           var decodedModel: Self
           do {
             decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
-          } catch {
+          } catch let error {
             onCompletion(nil, Self.convertError(error))
             return
           }
@@ -1223,7 +1186,7 @@ public extension Model {
             var decodedModel: Self
             do {
               decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
-            } catch {
+            } catch let error {
               onCompletion(nil, Self.convertError(error))
               return
             }
@@ -1252,7 +1215,7 @@ public extension Model {
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(Self.convertError(error))
       return
     }
