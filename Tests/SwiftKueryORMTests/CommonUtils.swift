@@ -29,6 +29,7 @@ class TestConnection: Connection {
     let queryBuilder: QueryBuilder
     let result: Result
     var query: Query? = nil
+    var raw: String? = nil
 
     enum Result {
         case returnEmpty
@@ -55,6 +56,7 @@ class TestConnection: Connection {
     }
 
     func execute(_ raw: String, onCompletion: @escaping ((QueryResult) -> ())) {
+        self.raw = raw
         returnResult(onCompletion)
     }
 
@@ -64,6 +66,7 @@ class TestConnection: Connection {
     }
 
     func execute(_ raw: String, parameters: [Any?], onCompletion: @escaping ((QueryResult) -> ())) {
+        self.raw = raw
         returnResult(onCompletion)
     }
 
@@ -73,6 +76,7 @@ class TestConnection: Connection {
     }
 
     func execute(_ raw: String, parameters: [String:Any?], onCompletion: @escaping ((QueryResult) -> ()))  {
+        self.raw = raw
         returnResult(onCompletion)
     }
 
