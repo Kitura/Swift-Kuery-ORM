@@ -53,6 +53,7 @@ extension UUID: DummyCodingValueProvider {
 
 // Main enum used to describe a decoded type
 // TODO: the associated data could do with labels
+/// :nodoc:
 indirect enum TypeInfo {
     case single(Any.Type, Any.Type)
     case keyed(Any.Type, [String: TypeInfo])
@@ -63,6 +64,7 @@ indirect enum TypeInfo {
     case opaque(Any.Type)
 }
 
+/// :nodoc:
 extension TypeInfo: CustomStringConvertible {
     public var description: String { return describeTypeInfo(self) }
 

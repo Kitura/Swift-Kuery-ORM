@@ -15,13 +15,30 @@
  */
 import SwiftKuery
 
+/// Defines the parameters of the ConnectionPool from SwiftKuery
 public typealias ConnectionPoolOptions = SwiftKuery.ConnectionPoolOptions
+
+/// Class defining the connection to the database.
+///
+/// To setup the database, in this case using [PostgreSQL](https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL):
+/// ```
+/// import SwiftKueryORM
+/// import SwiftKueryPostgreSQL
+/// let pool = PostgreSQLConnection.createPool(host: "localhost", port: 5432,
+///                                            options: [.databaseName("FoodDatabase")],
+///                                            poolOptions: ConnectionPoolOptions(
+///                                                                       initialCapacity: 10,
+///                                                                       maxCapacity: 50,
+///                                                                       timeout: 10000))
+/// Database.default = Database(pool)
+/// ```
+
 public class Database {
 
-    /// Global default Database of the Application
+    /// Global default Database for the application
     public static var `default`: Database?
 
-    /// Instance of TableInfo containing cached Tables
+    /// Instance of TableInfo containing cached tables
     public static var tableInfo = TableInfo()
 
     /// Enum defining the connection strategy: a connection pool or custom
@@ -47,7 +64,7 @@ public class Database {
         self.connectionStrategy = .pool(pool)
     }
 
-    /// Constructor for a custom generator
+    /// Constructor for a custom connection generator
     public init(generator: @escaping () -> Connection?) {
         self.connectionStrategy = .generator(generator)
     }

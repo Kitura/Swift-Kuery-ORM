@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>SwiftKueryORM  Reference</title>
+    <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="css/highlight.css" />
+    <meta charset="utf-8">
+    <script src="js/jquery.min.js" defer></script>
+    <script src="js/jazzy.js" defer></script>
+    
+    <script src="js/lunr.min.js" defer></script>
+    <script src="js/typeahead.jquery.js" defer></script>
+    <script src="js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+
+
+    <a title="SwiftKueryORM  Reference"></a>
+
+    <header class="header">
+      <p class="header-col header-col--primary">
+        <a class="header-link" href="index.html">
+          SwiftKueryORM Docs
+        </a>
+         (97% documented)
+      </p>
+    
+      <p class="header-col--secondary">
+        <form role="search" action="search.json">
+          <input type="text" placeholder="Search documentation" data-typeahead>
+        </form>
+      </p>
+    
+        <p class="header-col header-col--secondary">
+          <a class="header-link" href="https://github.com/IBM-Swift/Swift-Kuery-ORM">
+            <img class="header-icon" src="img/gh.png"/>
+            View on GitHub
+          </a>
+        </p>
+    
+    </header>
+
+    <p class="breadcrumbs">
+      <a class="breadcrumb" href="index.html">SwiftKueryORM Reference</a>
+      <img class="carat" src="img/carat.png" />
+      SwiftKueryORM  Reference
+    </p>
+
+    <div class="content-wrapper">
+      <nav class="navigation">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/Database.html">Database</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/DatabaseDecoder.html">DatabaseDecoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes/DatabaseEncoder.html">DatabaseEncoder</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Classes.html#/s:13SwiftKueryORM9TableInfoC">TableInfo</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Extensions/RequestError.html">RequestError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Protocols/Model.html">Model</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Typealiases.html">Type Aliases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Typealiases.html#/s:13SwiftKueryORM21ConnectionPoolOptionsa">ConnectionPoolOptions</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Typealiases.html#/s:13SwiftKueryORM11QueryParamsa">QueryParams</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+
+        <section class="section">
+          <div class="section-content">
+            
+            <p align="center">
+    <a href="http://kitura.io/">
+        <img src="https://raw.githubusercontent.com/IBM-Swift/Kitura/master/Sources/Kitura/resources/kitura-bird.svg?sanitize=true" height="100" alt="Kitura">
+    </a>
+</p>
+
+<p align="center">
+    <a href="http://www.kitura.io/">
+    <img src="https://img.shields.io/badge/docs-kitura.io-1FBCE4.svg" alt="Docs">
+    </a>
+    <a href="https://travis-ci.org/IBM-Swift/Swift-Kuery-ORM">
+    <img src="https://travis-ci.org/IBM-Swift/Swift-Kuery-ORM.svg?branch=master" alt="Build Status - Master">
+    </a>
+    <img src="https://img.shields.io/badge/os-macOS-green.svg?style=flat" alt="Mac OS X">
+    <img src="https://img.shields.io/badge/os-linux-green.svg?style=flat" alt="Linux">
+    <img src="https://img.shields.io/badge/license-Apache2-blue.svg?style=flat" alt="Apache 2">
+    <a href="http://swift-at-ibm-slack.mybluemix.net/">
+    <img src="http://swift-at-ibm-slack.mybluemix.net/badge.svg" alt="Slack Status">
+    </a>
+</p>
+<h1 id='swift-kuery-orm' class='heading'>Swift-Kuery-ORM</h1>
+<h2 id='summary' class='heading'>Summary</h2>
+
+<p>Swift-Kuery-ORM is an ORM (Object Relational Mapping) library built for Swift. Using it allows you to simplify persistence of model objects with your server.</p>
+
+<p>Swift-Kuery-ORM is built on top of <a href="http://github.com/IBM-Swift/Swift-Kuery">Swift-Kuery</a>, which means that its possible to use Swift-Kuery to customize SQL queries made to the database, if the functionality of the ORM is insufficient.</p>
+<h2 id='the-model-protocol' class='heading'>The Model Protocol</h2>
+
+<p>The key component of Swift-Kuery-ORM is the protocol <code><a href="Protocols/Model.html">Model</a></code>. </p>
+
+<p>Let&rsquo;s propose a struct to use as an example. We can declare an object that looks like so:</p>
+<pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">Grade</span><span class="p">:</span> <span class="kt">Codable</span> <span class="p">{</span>
+  <span class="k">var</span> <span class="nv">course</span><span class="p">:</span> <span class="kt">String</span>
+  <span class="k">var</span> <span class="nv">grade</span><span class="p">:</span> <span class="kt">Int</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>Thanks to <a href="https://developer.ibm.com/swift/2017/10/30/codable-routing/">Codable Routing</a> in Kitura 2.0, we declare our struct to be <code>Codable</code> to simplify our RESTful routes for these objects on our server. The <code><a href="Protocols/Model.html">Model</a></code> protocol extends what <code>Codable</code> does to work with the ORM. In your server application, you would extend your object like so:</p>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Grade</span><span class="p">:</span> <span class="kt">Model</span> <span class="p">{</span> <span class="p">}</span>
+</code></pre>
+
+<p>Now that your <code>Grade</code> struct conforms to <code><a href="Protocols/Model.html">Model</a></code>, after you have set up your database connection pool and created a database table, you automatically have access to a slew of convenience functions for your object.</p>
+
+<p>Need to retrieve all instances of <code>Grade</code>? You can implement:</p>
+<pre class="highlight swift"><code><span class="kt">Grade</span><span class="o">.</span><span class="nf">findAll</span><span class="p">()</span>
+</code></pre>
+
+<p>Need to add a new instance of <code>Grade</code>? Here&rsquo;s how:</p>
+<pre class="highlight swift"><code><span class="n">grade</span><span class="o">.</span><span class="nf">save</span><span class="p">()</span>
+</code></pre>
+
+<p>The <code><a href="Protocols/Model.html">Model</a></code> protocol is the key to using the ORM. Let&rsquo;s walk through how to fully set up an application to make use of the ORM.</p>
+<h2 id='example' class='heading'>Example</h2>
+
+<p>You&rsquo;ll want to go <a href="http://www.kitura.io/en/starter/gettingstarted.html">here</a> to create a server from the CLI to get started. You&rsquo;ll be using the <a href="https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL">PostgreSQL plugin of Swift Kuery</a>, so you will want to make sure that you have PostgreSQL running on your local machine, which you can install with <code>brew install postgresql</code>. The default port for PostgreSQL is 5432.</p>
+<h3 id='update-your-package-swift-file' class='heading'>Update your Package.swift file</h3>
+
+<p>Add Swift-Kuery-ORM and Swift-Kuery-PostgreSQL to your <code>Package.swift</code>:</p>
+<pre class="highlight swift"><code><span class="nv">dependencies</span><span class="p">:</span> <span class="p">[</span>
+    <span class="o">...</span>
+    <span class="c1">// Add these two lines</span>
+    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/IBM-Swift/Swift-Kuery-ORM.git"</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span> <span class="s">"0.0.1"</span><span class="p">),</span>
+    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL.git"</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span> <span class="s">"1.0.0"</span><span class="p">),</span>
+  <span class="p">],</span>
+  <span class="nv">targets</span><span class="p">:</span> <span class="p">[</span>
+    <span class="o">.</span><span class="nf">target</span><span class="p">(</span>
+      <span class="nv">name</span><span class="p">:</span> <span class="o">...</span>
+      <span class="c1">// Add these two modules to your target(s)</span>
+      <span class="nv">dependencies</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="s">"SwiftKueryORM"</span><span class="p">,</span> <span class="s">"SwiftKueryPostgreSQL"</span><span class="p">]),</span>
+  <span class="p">]</span>
+</code></pre>
+
+<p>Let&rsquo;s assume you want to add ORM functionality to a file called <code>Application.swift</code>. You&rsquo;ll need to make the following import statements at the top of the file:</p>
+<pre class="highlight swift"><code><span class="kd">import</span> <span class="kt">SwiftKueryORM</span>
+<span class="kd">import</span> <span class="kt">SwiftKueryPostgreSQL</span>
+</code></pre>
+<h3 id='create-your-database' class='heading'>Create Your Database</h3>
+
+<p>As mentioned before, we recommend you use <a href="https://brew.sh">Homebrew</a> to set up PostgreSQL on your machine. You can install PostgreSQL and set up your table like so:</p>
+<pre class="highlight shell"><code>brew install postgresql
+brew services start postgresql
+createdb school
+</code></pre>
+
+<p>Initialize your database in your <code>Application.swift</code> file:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">pool</span> <span class="o">=</span> <span class="kt">PostgreSQLConnection</span><span class="o">.</span><span class="nf">createPool</span><span class="p">(</span><span class="nv">host</span><span class="p">:</span> <span class="s">"localhost"</span><span class="p">,</span> <span class="nv">port</span><span class="p">:</span> <span class="mi">5432</span><span class="p">,</span> <span class="nv">options</span><span class="p">:</span> <span class="p">[</span><span class="o">.</span><span class="nf">databaseName</span><span class="p">(</span><span class="s">"school"</span><span class="p">)],</span> <span class="nv">poolOptions</span><span class="p">:</span> <span class="kt">ConnectionPoolOptions</span><span class="p">(</span><span class="nv">initialCapacity</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="nv">maxCapacity</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="nv">timeout</span><span class="p">:</span> <span class="mi">10000</span><span class="p">))</span>
+<span class="kt">Database</span><span class="o">.</span><span class="k">default</span> <span class="o">=</span> <span class="kt">Database</span><span class="p">(</span><span class="n">pool</span><span class="p">)</span>
+</code></pre>
+<h3 id='set-up-your-object' class='heading'>Set Up Your Object</h3>
+
+<p>Like before, assume you will work with a struct that looks like so:</p>
+<pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">Grade</span> <span class="p">:</span> <span class="kt">Codable</span> <span class="p">{</span>
+  <span class="k">var</span> <span class="nv">course</span><span class="p">:</span> <span class="kt">String</span>
+  <span class="k">var</span> <span class="nv">grade</span><span class="p">:</span> <span class="kt">Int</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>In your <code>Application.swift</code> file, extend <code>Grade</code> to conform to <code><a href="Protocols/Model.html">Model</a></code></p>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Grade</span> <span class="p">:</span> <span class="kt">Model</span> <span class="p">{</span> 
+    <span class="c1">// here, you can add any server-side specific logic to your object</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>Now, you need to create your table. If you are configuring your database while you start up your server, you can use <code>createTableSync()</code>, which runs synchronously. If you want to use an asynchronous function, you can use <code>createTable()</code> elsewhere. You can implement either of these functions like so:</p>
+<pre class="highlight swift"><code><span class="k">do</span> <span class="p">{</span>
+  <span class="k">try</span> <span class="kt">Grade</span><span class="o">.</span><span class="nf">createTableSync</span><span class="p">()</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="k">let</span> <span class="nv">error</span> <span class="p">{</span>
+  <span class="c1">// Error</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>It&rsquo;s important to point out that if you&rsquo;ve already created your table, this will throw an error here.</p>
+
+<p>Your application is now ready to make use of all the functions available in the <code><a href="Protocols/Model.html">Model</a></code> protocol. If you&rsquo;d like to see a fully working example of the ORM using <a href="https://www.ibm.com/blogs/bluemix/2018/01/kitura-2-0-taking-advantage-of-codable-routes/">Codable Routing</a>, visit our <a href="https://github.com/IBM/foodtrackerbackend">FoodTracker</a> example.</p>
+
+<p>Let&rsquo;s cover all the functionality you have available to you now.</p>
+<h3 id='saving' class='heading'>Saving</h3>
+
+<p>If you&rsquo;d like to save a new object to your database, you have to create the object and use the <code>save()</code> function:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">grade</span> <span class="o">=</span> <span class="kt">Grade</span><span class="p">(</span><span class="nv">course</span><span class="p">:</span> <span class="s">"physics"</span><span class="p">,</span> <span class="nv">grade</span><span class="p">:</span> <span class="mi">80</span><span class="p">)</span>
+<span class="n">grade</span><span class="o">.</span><span class="n">save</span> <span class="p">{</span> <span class="n">grade</span><span class="p">,</span> <span class="n">error</span> <span class="k">in</span>
+  <span class="o">...</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>You also optionally have the ability to pass the ID of the newly saved object into your closure. Add it to the collection of parameters like so:</p>
+<pre class="highlight swift"><code><span class="n">grade</span><span class="o">.</span><span class="n">save</span> <span class="p">{</span> <span class="p">(</span><span class="nv">id</span><span class="p">:</span> <span class="kt">Int</span><span class="p">?,</span> <span class="nv">grade</span><span class="p">:</span> <span class="kt">Grade</span><span class="p">?,</span> <span class="nv">error</span><span class="p">:</span> <span class="kt">RequestError</span><span class="p">?)</span> <span class="k">in</span>
+  <span class="o">...</span>
+<span class="p">}</span>
+</code></pre>
+<h3 id='updating' class='heading'>Updating</h3>
+
+<p>If you have the id for an existing record of your object, and you&rsquo;d like to update the record with an object, you can use the <code>update()</code> function to do so:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">grade</span> <span class="o">=</span> <span class="kt">Grade</span><span class="p">(</span><span class="nv">course</span><span class="p">:</span> <span class="s">"physics"</span><span class="p">,</span> <span class="nv">grade</span><span class="p">:</span> <span class="mi">80</span><span class="p">)</span>
+<span class="n">grade</span><span class="o">.</span><span class="n">course</span> <span class="o">=</span> <span class="s">"maths"</span>
+
+<span class="n">grade</span><span class="o">.</span><span class="nf">update</span><span class="p">(</span><span class="nv">id</span><span class="p">:</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span> <span class="n">grade</span><span class="p">,</span> <span class="n">error</span> <span class="k">in</span>
+  <span class="o">...</span>
+<span class="p">}</span>
+</code></pre>
+<h3 id='retrieving' class='heading'>Retrieving</h3>
+
+<p>If you&rsquo;d like to find a specific object, and you have its id, you can use the <code>find()</code> function to retrieve it:</p>
+<pre class="highlight swift"><code><span class="kt">Grade</span><span class="o">.</span><span class="nf">find</span><span class="p">(</span><span class="nv">id</span><span class="p">:</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span> <span class="k">in</span>
+  <span class="o">...</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>If you&rsquo;d like to retrieve all instances of a particular object, you can make use of <code>findAll()</code> as a static function on the type you are trying to retrieve:</p>
+<pre class="highlight swift"><code><span class="kt">Grade</span><span class="o">.</span><span class="n">findAll</span> <span class="p">{</span> <span class="p">(</span><span class="nv">result</span><span class="p">:</span> <span class="p">[</span><span class="kt">Grade</span><span class="p">]?,</span> <span class="nv">error</span><span class="p">:</span> <span class="kt">RequestError</span><span class="p">?)</span> <span class="k">in</span>
+  <span class="o">...</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>You also have the ability to form your results in different ways and formats, like so:</p>
+<pre class="highlight swift"><code><span class="kt">Grade</span><span class="o">.</span><span class="n">findAll</span> <span class="p">{</span> <span class="p">(</span><span class="nv">result</span><span class="p">:</span> <span class="p">[(</span><span class="kt">Int</span><span class="p">,</span> <span class="kt">Grade</span><span class="p">)]?,</span> <span class="nv">error</span><span class="p">:</span> <span class="kt">RequestError</span><span class="p">?)</span> <span class="k">in</span>
+  <span class="o">...</span>
+<span class="p">}</span>
+
+<span class="kt">Grade</span><span class="o">.</span><span class="n">findAll</span> <span class="p">{</span> <span class="p">(</span><span class="nv">result</span><span class="p">:</span> <span class="p">[</span><span class="kt">Int</span><span class="p">:</span> <span class="kt">Grade</span><span class="p">]?,</span> <span class="nv">error</span><span class="p">:</span> <span class="kt">RequestError</span><span class="p">?)</span> <span class="k">in</span>
+  <span class="o">...</span>
+<span class="p">}</span>
+</code></pre>
+<h3 id='deleting' class='heading'>Deleting</h3>
+
+<p>If you&rsquo;d like to delete an object, and you have its id, you can use the <code>delete()</code> function like so:</p>
+<pre class="highlight swift"><code><span class="kt">Grade</span><span class="o">.</span><span class="nf">delete</span><span class="p">(</span><span class="nv">id</span><span class="p">:</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span> <span class="n">error</span> <span class="k">in</span>
+  <span class="o">...</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>If you&rsquo;re feeling bold, and you&rsquo;d like to remove all instances of an object from your database, you can use the static function <code>deleteAll()</code> with your type:</p>
+<pre class="highlight swift"><code><span class="kt">Grade</span><span class="o">.</span><span class="n">deleteAll</span> <span class="p">{</span> <span class="n">error</span> <span class="k">in</span>
+  <span class="o">...</span>
+<span class="p">}</span>
+</code></pre>
+<h3 id='customization' class='heading'>Customization</h3>
+
+<p>The ORM uses <a href="https://github.com/IBM-Swift/Swift-Kuery">Swift-Kuery</a> which allows you to customize and execute your own queries without breaking any existing ORM functionality. You&rsquo;ll want to have access to the table for your object, which you can get with the <code>getTable()</code> function:</p>
+<pre class="highlight swift"><code><span class="k">do</span> <span class="p">{</span>
+  <span class="k">let</span> <span class="nv">table</span> <span class="o">=</span> <span class="kt">Grade</span><span class="o">.</span><span class="nf">getTable</span><span class="p">()</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">{</span>
+  <span class="c1">// Error</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>After you retrieve your table, you can create a <code>Query</code> object to specify what you want to execute on your database, and perform it like so:</p>
+<pre class="highlight swift"><code><span class="nf">executeQuery</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="kt">Query</span><span class="p">)</span> <span class="p">{</span> <span class="p">(</span><span class="nv">grade</span><span class="p">:</span> <span class="kt">Grade</span><span class="p">?,</span> <span class="nv">error</span><span class="p">:</span> <span class="kt">RequestError</span><span class="p">?)</span> <span class="k">in</span>
+  <span class="o">...</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>You can customize the parameters passed into your closure after you execute a <code>Query</code> like so:</p>
+<pre class="highlight swift"><code><span class="nf">executeQuery</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="kt">Query</span><span class="p">)</span> <span class="p">{</span> <span class="n">grade</span><span class="p">,</span> <span class="n">error</span> <span class="k">in</span>
+  <span class="o">...</span>
+<span class="p">}</span>
+
+<span class="nf">executeQuery</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="kt">Query</span><span class="p">)</span> <span class="p">{</span> <span class="n">error</span> <span class="k">in</span>
+  <span class="o">...</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>If you&rsquo;d like to learn more about how you can customize queries, check out the <a href="https://github.com/IBM-Swift/Swift-Kuery">Swift-Kuery</a> repository for more information.</p>
+<h2 id='list-of-plugins' class='heading'>List of plugins:</h2>
+
+<ul>
+<li><p><a href="https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL">PostgreSQL</a></p></li>
+<li><p><a href="https://github.com/IBM-Swift/Swift-Kuery-SQLite">SQLite</a></p></li>
+<li><p><a href="https://github.com/IBM-Swift/SwiftKueryMySQL">MySQL</a></p></li>
+</ul>
+<h2 id='license' class='heading'>License</h2>
+
+<p>This library is licensed under Apache 2.0. Full license text is available in <a href="LICENSE.txt">LICENSE</a>.</p>
+
+          </div>
+        </section>
+
+
+      </article>
+    </div>
+    <section class="footer">
+      <p>&copy; 2018 <a class="link" href="" target="_blank" rel="external">IBM</a>. All rights reserved. (Last updated: 2018-04-17)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.1</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+    </section>
+  </body>
+</div>
+</html>

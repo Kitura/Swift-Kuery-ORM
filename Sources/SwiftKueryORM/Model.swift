@@ -19,37 +19,94 @@ import KituraContracts
 import Foundation
 import Dispatch
 
+/// Type Alias for RequestError from [KituraContracts](https://github.com/IBM-Swift/KituraContracts)
 public typealias RequestError = KituraContracts.RequestError
+
+/// Type Alias for QueryParams from [KituraContracts](https://github.com/IBM-Swift/KituraContracts)
+public typealias QueryParams = KituraContracts.QueryParams
+
+/// Type Alias for SQLDataType from [SwiftKuery](https://github.com/IBM-Swift/Swift-Kuery)
 public typealias SQLDataType = SwiftKuery.SQLDataType
 
+/// Protocol Model conforming to Codable defining the available operations
 public protocol Model: Codable {
+  /// Defines the tableName in the Database
   static var tableName: String {get}
+  /// Defines the id column name in the Database
   static var idColumnName: String {get}
+  /// Defines the id column type in the Database
   static var idColumnType: SQLDataType.Type {get}
 
+  /// Call to create the table in the database synchronously
   static func createTableSync(using db: Database?) throws -> Bool
+
+  /// Call to create the table in the database asynchronously
   static func createTable(using db: Database?, _ onCompletion: @escaping (Bool?, RequestError?) -> Void)
+
+  /// Call to drop the table in the database synchronously
   static func dropTableSync(using db: Database?) throws -> Bool
+
+  /// Call to drop the table in the database asynchronously
   static func dropTable(using db: Database?, _ onCompletion: @escaping (Bool?, RequestError?) -> Void)
 
+  /// Call to save a model to the database that accepts a completion
+  /// handler. The callback is passed a model or an error
   func save(using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
+
+  /// Call to save a model to the database that accepts a completion
+  /// handler. The callback is passed an id, a model or an error
   func save<I: Identifier>(using db: Database?, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void)
 
-  static func find<I: Identifier>(id: I, using db: Database?, onCompletion: @escaping (Self?, RequestError?) -> Void)
+  /// Call to find a model in the database with an id that accepts a completion
+  /// handler. The callback is passed the model or an error
+  static func find<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
+
+  /// Call to find all the models in the database that accepts a completion
+  /// handler. The callback is passed an array of models or an error
   static func findAll(using db: Database?, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
+
+  /// Call to find all the models in the database that accepts a completion
+  /// handler. The callback is passed an array of tuples (id, model) or an error
   static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
+
+  /// Call to find all the models in the database that accepts a completion
+  /// handler. The callback is passed a dictionary [id: model] or an error
   static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
 
+  /// Call to find all the models in the database matching the QueryParams that accepts a completion
+  /// handler. The callback is passed an array of models or an error
+  static func findAll<Q: QueryParams>(using db: Database?, matching queryParams: Q, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
+
+  /// Call to find all the models in the database matching the QueryParams that accepts a completion
+  /// handler. The callback is passed an array of tuples (id, model) or an error
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
+
+  /// Call to find all the models in the database matching the QueryParams that accepts a completion
+  /// handler. The callback is passed a dictionary [id: model] or an error
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
+
+  /// Call to update a model in the database with an id that accepts a completion
+  /// handler. The callback is passed a updated model or an error
   func update<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
 
+  /// Call to delete a model in the database with an id that accepts a completion
+  /// handler. The callback is passed an optional error
   static func delete(id: Identifier, using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
+
+  /// Call to delete all the models in the database that accepts a completion
+  /// handler. The callback is passed an optional error
   static func deleteAll(using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
 
+  /// Call to delete all the models in the database mathcing the QueryParams that accepts a completion
+  /// handler. The callback is passed an optional error
+  static func deleteAll<Q: QueryParams>(using db: Database?, matching queryParams:Q, _ onCompletion: @escaping (RequestError?) -> Void)
+
+  /// Call to get the table of the model
   static func getTable() throws -> Table
 }
 
 public extension Model {
-  /// Default implementation of the table name
+  /// Defaults to the name of the model + "s"
   static var tableName: String {
     let structName = String(describing: self)
     if structName.last == "s" {
@@ -58,12 +115,11 @@ public extension Model {
     return structName + "s"
   }
 
-  /// Default implementation of id column name
+  /// Defaults to "id"
   static var idColumnName: String { return "id" }
+  /// Defaults to Int64
   static var idColumnType: SQLDataType.Type { return Int64.self }
 
-
-  /// Synchronous function creating the table in the database
   @discardableResult
   static func createTableSync(using db: Database? = nil) throws -> Bool {
     var result: Bool?
@@ -86,26 +142,24 @@ public extension Model {
     return resultUnwrapped
   }
 
-  /// Asynchronous function creating the table in the database
   static func createTable(using db: Database? = nil, _ onCompletion: @escaping (Bool?, RequestError?) -> Void) {
-    guard let database = db ?? Database.default else {
-      onCompletion(nil, .ormDatabaseNotInitialized)
-      return
-    }
-    guard let connection = database.getConnection() else {
-      onCompletion(nil, .ormConnectionFailed)
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
       return
     }
 
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
 
-    connection.connect() { error in
+    connection.connect { error in
       if let error = error {
         onCompletion(nil, Self.convertError(error))
         return
@@ -125,8 +179,6 @@ public extension Model {
     }
   }
 
-
-  /// Synchronous function droping the table from the database
   @discardableResult
   static func dropTableSync(using db: Database? = nil) throws -> Bool {
     var result: Bool?
@@ -149,21 +201,19 @@ public extension Model {
     return resultUnwrapped
   }
 
-  /// Asynchronous function droping the table from the database
   static func dropTable(using db : Database? = nil, _ onCompletion: @escaping (Bool?, RequestError?) -> Void) {
-    guard let database = db ?? Database.default else {
-      onCompletion(nil, .ormDatabaseNotInitialized)
-      return
-    }
-    guard let connection = database.getConnection() else {
-      onCompletion(nil, .ormConnectionFailed)
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
       return
     }
 
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -188,29 +238,21 @@ public extension Model {
     }
   }
 
-  /// Save a instance of model to the database : `model.save()`
   func save(using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
-    guard let database = db ?? Database.default else {
-      onCompletion(nil, .ormDatabaseNotInitialized)
-      return
-    }
-    guard let connection = database.getConnection() else {
-      onCompletion(nil, .ormConnectionFailed)
-      return
-    }
-
-    var table: Table
+    var connection: Connection
     do {
-      table = try Self.getTable()
-    } catch {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
 
+    var table: Table
     var values: [String : Any]
     do {
+      table = try Self.getTable()
       values = try DatabaseEncoder().encode(self)
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -239,32 +281,21 @@ public extension Model {
     }
   }
 
-  /// Save a instance of model to the database : `model.save()` and 
-  /// get back the auto incrementing id value
-  /// - Parameter using: Optional Database to use
-  /// - Returns: A tuple (Identifier, Model, RequestError)
   func save<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
-    guard let database = db ?? Database.default else {
-      onCompletion(nil, nil, .ormDatabaseNotInitialized)
-      return
-    }
-    guard let connection = database.getConnection() else {
-      onCompletion(nil, nil, .ormConnectionFailed)
-      return
-    }
-
-    var table: Table
+    var connection: Connection
     do {
-      table = try Self.getTable()
-    } catch {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
       onCompletion(nil, nil, Self.convertError(error))
       return
     }
 
+    var table: Table
     var values: [String : Any]
     do {
+      table = try Self.getTable()
       values = try DatabaseEncoder().encode(self)
-    } catch {
+    } catch let error {
       onCompletion(nil, nil, Self.convertError(error))
       return
     }
@@ -318,21 +349,19 @@ public extension Model {
   /// Find a model with an id
   /// - Parameter using: Optional Database to use
   /// - Returns: A tuple (Model, RequestError)
-  static func find<I: Identifier>(id: I, using db: Database? = nil, onCompletion: @escaping (Self?, RequestError?) -> Void) {
-    guard let database = db ?? Database.default else {
-      onCompletion(nil, .ormDatabaseNotInitialized)
-      return
-    }
-    guard let connection = database.getConnection() else {
-      onCompletion(nil, .ormConnectionFailed)
+  static func find<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
       return
     }
 
     var table: Table
-
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -370,7 +399,7 @@ public extension Model {
           var decodedModel: Self
           do {
             decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
-          } catch {
+          } catch let error {
             onCompletion(nil, Self.convertError(error))
             return
           }
@@ -381,23 +410,20 @@ public extension Model {
     }
   }
 
-  /// Find all the models
-  /// - Parameter using: Optional Database to use
-  /// - Returns: An array of model
+  ///
   static func findAll(using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
-    guard let database = db ?? Database.default else {
-      onCompletion(nil, .ormDatabaseNotInitialized)
-      return
-    }
-    guard let connection = database.getConnection() else {
-      onCompletion(nil, .ormConnectionFailed)
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
       return
     }
 
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -439,7 +465,7 @@ public extension Model {
             var decodedModel: Self
             do {
               decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
-            } catch {
+            } catch let error {
               onCompletion(nil, Self.convertError(error))
               return
             }
@@ -455,19 +481,18 @@ public extension Model {
   /// - Parameter using: Optional Database to use
   /// - Returns: An array of tuples (id, model)
   static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
-    guard let database = db ?? Database.default else {
-      onCompletion(nil, .ormDatabaseNotInitialized)
-      return
-    }
-    guard let connection = database.getConnection() else {
-      onCompletion(nil, .ormConnectionFailed)
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
       return
     }
 
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -509,7 +534,7 @@ public extension Model {
             var decodedModel: Self
             do {
               decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
-            } catch {
+            } catch let error {
               onCompletion(nil, Self.convertError(error))
               return
             }
@@ -538,23 +563,20 @@ public extension Model {
     }
   }
 
-  /// Find all the models
-  /// - Parameter using: Optional Database to use
-  /// - Returns: A dictionary [id: model]
+  /// :nodoc:
   static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
-    guard let database = db ?? Database.default else {
-      onCompletion(nil, .ormDatabaseNotInitialized)
-      return
-    }
-    guard let connection = database.getConnection() else {
-      onCompletion(nil, .ormConnectionFailed)
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
       return
     }
 
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -596,7 +618,7 @@ public extension Model {
             var decodedModel: Self
             do {
               decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
-            } catch {
+            } catch let error {
               onCompletion(nil, Self.convertError(error))
               return
             }
@@ -617,6 +639,165 @@ public extension Model {
             } catch {
               onCompletion(nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
             }
+          }
+          onCompletion(result, nil)
+        }
+      }
+    }
+  }
+
+  /// Find all the models matching the QueryParams
+  /// - Parameter using: Optional Database to use
+  /// - Parameter matching: Optional QueryParams to use
+  /// - Returns: An array of model
+  static func findAll<Q: QueryParams>(using db: Database? = nil, matching queryParams: Q, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    var table: Table
+    var filter: Filter
+    do {
+      table = try Self.getTable()
+      filter = try Self.getFilter(queryParams: queryParams, table: table)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    let query = Select(from: table).where(filter)
+    var dictionariesTitleToValue = [[String: Any?]]()
+
+    connection.connect { error in
+      if let error = error {
+        onCompletion(nil, Self.convertError(error))
+        return
+      } else {
+        connection.execute(query: query) { result in
+          guard result.success else {
+            guard let error = result.asError else {
+              onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
+              return
+            }
+            onCompletion(nil, Self.convertError(error))
+            return
+          }
+
+          if case QueryResult.successNoData = result {
+            onCompletion([], nil)
+            return
+          }
+
+          guard let rows = result.asRows else {
+            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve values from table: \(String(describing: Self.tableName))"))
+            return
+          }
+
+          for row in rows {
+            dictionariesTitleToValue.append(row)
+          }
+
+          var result = [Self]()
+          for dictionary in dictionariesTitleToValue {
+            var decodedModel: Self
+            do {
+              decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
+            } catch let error {
+              onCompletion(nil, Self.convertError(error))
+              return
+            }
+            result.append(decodedModel)
+          }
+          onCompletion(result, nil)
+        }
+      }
+    }
+  }
+
+  /// Find all the models matching the QueryParams
+  /// - Parameter using: Optional Database to use
+  /// - Returns: An array of tuples (id, model) 
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    var table: Table
+    var filter: Filter
+    do {
+      table = try Self.getTable()
+      filter = try Self.getFilter(queryParams: queryParams, table: table)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    let query = Select(from: table).where(filter)
+    var dictionariesTitleToValue = [[String: Any?]]()
+
+    connection.connect { error in
+      if let error = error {
+        onCompletion(nil, Self.convertError(error))
+        return
+      } else {
+        connection.execute(query: query) { result in
+          guard result.success else {
+            guard let error = result.asError else {
+              onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
+              return
+            }
+            onCompletion(nil, Self.convertError(error))
+            return
+          }
+
+          if case QueryResult.successNoData = result {
+            onCompletion([], nil)
+            return
+          }
+
+          guard let rows = result.asRows else {
+            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve values from table: \(String(describing: Self.tableName))"))
+            return
+          }
+
+          for row in rows {
+            dictionariesTitleToValue.append(row)
+          }
+
+          var result = [(I,Self)]()
+          for dictionary in dictionariesTitleToValue {
+            var decodedModel: Self
+            do {
+              decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
+            } catch let error {
+              onCompletion(nil, Self.convertError(error))
+              return
+            }
+
+            guard let value = dictionary[idColumnName] else {
+              onCompletion(nil, RequestError(.ormNotFound, reason: "Could not find return id"))
+              return
+            }
+
+            guard let unwrappedValue: Any = value else {
+              onCompletion(nil, RequestError(.ormNotFound, reason: "Return id is nil"))
+              return
+            }
+
+            do {
+              let identifier = try I(value: String(describing: unwrappedValue))
+              result.append((identifier, decodedModel))
+            } catch {
+              onCompletion(nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
+            }
 
           }
           onCompletion(result, nil)
@@ -625,32 +806,108 @@ public extension Model {
     }
   }
 
-  /// Update a model
-  /// - Parameter id: Identifier of the model to update
+  /// Find all the models matching the QueryParams
   /// - Parameter using: Optional Database to use
-  /// - Returns: A tuple (model, error)
-  func update<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
-    guard let database = db ?? Database.default else {
-      onCompletion(nil, .ormDatabaseNotInitialized)
-      return
-    }
-    guard let connection = database.getConnection() else {
-      onCompletion(nil, .ormConnectionFailed)
-      return
-    }
-
-    var table: Table
+  /// - Returns: A dictionary [id: model]
+  static func findAll<Q:QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
+    var connection: Connection
     do {
-      table = try Self.getTable()
-    } catch {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
 
+    var table: Table
+    var filter: Filter
+    do {
+      table = try Self.getTable()
+      filter = try Self.getFilter(queryParams: queryParams, table: table)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    let query = Select(from: table).where(filter)
+    var dictionariesTitleToValue = [[String: Any?]]()
+
+    connection.connect { error in
+      if let error = error {
+        onCompletion(nil, Self.convertError(error))
+        return
+      } else {
+        connection.execute(query: query) { result in
+          guard result.success else {
+            guard let error = result.asError else {
+              onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
+              return
+            }
+            onCompletion(nil, Self.convertError(error))
+            return
+          }
+
+          if case QueryResult.successNoData = result {
+            onCompletion([:], nil)
+            return
+          }
+
+          guard let rows = result.asRows else {
+            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve values from table: \(String(describing: Self.tableName))"))
+            return
+          }
+
+          for row in rows {
+            dictionariesTitleToValue.append(row)
+          }
+
+          var result = [I: Self]()
+          for dictionary in dictionariesTitleToValue {
+            var decodedModel: Self
+            do {
+              decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
+            } catch let error {
+              onCompletion(nil, Self.convertError(error))
+              return
+            }
+
+            guard let value = dictionary[idColumnName] else {
+              onCompletion(nil, RequestError(.ormNotFound, reason: "Could not find return id"))
+              return
+            }
+
+            guard let unwrappedValue: Any = value else {
+              onCompletion(nil, RequestError(.ormNotFound, reason: "Return id is nil"))
+              return
+            }
+
+            do {
+              let identifier = try I(value: String(describing: unwrappedValue))
+              result[identifier] = decodedModel
+            } catch {
+              onCompletion(nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
+            }
+          }
+          onCompletion(result, nil)
+        }
+      }
+    }
+  }
+
+  func update<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    var table: Table
     var values: [String: Any]
     do {
+      table = try Self.getTable()
       values = try DatabaseEncoder().encode(self)
-    } catch {
+    } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
@@ -684,24 +941,19 @@ public extension Model {
     }
   }
 
-  /// Delete a model
-  /// - Parameter id: Identifier of the model to delete
-  /// - Parameter using: Optional Database to use
-  /// - Returns: An optional RequestError
   static func delete(id: Identifier, using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void) {
-    guard let database = db ?? Database.default else {
-      onCompletion(.ormDatabaseNotInitialized)
-      return
-    }
-    guard let connection = database.getConnection() else {
-      onCompletion(.ormConnectionFailed)
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(Self.convertError(error))
       return
     }
 
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(Self.convertError(error))
       return
     }
@@ -733,23 +985,19 @@ public extension Model {
     }
   }
 
-  /// Delete all the models
-  /// - Parameter using: Optional Database to use
-  /// - Returns: An optional RequestError
   static func deleteAll(using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void) {
-    guard let database = db ?? Database.default else {
-      onCompletion(.ormDatabaseNotInitialized)
-      return
-    }
-    guard let connection = database.getConnection() else {
-      onCompletion(.ormConnectionFailed)
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(Self.convertError(error))
       return
     }
 
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(Self.convertError(error))
       return
     }
@@ -776,19 +1024,65 @@ public extension Model {
     }
   }
 
+  /// Delete all the models matching the QueryParams
+  /// - Parameter using: Optional Database to use
+  /// - Returns: An optional RequestError
+  static func deleteAll<Q: QueryParams>(using db: Database? = nil, matching queryParams: Q, _ onCompletion: @escaping (RequestError?) -> Void) {
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(Self.convertError(error))
+      return
+    }
+
+    var table: Table
+    do {
+      table = try Self.getTable()
+    } catch let error {
+      onCompletion(Self.convertError(error))
+      return
+    }
+
+    var filter: Filter
+    do {
+      filter = try Self.getFilter(queryParams: queryParams, table: table)
+    } catch let error {
+      onCompletion(Self.convertError(error))
+      return
+    }
+
+    let query = Delete(from: table).where(filter)
+
+    connection.connect {error in
+      if let error = error {
+        onCompletion(Self.convertError(error))
+        return
+      } else {
+        connection.execute(query: query) { result in
+          guard result.success else {
+            guard let error = result.asError else {
+              onCompletion(Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
+              return
+            }
+            onCompletion(Self.convertError(error))
+            return
+          }
+          onCompletion(nil)
+        }
+      }
+    }
+  }
   static func getTable() throws -> Table {
     return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType), Self.tableName, for: Self.self)
   }
 
-  /// - Parameter using: Optional Database to use
-  /// - Returns: A tuple (Model, RequestError)
-  static func executeQuery(query: Query, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
-    guard let database = db ?? Database.default else {
-      onCompletion(nil, .ormDatabaseNotInitialized)
-      return
-    }
-    guard let connection = database.getConnection() else {
-      onCompletion(nil, .ormConnectionFailed)
+  internal static func executeQuery(query: Query, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
       return
     }
 
@@ -819,7 +1113,7 @@ public extension Model {
           var decodedModel: Self
           do {
             decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
-          } catch {
+          } catch let error {
             onCompletion(nil, Self.convertError(error))
             return
           }
@@ -832,13 +1126,12 @@ public extension Model {
 
   /// - Parameter using: Optional Database to use
   /// - Returns: A tuple ([Model], RequestError)
-  static func executeQuery(query: Query, using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?)-> Void ) {
-    guard let database = db ?? Database.default else {
-      onCompletion(nil, .ormDatabaseNotInitialized)
-      return
-    }
-    guard let connection = database.getConnection() else {
-      onCompletion(nil, .ormConnectionFailed)
+  internal static func executeQuery(query: Query, using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?)-> Void ) {
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
       return
     }
 
@@ -878,7 +1171,7 @@ public extension Model {
             var decodedModel: Self
             do {
               decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
-            } catch {
+            } catch let error {
               onCompletion(nil, Self.convertError(error))
               return
             }
@@ -894,20 +1187,19 @@ public extension Model {
 
   /// - Parameter using: Optional Database to use
   /// - Returns: An optional RequestError
-  static func executeQuery(using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void ) {
-    guard let database = db ?? Database.default else {
-      onCompletion(.ormDatabaseNotInitialized)
-      return
-    }
-    guard let connection = database.getConnection() else {
-      onCompletion(.ormConnectionFailed)
+  internal static func executeQuery(using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void ) {
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(Self.convertError(error))
       return
     }
 
     var table: Table
     do {
       table = try Self.getTable()
-    } catch {
+    } catch let error {
       onCompletion(Self.convertError(error))
       return
     }
@@ -934,6 +1226,41 @@ public extension Model {
     }
   }
 
+  /// This function converts the Query Parameter into a Filter used in SwiftKuery
+  /// Parameters:
+  /// - A generic QueryParams instance
+  /// - A Table instance
+  /// Steps:
+  /// 1 - Convert the values in the QueryParams to a dictionary of String to String
+  /// 2 - Construct an array of tuples (Column, Value)
+  /// 3 - Verify that we have at least one tuple
+  /// 4 - Iterate through the tuples
+  /// 5 - Remove the first tuple and create a filter
+  /// 6 - If the array still as tuples, iterate through them and append a new filter (column == value) with an AND operator
+  /// 7 - Finally, return the Filter
+
+  private static func getFilter<Q: QueryParams>(queryParams: Q, table: Table) throws -> Filter {
+    var queryDictionary: [String: String] = try QueryEncoder().encode(queryParams)
+
+    var columnsToValues: [(column: Column, value: String)] = []
+    for column in table.columns {
+      if let value = queryDictionary[column.name] {
+        columnsToValues.append((column, value))
+      }
+    }
+
+    if columnsToValues.count < 1 {
+      throw RequestError(.ormQueryError, reason: "Could not extract values for Query Parameters")
+    }
+
+    let firstTuple = columnsToValues.removeFirst()
+    var filter: Filter = (firstTuple.column == firstTuple.value)
+    for (column, value) in columnsToValues {
+      filter = filter && (column == value)
+    }
+    return filter
+  }
+
   private static func convertError(_ error: Error) -> RequestError {
     switch error {
     case let requestError as RequestError:
@@ -948,22 +1275,47 @@ public extension Model {
       return RequestError(.ormDatabaseDecodingError, reason: String(describing: error))
     }
   }
+
+  private static func getConnection(using db: Database? = nil) throws -> Connection {
+    guard let database = db ?? Database.default else {
+      throw RequestError.ormDatabaseNotInitialized
+    }
+
+    guard let connection = database.getConnection() else {
+      throw RequestError.ormConnectionFailed
+    }
+
+    return connection
+  }
 }
 
-//TODO Kitura should update to convert 7XX into 500
+/**
+ Extension of the RequestError from [KituraContracts](https://github.com/IBM-Swift/KituraContracts.git)
+ */
 extension RequestError {
   init(_ base: RequestError, reason: String) {
     self.init(rawValue: base.rawValue, reason: reason)
   }
+  /// Error when the Database has not been set
   public static let ormDatabaseNotInitialized = RequestError(rawValue: 700, reason: "Database not Initialized")
+  /// Error when the createTable call fails
   public static let ormTableCreationError = RequestError(rawValue: 701)
+  /// Error when the TypeDecoder failed to extract the types from the model
   public static let ormCodableDecodingError = RequestError(rawValue: 702)
+  /// Error when the DatabaseDecoder could not construct a Model
   public static let ormDatabaseDecodingError = RequestError(rawValue: 703)
+  /// Error when the DatabaseEncoder could not decode a Model
   public static let ormDatabaseEncodingError = RequestError(rawValue: 704)
+  /// Error when the Query fails to be executed
   public static let ormQueryError = RequestError(rawValue: 706)
+  /// Error when the values retrieved from the database are nil
   public static let ormNotFound = RequestError(rawValue: 707)
+  /// Error when the table defined does not contain a specific column
   public static let ormInvalidTableDefinition = RequestError(rawValue: 708)
+  /// Error when the Identifier could not be constructed
   public static let ormIdentifierError = RequestError(rawValue: 709)
+  /// Error when an internal error occurs
   public static let ormInternalError = RequestError(rawValue: 710)
+  /// Error when retrieving a connection from the database fails
   public static let ormConnectionFailed = RequestError(rawValue: 711, reason: "Failed to retrieve a connection from the database")
 }
