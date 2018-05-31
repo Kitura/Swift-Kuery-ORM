@@ -30,8 +30,8 @@ class TestUpdate: XCTestCase {
                 XCTAssertNotNil(connection.query, "Update Failed: Query is nil")
                 if let query = connection.query {
                   let expectedPrefix = "UPDATE People SET"
-                  let expectedSuffix = "WHERE People.id = '1'"
-                  let expectedUpdates = ["name = 'Joe'", "age = 38"]
+                  let expectedSuffix = "WHERE People.id = ?3"
+                  let expectedUpdates = ["name = ?1", "age = ?2"]
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
                   XCTAssertTrue(resultQuery.hasSuffix(expectedSuffix))

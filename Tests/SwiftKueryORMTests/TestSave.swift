@@ -64,7 +64,7 @@ class TestSave: XCTestCase {
                 if let query = connection.query {
                   let expectedPrefix = "INSERT INTO People"
                   let expectedSQLStatement = "VALUES"
-                  let expectedDictionary = ["name": "Joe", "age": "38"]
+                  let expectedDictionary = ["name": "?1", "age": "?2"]
 
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
@@ -96,7 +96,7 @@ class TestSave: XCTestCase {
                 if let query = connection.query {
                   let expectedPrefix = "INSERT INTO People"
                   let expectedSQLStatement = "VALUES"
-                  let expectedDictionary = ["name": "Joe", "age": "38"]
+                  let expectedDictionary = ["name": "?1", "age": "?2"]
 
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))

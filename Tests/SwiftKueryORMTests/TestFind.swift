@@ -31,7 +31,7 @@ class TestFind: XCTestCase {
                 XCTAssertNil(error, "Find Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedQuery = "SELECT * FROM People WHERE People.id = '1'"
+                  let expectedQuery = "SELECT * FROM People WHERE People.id = ?1"
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertEqual(resultQuery, expectedQuery, "Find Failed: Invalid query")
                 }
