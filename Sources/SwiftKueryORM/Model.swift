@@ -57,6 +57,25 @@ public protocol Model: Codable {
   /// handler. The callback is passed an id, a model or an error
   func save<I: Identifier>(using db: Database?, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void)
 
+  /// Call to update a model in the database with an id that accepts a completion
+  /// handler. The callback is passed a updated model or an error
+  func update<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
+
+  /// Call to delete a model in the database with an id that accepts a completion
+  /// handler. The callback is passed an optional error
+  static func delete(id: Identifier, using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
+
+  /// Call to delete all the models in the database that accepts a completion
+  /// handler. The callback is passed an optional error
+  static func deleteAll(using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
+
+  /// Call to delete all the models in the database mathcing the QueryParams that accepts a completion
+  /// handler. The callback is passed an optional error
+  static func deleteAll<Q: QueryParams>(using db: Database?, matching queryParams:Q?, _ onCompletion: @escaping (RequestError?) -> Void)
+
+  /// Call to get the table of the model
+  static func getTable() throws -> Table
+
   /// Call to find a model in the database with an id that accepts a completion
   /// handler. The callback is passed the model or an error
   static func find<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
@@ -85,24 +104,6 @@ public protocol Model: Codable {
   /// handler. The callback is passed a dictionary [id: model] or an error
   static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
 
-  /// Call to update a model in the database with an id that accepts a completion
-  /// handler. The callback is passed a updated model or an error
-  func update<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
-
-  /// Call to delete a model in the database with an id that accepts a completion
-  /// handler. The callback is passed an optional error
-  static func delete(id: Identifier, using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
-
-  /// Call to delete all the models in the database that accepts a completion
-  /// handler. The callback is passed an optional error
-  static func deleteAll(using db: Database?, _ onCompletion: @escaping (RequestError?) -> Void)
-
-  /// Call to delete all the models in the database mathcing the QueryParams that accepts a completion
-  /// handler. The callback is passed an optional error
-  static func deleteAll<Q: QueryParams>(using db: Database?, matching queryParams:Q?, _ onCompletion: @escaping (RequestError?) -> Void)
-
-  /// Call to get the table of the model
-  static func getTable() throws -> Table
 }
 
 public extension Model {
@@ -260,175 +261,6 @@ public extension Model {
     let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
     let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: true)
     self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
-  }
-
-  /// Find a model with an id
-  /// - Parameter using: Optional Database to use
-  /// - Returns: A tuple (Model, RequestError)
-  static func find<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
-    var table: Table
-    do {
-      table = try Self.getTable()
-    } catch let error {
-      onCompletion(nil, Self.convertError(error))
-      return
-    }
-
-    guard let idColumn = table.columns.first(where: {$0.name == Self.idColumnName}) else {
-      onCompletion(nil, RequestError(.ormInvalidTableDefinition, reason: "Could not find id column"))
-      return
-    }
-
-    let query = Select(from: table).where(idColumn == Parameter())
-    let parameters: [Any?] = [id.value]
-    Self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
-  }
-
-  ///
-  static func findAll(using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
-    var table: Table
-    do {
-      table = try Self.getTable()
-    } catch let error {
-      onCompletion(nil, Self.convertError(error))
-      return
-    }
-
-    let query = Select(from: table)
-    Self.executeQuery(query: query, using: db, onCompletion)
-  }
-
-  /// Find all the models
-  /// - Parameter using: Optional Database to use
-  /// - Returns: An array of tuples (id, model)
-  static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
-    var table: Table
-    do {
-      table = try Self.getTable()
-    } catch let error {
-      onCompletion(nil, Self.convertError(error))
-      return
-    }
-
-    let query = Select(from: table)
-    Self.executeQuery(query: query, using: db, onCompletion)
-  }
-
-  /// :nodoc:
-  static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
-    var table: Table
-    do {
-      table = try Self.getTable()
-    } catch let error {
-      onCompletion(nil, Self.convertError(error))
-      return
-    }
-
-    let query = Select(from: table)
-    Self.executeQuery(query: query, using: db) { (tuples: [(I, Self)]?, error: RequestError?) in
-      if let error = error {
-        onCompletion(nil, error)
-        return
-      } else if let tuples = tuples {
-        var result = [I: Self]()
-        for (id, model) in tuples {
-          result[id] = model
-        }
-        onCompletion(result, nil)
-        return
-      } else {
-        onCompletion(nil, .ormInternalError)
-      }
-    }
-  }
-
-  /// - Parameter matching: Optional QueryParams to use
-  /// - Returns: An array of model
-  static func findAll<Q: QueryParams>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
-    var table: Table
-    do {
-      table = try Self.getTable()
-    } catch let error {
-      onCompletion(nil, Self.convertError(error))
-      return
-    }
-
-    var query: Select = Select(from: table)
-    var parameters: [Any?]? = nil
-    if let queryParams = queryParams {
-      do {
-        (query, parameters) = try getSelectQueryWithFilters(query: query, queryParams: queryParams, table: table)
-      } catch let error {
-        onCompletion(nil, Self.convertError(error))
-        return
-      }
-    }
-    Self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
-  }
-
-  /// Find all the models matching the QueryParams
-  /// - Parameter using: Optional Database to use
-  /// - Returns: An array of tuples (id, model)
-  static func findAll<Q: QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
-    var table: Table
-    do {
-      table = try Self.getTable()
-    } catch let error {
-      onCompletion(nil, Self.convertError(error))
-      return
-    }
-
-    var query: Select = Select(from: table)
-    var parameters: [Any?]? = nil
-    if let queryParams = queryParams {
-      do {
-        (query, parameters) = try getSelectQueryWithFilters(query: query, queryParams: queryParams, table: table)
-      } catch let error {
-        onCompletion(nil, Self.convertError(error))
-        return
-      }
-    }
-    Self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
-  }
-
-  /// Find all the models matching the QueryParams
-  /// - Parameter using: Optional Database to use
-  /// - Returns: A dictionary [id: model]
-  static func findAll<Q:QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
-    var table: Table
-    do {
-      table = try Self.getTable()
-    } catch let error {
-      onCompletion(nil, Self.convertError(error))
-      return
-    }
-
-    var query: Select = Select(from: table)
-    var parameters: [Any?]? = nil
-    if let queryParams = queryParams {
-      do {
-        (query, parameters) = try getSelectQueryWithFilters(query: query, queryParams: queryParams, table: table)
-      } catch let error {
-        onCompletion(nil, Self.convertError(error))
-        return
-      }
-    }
-
-    Self.executeQuery(query: query, parameters: parameters, using: db) { (tuples: [(I, Self)]?, error: RequestError?) in
-      if let error = error {
-        onCompletion(nil, error)
-        return
-      } else if let tuples = tuples {
-        var result = [I: Self]()
-        for (id, model) in tuples {
-          result[id] = model
-        }
-        onCompletion(result, nil)
-        return
-      } else {
-        onCompletion(nil, .ormInternalError)
-      }
-    }
   }
 
   func update<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
@@ -1121,6 +953,175 @@ public extension Model {
     }
 
     return connection
+  }
+  /// Find a model with an id
+  /// - Parameter using: Optional Database to use
+  /// - Returns: A tuple (Model, RequestError)
+  static func find<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
+    var table: Table
+    do {
+      table = try Self.getTable()
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    guard let idColumn = table.columns.first(where: {$0.name == Self.idColumnName}) else {
+      onCompletion(nil, RequestError(.ormInvalidTableDefinition, reason: "Could not find id column"))
+      return
+    }
+
+    let query = Select(from: table).where(idColumn == Parameter())
+    let parameters: [Any?] = [id.value]
+    Self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
+  }
+
+
+  ///
+  static func findAll(using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
+    var table: Table
+    do {
+      table = try Self.getTable()
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    let query = Select(from: table)
+    Self.executeQuery(query: query, using: db, onCompletion)
+  }
+
+  /// Find all the models
+  /// - Parameter using: Optional Database to use
+  /// - Returns: An array of tuples (id, model)
+  static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
+    var table: Table
+    do {
+      table = try Self.getTable()
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    let query = Select(from: table)
+    Self.executeQuery(query: query, using: db, onCompletion)
+  }
+
+  /// :nodoc:
+  static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
+    var table: Table
+    do {
+      table = try Self.getTable()
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    let query = Select(from: table)
+    Self.executeQuery(query: query, using: db) { (tuples: [(I, Self)]?, error: RequestError?) in
+      if let error = error {
+        onCompletion(nil, error)
+        return
+      } else if let tuples = tuples {
+        var result = [I: Self]()
+        for (id, model) in tuples {
+          result[id] = model
+        }
+        onCompletion(result, nil)
+        return
+      } else {
+        onCompletion(nil, .ormInternalError)
+      }
+    }
+  }
+
+  /// - Parameter matching: Optional QueryParams to use
+  /// - Returns: An array of model
+  static func findAll<Q: QueryParams>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
+    var table: Table
+    do {
+      table = try Self.getTable()
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    var query: Select = Select(from: table)
+    var parameters: [Any?]? = nil
+    if let queryParams = queryParams {
+      do {
+        (query, parameters) = try getSelectQueryWithFilters(query: query, queryParams: queryParams, table: table)
+      } catch let error {
+        onCompletion(nil, Self.convertError(error))
+        return
+      }
+    }
+    Self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
+  }
+
+  /// Find all the models matching the QueryParams
+  /// - Parameter using: Optional Database to use
+  /// - Returns: An array of tuples (id, model)
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
+    var table: Table
+    do {
+      table = try Self.getTable()
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    var query: Select = Select(from: table)
+    var parameters: [Any?]? = nil
+    if let queryParams = queryParams {
+      do {
+        (query, parameters) = try getSelectQueryWithFilters(query: query, queryParams: queryParams, table: table)
+      } catch let error {
+        onCompletion(nil, Self.convertError(error))
+        return
+      }
+    }
+    Self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
+  }
+
+  /// Find all the models matching the QueryParams
+  /// - Parameter using: Optional Database to use
+  /// - Returns: A dictionary [id: model]
+  static func findAll<Q:QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
+    var table: Table
+    do {
+      table = try Self.getTable()
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    var query: Select = Select(from: table)
+    var parameters: [Any?]? = nil
+    if let queryParams = queryParams {
+      do {
+        (query, parameters) = try getSelectQueryWithFilters(query: query, queryParams: queryParams, table: table)
+      } catch let error {
+        onCompletion(nil, Self.convertError(error))
+        return
+      }
+    }
+
+    Self.executeQuery(query: query, parameters: parameters, using: db) { (tuples: [(I, Self)]?, error: RequestError?) in
+      if let error = error {
+        onCompletion(nil, error)
+        return
+      } else if let tuples = tuples {
+        var result = [I: Self]()
+        for (id, model) in tuples {
+          result[id] = model
+        }
+        onCompletion(result, nil)
+        return
+      } else {
+        onCompletion(nil, .ormInternalError)
+      }
+    }
   }
 }
 
