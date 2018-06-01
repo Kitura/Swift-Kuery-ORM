@@ -354,9 +354,7 @@ public extension Model {
     var parameters: [Any?]? = nil
     if let queryParams = queryParams {
       do {
-        let resultTuple: (query: Select, parameters: [Any?]?) = try getSelectQueryWithFilters(query: query, queryParams: queryParams, table: table)
-        query = resultTuple.query
-        parameters = resultTuple.parameters
+        (query, parameters) = try getSelectQueryWithFilters(query: query, queryParams: queryParams, table: table)
       } catch let error {
         onCompletion(nil, Self.convertError(error))
         return
@@ -381,9 +379,7 @@ public extension Model {
     var parameters: [Any?]? = nil
     if let queryParams = queryParams {
       do {
-        let resultTuple: (query: Select, parameters: [Any?]?) = try getSelectQueryWithFilters(query: query, queryParams: queryParams, table: table)
-        query = resultTuple.query
-        parameters = resultTuple.parameters
+        (query, parameters) = try getSelectQueryWithFilters(query: query, queryParams: queryParams, table: table)
       } catch let error {
         onCompletion(nil, Self.convertError(error))
         return
@@ -504,7 +500,7 @@ public extension Model {
     if let queryParams = queryParams {
       do {
         let values: [String: Any] = try QueryEncoder().encode(queryParams)
-        if values.count < 0 {
+        if values.count < 1 {
           onCompletion(RequestError(.ormQueryError, reason: "Could not extract values for Query Parameters"))
         }
         let filterInfo = try Self.getFilter(values: values, table: table)
@@ -920,7 +916,7 @@ public extension Model {
   */
   private static func getSelectQueryWithFilters<Q: QueryParams>(query: Select, queryParams: Q, table: Table) throws -> (query: Select, parameters: [Any?]?) {
       let values: [String: Any] = try QueryEncoder().encode(queryParams)
-      if values.count < 0 {
+      if values.count < 1 {
         throw RequestError(.ormQueryError, reason: "Could not extract values for Query Parameters")
       }
       let filterInfo = try Self.getFilter(values: values, table: table)
