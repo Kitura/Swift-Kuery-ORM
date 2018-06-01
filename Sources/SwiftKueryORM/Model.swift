@@ -404,9 +404,7 @@ public extension Model {
     var parameters: [Any?]? = nil
     if let queryParams = queryParams {
       do {
-        let resultTuple: (query: Select, parameters: [Any?]?) = try getSelectQueryWithFilters(query: query, queryParams: queryParams, table: table)
-        query = resultTuple.query
-        parameters = resultTuple.parameters
+        (query, parameters) = try getSelectQueryWithFilters(query: query, queryParams: queryParams, table: table)
       } catch let error {
         onCompletion(nil, Self.convertError(error))
         return
