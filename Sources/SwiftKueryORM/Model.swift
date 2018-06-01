@@ -237,10 +237,11 @@ public extension Model {
       return
     }
 
-    let columns = table.columns.filter({$0.autoIncrement != true})
-    let valueTuples = columns.filter({values[$0.name] != nil}).map({($0, values[$0.name]!)})
-    let query = Insert(into: table, valueTuples: valueTuples)
-    self.executeQuery(query: query, using: db, onCompletion)
+    let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
+    let parameters: [Any?] = columns.map({values[$0.name]!})
+    let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
+    let query = Insert(into: table, columns: columns, values: parameterPlaceHolders)
+    self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
   }
 
   func save<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
@@ -254,10 +255,11 @@ public extension Model {
       return
     }
 
-    let columns = table.columns.filter({$0.autoIncrement != true})
-    let valueTuples = columns.filter({values[$0.name] != nil}).map({($0, values[$0.name]!)})
-    let query = Insert(into: table, valueTuples: valueTuples, returnID: true)
-    self.executeQuery(query: query, using: db, onCompletion)
+    let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
+    let parameters: [Any?] = columns.map({values[$0.name]!})
+    let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
+    let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: true)
+    self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
   }
 
   /// Find a model with an id
@@ -277,8 +279,9 @@ public extension Model {
       return
     }
 
-    let query = Select(from: table).where(idColumn == id.value)
-    Self.executeQuery(query: query, using: db, onCompletion)
+    let query = Select(from: table).where(idColumn == Parameter())
+    let parameters: [Any?] = [id.value]
+    Self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
   }
 
   ///
@@ -439,15 +442,17 @@ public extension Model {
       return
     }
 
-    let columns = table.columns.filter({$0.autoIncrement != true})
-    let valueTuples = columns.filter({values[$0.name] != nil}).map({($0, values[$0.name]!)})
+    let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
+    var parameters: [Any?] = columns.map({values[$0.name]!})
+    let parameterPlaceHolders: [(Column, Any)] = columns.map({($0, Parameter())})
     guard let idColumn = table.columns.first(where: {$0.name == Self.idColumnName}) else {
       onCompletion(nil, RequestError(rawValue: 708, reason: "Could not find id column"))
       return
     }
 
-    let query = Update(table, set: valueTuples).where(idColumn == id.value)
-    executeQuery(query: query, using: db, onCompletion)
+    let query = Update(table, set: parameterPlaceHolders).where(idColumn == Parameter())
+    parameters.append(id.value)
+    executeQuery(query: query, parameters: parameters, using: db, onCompletion)
   }
 
   static func delete(id: Identifier, using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void) {
@@ -464,8 +469,9 @@ public extension Model {
       return
     }
 
-    let query = Delete(from: table).where(idColumn == id.value)
-    Self.executeQuery(query: query, using: db, onCompletion)
+    let query = Delete(from: table).where(idColumn == Parameter())
+    let parameters: [Any?] = [id.value]
+    Self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
   }
 
   static func deleteAll(using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void) {
@@ -518,7 +524,7 @@ public extension Model {
     Self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
   }
 
-  internal func executeQuery(query: Query, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
+  internal func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
     var connection: Connection
     do {
       connection = try Self.getConnection(using: db)
@@ -532,7 +538,7 @@ public extension Model {
         onCompletion(nil, Self.convertError(error))
         return
       } else {
-        connection.execute(query: query) { result in
+        connection.execute(query: query, parameters: parameters) { result in
           guard result.success else {
             guard let error = result.asError else {
               onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
@@ -548,7 +554,7 @@ public extension Model {
     }
   }
 
-  internal func executeQuery<I: Identifier>(query: Query, using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
+  internal func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
 
     var connection: Connection
     do {
@@ -565,7 +571,7 @@ public extension Model {
         onCompletion(nil, nil, Self.convertError(error))
         return
       } else {
-        connection.execute(query: query) { result in
+        connection.execute(query: query, parameters: parameters) { result in
           guard result.success else {
             guard let error = result.asError else {
               onCompletion(nil, nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
@@ -606,7 +612,7 @@ public extension Model {
     }
   }
 
-  internal static func executeQuery(query: Query, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
+  internal static func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
     var connection: Connection
     do {
       connection = try Self.getConnection(using: db)
@@ -622,7 +628,7 @@ public extension Model {
         onCompletion(nil, Self.convertError(error))
         return
       } else {
-        connection.execute(query: query) { result in
+        connection.execute(query: query, parameters: parameters) { result in
           guard result.success else {
             guard let error = result.asError else {
               onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
@@ -653,7 +659,7 @@ public extension Model {
     }
   }
 
-  internal static func executeQuery<I: Identifier>(query: Query, using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
+  internal static func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
     var connection: Connection
     do {
       connection = try Self.getConnection(using: db)
@@ -669,7 +675,7 @@ public extension Model {
         onCompletion(nil, nil, Self.convertError(error))
         return
       } else {
-        connection.execute(query: query) { result in
+        connection.execute(query: query, parameters: parameters) { result in
           guard result.success else {
             guard let error = result.asError else {
               onCompletion(nil, nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
