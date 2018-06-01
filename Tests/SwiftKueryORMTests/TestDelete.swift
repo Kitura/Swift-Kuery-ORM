@@ -77,12 +77,16 @@ class TestDelete: XCTestCase {
                 XCTAssertNotNil(connection.query, "Delete Failed: Query is nil")
                 if let query = connection.query {
                   let expectedPrefix = "DELETE FROM People WHERE"
-                  let expectedClauses = ["People.name = ?1", "People.age = ?2"]
+                  let expectedClauses = [["People.name = ?1", "People.name = ?2"], ["People.age = ?1", "People.age = ?2"]]
                   let expectedOperator = "AND"
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
-                  for whereClause in expectedClauses {
-                    XCTAssertTrue(resultQuery.contains(whereClause))
+                  for whereClauses in expectedClauses {
+                    var success = false
+                    for whereClause in whereClauses where resultQuery.contains(whereClause) {
+                      success = true
+                    }
+                    XCTAssertTrue(success)
                   }
                   XCTAssertTrue(resultQuery.contains(expectedOperator))
                 }

@@ -64,7 +64,7 @@ class TestSave: XCTestCase {
                 if let query = connection.query {
                   let expectedPrefix = "INSERT INTO People"
                   let expectedSQLStatement = "VALUES"
-                  let expectedDictionary = ["name": "?1", "age": "?2"]
+                  let expectedDictionary = ["name": "?1,?2", "age": "?1,?2"]
 
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
@@ -96,7 +96,7 @@ class TestSave: XCTestCase {
                 if let query = connection.query {
                   let expectedPrefix = "INSERT INTO People"
                   let expectedSQLStatement = "VALUES"
-                  let expectedDictionary = ["name": "?1", "age": "?2"]
+                  let expectedDictionary = ["name": "?1,?2", "age": "?1,?2"]
 
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
@@ -133,9 +133,14 @@ class TestSave: XCTestCase {
 
       // Asserting the results which the expectations
       XCTAssertEqual(resultDictionary.count, expectedDictionary.count)
-      for key in expectedDictionary.keys {
+      for (key, value) in expectedDictionary {
         XCTAssertNotNil(resultDictionary[key], "Value for key: \(String(describing: key)) is nil in the result dictionary")
-        XCTAssertEqual(resultDictionary[key], expectedDictionary[key])
+        var values = value.split(separator: ",")
+        var success = false
+        for value in values where resultDictionary[key] == String(value) {
+          success = true
+        }
+        XCTAssertTrue(success)
       }
     }
 }

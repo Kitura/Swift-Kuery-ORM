@@ -31,12 +31,16 @@ class TestUpdate: XCTestCase {
                 if let query = connection.query {
                   let expectedPrefix = "UPDATE People SET"
                   let expectedSuffix = "WHERE People.id = ?3"
-                  let expectedUpdates = ["name = ?1", "age = ?2"]
+                  let expectedUpdates = [["name = ?1", "name = ?2"], ["age = ?1", "age = ?2"]]
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
                   XCTAssertTrue(resultQuery.hasSuffix(expectedSuffix))
-                  for update in expectedUpdates {
-                      XCTAssertTrue(resultQuery.contains(update))
+                  for updates in expectedUpdates {
+                      var success = false
+                      for update in updates where resultQuery.contains(update) {
+                        success = true
+                      }
+                      XCTAssertTrue(success)
                   }
                 }
                 XCTAssertNotNil(p, "Update Failed: No model returned")
