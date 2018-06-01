@@ -89,7 +89,7 @@ class TestFind: XCTestCase {
                 XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
                 if let query = connection.query {
                   let expectedPrefix = "SELECT * FROM People WHERE"
-                  let expectedClauses = ["People.name = 'Joe'", "People.age = '38'"]
+                  let expectedClauses = ["People.name = ?1", "People.age = ?2"]
                   let expectedOperator = "AND"
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
