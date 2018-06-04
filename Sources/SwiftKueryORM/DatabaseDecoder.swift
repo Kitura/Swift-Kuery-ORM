@@ -191,6 +191,10 @@ open class DatabaseDecoder {
         let castValue = try castedValue(value, String.self, key)
         let uuid = UUID(uuidString: castValue)
         return try castedValue(uuid, type, key)
+      } else if type is Date.Type && value != nil {
+        let castValue = try castedValue(value, Double.self, key)
+        let date = Date(timeIntervalSinceReferenceDate: castValue)
+        return try castedValue(date, type, key)
       } else {
         throw RequestError(.ormDatabaseDecodingError, reason: "Unsupported type: \(String(describing: type)) for value: \(String(describing: value))")
       }
@@ -292,6 +296,10 @@ open class DatabaseDecoder {
         let castValue = try castedValue(value, String.self, key)
         let url = URL(string: castValue)
         return try castedValue(url, type, key)
+      } else if type is Date.Type {
+        let castValue = try castedValue(value, Double.self, key)
+        let date = Date(timeIntervalSinceReferenceDate: castValue)
+        return try castedValue(date, type, key)
       } else {
         throw RequestError(.ormDatabaseDecodingError, reason: "Unsupported type: \(String(describing: type)) for value: \(String(describing: value))")
       }
