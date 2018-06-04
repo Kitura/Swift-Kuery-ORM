@@ -73,7 +73,7 @@ Add Swift-Kuery-ORM and Swift-Kuery-PostgreSQL to your `Package.swift`:
 dependencies: [
     ...
     // Add these two lines
-    .package(url: "https://github.com/IBM-Swift/Swift-Kuery-ORM.git", from: "0.0.1"),
+    .package(url: "https://github.com/IBM-Swift/Swift-Kuery-ORM.git", from: "0.1.0"),
     .package(url: "https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL.git", from: "1.0.0"),
   ],
   targets: [
