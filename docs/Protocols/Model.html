@@ -95,6 +95,9 @@
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="../Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a>
               </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Typealiases.html#/s:13SwiftKueryORM11SQLDataTypea">SQLDataType</a>
+              </li>
             </ul>
           </li>
         </ul>
@@ -170,7 +173,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Defines the id column name in the Database</p>
+                        <p>Defines the id column name in the Database and if set to the same name as
+a field in the model it will make that field the Primary Key of the table in the Database.</p>
+
+<p>If that field is of type Int?, it will set it as auto increment in the
+Database and will populate the field when the model is returned.</p>
+
+<p>If when saving a model, that field has a value it will not save it but
+instead get an auto increment value.</p>
 
                       </div>
                       <h4>Default Implementation</h4>
@@ -217,7 +227,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="k">var</span> <span class="nv">idColumnType</span><span class="p">:</span> <span class="kt">SQLDataType</span><span class="o">.</span><span class="k">Type</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="k">var</span> <span class="nv">idColumnType</span><span class="p">:</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM11SQLDataTypea">SQLDataType</a></span><span class="o">.</span><span class="k">Type</span></code></pre>
 
                         </div>
                       </div>
@@ -428,6 +438,181 @@ handler. The callback is passed an id, a model or an error</p>
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:13SwiftKueryORM5ModelP6updateyqd__2id_AA8DatabaseCSg5usingyxSg_15KituraContracts12RequestErrorVSgtctAK10IdentifierRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/update(id:using:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM5ModelP6updateyqd__2id_AA8DatabaseCSg5usingyxSg_15KituraContracts12RequestErrorVSgtctAK10IdentifierRd__lF">update(id:using:_:)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Call to update a model in the database with an id that accepts a completion
+handler. The callback is passed a updated model or an error</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">update</span><span class="o">&lt;</span><span class="kt">I</span><span class="p">:</span> <span class="kt">Identifier</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">id</span><span class="p">:</span> <span class="kt">I</span><span class="p">,</span> <span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="k">Self</span><span class="p">?,</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a></span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:13SwiftKueryORM5ModelP6deletey15KituraContracts10Identifier_p2id_AA8DatabaseCSg5usingyAE12RequestErrorVSgctFZ"></a>
+                    <a name="//apple_ref/swift/Method/delete(id:using:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM5ModelP6deletey15KituraContracts10Identifier_p2id_AA8DatabaseCSg5usingyAE12RequestErrorVSgctFZ">delete(id:using:_:)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Call to delete a model in the database with an id that accepts a completion
+handler. The callback is passed an optional error</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">delete</span><span class="p">(</span><span class="nv">id</span><span class="p">:</span> <span class="kt">Identifier</span><span class="p">,</span> <span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a></span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:13SwiftKueryORM5ModelP9deleteAllyAA8DatabaseCSg5using_y15KituraContracts12RequestErrorVSgctFZ"></a>
+                    <a name="//apple_ref/swift/Method/deleteAll(using:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM5ModelP9deleteAllyAA8DatabaseCSg5using_y15KituraContracts12RequestErrorVSgctFZ">deleteAll(using:_:)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Call to delete all the models in the database that accepts a completion
+handler. The callback is passed an optional error</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">deleteAll</span><span class="p">(</span><span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a></span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:13SwiftKueryORM5ModelP9deleteAllyAA8DatabaseCSg5using_qd__Sg8matchingy15KituraContracts12RequestErrorVSgctAK11QueryParamsRd__lFZ"></a>
+                    <a name="//apple_ref/swift/Method/deleteAll(using:matching:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM5ModelP9deleteAllyAA8DatabaseCSg5using_qd__Sg8matchingy15KituraContracts12RequestErrorVSgctAK11QueryParamsRd__lFZ">deleteAll(using:matching:_:)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Call to delete all the models in the database mathcing the QueryParams that accepts a completion
+handler. The callback is passed an optional error</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        <p>Delete all the models matching the QueryParams</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="n">deleteAll</span><span class="o">&lt;</span><span class="kt">Q</span><span class="p">:</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM11QueryParamsa">QueryParams</a></span><span class="o">&gt;</span><span class="p">(</span><span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?,</span> <span class="n">matching</span> <span class="nv">queryParams</span><span class="p">:</span><span class="kt">Q</span><span class="p">?,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a></span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:13SwiftKueryORM5ModelP8getTable0aB00F0CyKFZ"></a>
+                    <a name="//apple_ref/swift/Method/getTable()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM5ModelP8getTable0aB00F0CyKFZ">getTable()</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Call to get the table of the model</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">getTable</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Table</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:13SwiftKueryORM5ModelP4findyqd__2id_AA8DatabaseCSg5usingyxSg_15KituraContracts12RequestErrorVSgtctAK10IdentifierRd__lFZ"></a>
                     <a name="//apple_ref/swift/Method/find(id:using:_:)" class="dashAnchor"></a>
                     <a class="token" href="#/s:13SwiftKueryORM5ModelP4findyqd__2id_AA8DatabaseCSg5usingyxSg_15KituraContracts12RequestErrorVSgtctAK10IdentifierRd__lFZ">find(id:using:_:)</a>
@@ -556,9 +741,9 @@ handler. The callback is passed a dictionary [id: model] or an error</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:13SwiftKueryORM5ModelP7findAllyAA8DatabaseCSg5using_qd__8matchingySayxGSg_15KituraContracts12RequestErrorVSgtctAL11QueryParamsRd__lFZ"></a>
+                    <a name="/s:13SwiftKueryORM5ModelP7findAllyAA8DatabaseCSg5using_qd__Sg8matchingySayxGSg_15KituraContracts12RequestErrorVSgtctAM11QueryParamsRd__lFZ"></a>
                     <a name="//apple_ref/swift/Method/findAll(using:matching:_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:13SwiftKueryORM5ModelP7findAllyAA8DatabaseCSg5using_qd__8matchingySayxGSg_15KituraContracts12RequestErrorVSgtctAL11QueryParamsRd__lFZ">findAll(using:matching:_:)</a>
+                    <a class="token" href="#/s:13SwiftKueryORM5ModelP7findAllyAA8DatabaseCSg5using_qd__Sg8matchingySayxGSg_15KituraContracts12RequestErrorVSgtctAM11QueryParamsRd__lFZ">findAll(using:matching:_:)</a>
                     </code>
                       <span class="declaration-note">
                         Default implementation
@@ -577,14 +762,13 @@ handler. The callback is passed an array of models or an error</p>
                       <div class="default_impl abstract">
                         <p>Find all the models matching the QueryParams</p>
 <p>Find all the models matching the QueryParams</p>
-<p>Find all the models matching the QueryParams</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="n">findAll</span><span class="o">&lt;</span><span class="kt">Q</span><span class="p">:</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM11QueryParamsa">QueryParams</a></span><span class="o">&gt;</span><span class="p">(</span><span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?,</span> <span class="n">matching</span> <span class="nv">queryParams</span><span class="p">:</span> <span class="kt">Q</span><span class="p">,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">([</span><span class="k">Self</span><span class="p">]?,</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a></span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="n">findAll</span><span class="o">&lt;</span><span class="kt">Q</span><span class="p">:</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM11QueryParamsa">QueryParams</a></span><span class="o">&gt;</span><span class="p">(</span><span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?,</span> <span class="n">matching</span> <span class="nv">queryParams</span><span class="p">:</span> <span class="kt">Q</span><span class="p">?,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">([</span><span class="k">Self</span><span class="p">]?,</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a></span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -594,9 +778,9 @@ handler. The callback is passed an array of models or an error</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:13SwiftKueryORM5ModelP7findAllyAA8DatabaseCSg5using_qd__8matchingySayqd_0__xtGSg_15KituraContracts12RequestErrorVSgtctAL11QueryParamsRd__AL10IdentifierRd_0_r0_lFZ"></a>
+                    <a name="/s:13SwiftKueryORM5ModelP7findAllyAA8DatabaseCSg5using_qd__Sg8matchingySayqd_0__xtGSg_15KituraContracts12RequestErrorVSgtctAM11QueryParamsRd__AM10IdentifierRd_0_r0_lFZ"></a>
                     <a name="//apple_ref/swift/Method/findAll(using:matching:_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:13SwiftKueryORM5ModelP7findAllyAA8DatabaseCSg5using_qd__8matchingySayqd_0__xtGSg_15KituraContracts12RequestErrorVSgtctAL11QueryParamsRd__AL10IdentifierRd_0_r0_lFZ">findAll(using:matching:_:)</a>
+                    <a class="token" href="#/s:13SwiftKueryORM5ModelP7findAllyAA8DatabaseCSg5using_qd__Sg8matchingySayqd_0__xtGSg_15KituraContracts12RequestErrorVSgtctAM11QueryParamsRd__AM10IdentifierRd_0_r0_lFZ">findAll(using:matching:_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -612,7 +796,7 @@ handler. The callback is passed an array of tuples (id, model) or an error</p>
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="n">findAll</span><span class="o">&lt;</span><span class="kt">Q</span><span class="p">:</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM11QueryParamsa">QueryParams</a></span><span class="p">,</span> <span class="kt">I</span><span class="p">:</span> <span class="kt">Identifier</span><span class="o">&gt;</span><span class="p">(</span><span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?,</span> <span class="n">matching</span> <span class="nv">queryParams</span><span class="p">:</span> <span class="kt">Q</span><span class="p">,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">([(</span><span class="kt">I</span><span class="p">,</span> <span class="k">Self</span><span class="p">)]?,</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a></span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="n">findAll</span><span class="o">&lt;</span><span class="kt">Q</span><span class="p">:</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM11QueryParamsa">QueryParams</a></span><span class="p">,</span> <span class="kt">I</span><span class="p">:</span> <span class="kt">Identifier</span><span class="o">&gt;</span><span class="p">(</span><span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?,</span> <span class="n">matching</span> <span class="nv">queryParams</span><span class="p">:</span> <span class="kt">Q</span><span class="p">?,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">([(</span><span class="kt">I</span><span class="p">,</span> <span class="k">Self</span><span class="p">)]?,</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a></span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -622,9 +806,9 @@ handler. The callback is passed an array of tuples (id, model) or an error</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:13SwiftKueryORM5ModelP7findAllyAA8DatabaseCSg5using_qd__8matchingys10DictionaryVyqd_0_xGSg_15KituraContracts12RequestErrorVSgtctAN11QueryParamsRd__AN10IdentifierRd_0_s8HashableRd_0_r0_lFZ"></a>
+                    <a name="/s:13SwiftKueryORM5ModelP7findAllyAA8DatabaseCSg5using_qd__Sg8matchingys10DictionaryVyqd_0_xGSg_15KituraContracts12RequestErrorVSgtctAO11QueryParamsRd__AO10IdentifierRd_0_s8HashableRd_0_r0_lFZ"></a>
                     <a name="//apple_ref/swift/Method/findAll(using:matching:_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:13SwiftKueryORM5ModelP7findAllyAA8DatabaseCSg5using_qd__8matchingys10DictionaryVyqd_0_xGSg_15KituraContracts12RequestErrorVSgtctAN11QueryParamsRd__AN10IdentifierRd_0_s8HashableRd_0_r0_lFZ">findAll(using:matching:_:)</a>
+                    <a class="token" href="#/s:13SwiftKueryORM5ModelP7findAllyAA8DatabaseCSg5using_qd__Sg8matchingys10DictionaryVyqd_0_xGSg_15KituraContracts12RequestErrorVSgtctAO11QueryParamsRd__AO10IdentifierRd_0_s8HashableRd_0_r0_lFZ">findAll(using:matching:_:)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -640,182 +824,7 @@ handler. The callback is passed a dictionary [id: model] or an error</p>
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="n">findAll</span><span class="o">&lt;</span><span class="kt">Q</span><span class="p">:</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM11QueryParamsa">QueryParams</a></span><span class="p">,</span> <span class="kt">I</span><span class="p">:</span> <span class="kt">Identifier</span><span class="o">&gt;</span><span class="p">(</span><span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?,</span> <span class="n">matching</span> <span class="nv">queryParams</span><span class="p">:</span> <span class="kt">Q</span><span class="p">,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">([</span><span class="kt">I</span><span class="p">:</span> <span class="k">Self</span><span class="p">]?,</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a></span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:13SwiftKueryORM5ModelP6updateyqd__2id_AA8DatabaseCSg5usingyxSg_15KituraContracts12RequestErrorVSgtctAK10IdentifierRd__lF"></a>
-                    <a name="//apple_ref/swift/Method/update(id:using:_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:13SwiftKueryORM5ModelP6updateyqd__2id_AA8DatabaseCSg5usingyxSg_15KituraContracts12RequestErrorVSgtctAK10IdentifierRd__lF">update(id:using:_:)</a>
-                    </code>
-                      <span class="declaration-note">
-                        Default implementation
-                      </span>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Call to update a model in the database with an id that accepts a completion
-handler. The callback is passed a updated model or an error</p>
-
-                      </div>
-                      <h4>Default Implementation</h4>
-                      <div class="default_impl abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">update</span><span class="o">&lt;</span><span class="kt">I</span><span class="p">:</span> <span class="kt">Identifier</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">id</span><span class="p">:</span> <span class="kt">I</span><span class="p">,</span> <span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="k">Self</span><span class="p">?,</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a></span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:13SwiftKueryORM5ModelP6deletey15KituraContracts10Identifier_p2id_AA8DatabaseCSg5usingyAE12RequestErrorVSgctFZ"></a>
-                    <a name="//apple_ref/swift/Method/delete(id:using:_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:13SwiftKueryORM5ModelP6deletey15KituraContracts10Identifier_p2id_AA8DatabaseCSg5usingyAE12RequestErrorVSgctFZ">delete(id:using:_:)</a>
-                    </code>
-                      <span class="declaration-note">
-                        Default implementation
-                      </span>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Call to delete a model in the database with an id that accepts a completion
-handler. The callback is passed an optional error</p>
-
-                      </div>
-                      <h4>Default Implementation</h4>
-                      <div class="default_impl abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">delete</span><span class="p">(</span><span class="nv">id</span><span class="p">:</span> <span class="kt">Identifier</span><span class="p">,</span> <span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a></span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:13SwiftKueryORM5ModelP9deleteAllyAA8DatabaseCSg5using_y15KituraContracts12RequestErrorVSgctFZ"></a>
-                    <a name="//apple_ref/swift/Method/deleteAll(using:_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:13SwiftKueryORM5ModelP9deleteAllyAA8DatabaseCSg5using_y15KituraContracts12RequestErrorVSgctFZ">deleteAll(using:_:)</a>
-                    </code>
-                      <span class="declaration-note">
-                        Default implementation
-                      </span>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Call to delete all the models in the database that accepts a completion
-handler. The callback is passed an optional error</p>
-
-                      </div>
-                      <h4>Default Implementation</h4>
-                      <div class="default_impl abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">deleteAll</span><span class="p">(</span><span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a></span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:13SwiftKueryORM5ModelP9deleteAllyAA8DatabaseCSg5using_qd__8matchingy15KituraContracts12RequestErrorVSgctAJ11QueryParamsRd__lFZ"></a>
-                    <a name="//apple_ref/swift/Method/deleteAll(using:matching:_:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:13SwiftKueryORM5ModelP9deleteAllyAA8DatabaseCSg5using_qd__8matchingy15KituraContracts12RequestErrorVSgctAJ11QueryParamsRd__lFZ">deleteAll(using:matching:_:)</a>
-                    </code>
-                      <span class="declaration-note">
-                        Default implementation
-                      </span>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Call to delete all the models in the database mathcing the QueryParams that accepts a completion
-handler. The callback is passed an optional error</p>
-
-                      </div>
-                      <h4>Default Implementation</h4>
-                      <div class="default_impl abstract">
-                        <p>Delete all the models matching the QueryParams</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="n">deleteAll</span><span class="o">&lt;</span><span class="kt">Q</span><span class="p">:</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM11QueryParamsa">QueryParams</a></span><span class="o">&gt;</span><span class="p">(</span><span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?,</span> <span class="n">matching</span> <span class="nv">queryParams</span><span class="p">:</span><span class="kt">Q</span><span class="p">,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a></span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:13SwiftKueryORM5ModelP8getTable0aB00F0CyKFZ"></a>
-                    <a name="//apple_ref/swift/Method/getTable()" class="dashAnchor"></a>
-                    <a class="token" href="#/s:13SwiftKueryORM5ModelP8getTable0aB00F0CyKFZ">getTable()</a>
-                    </code>
-                      <span class="declaration-note">
-                        Default implementation
-                      </span>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Call to get the table of the model</p>
-
-                      </div>
-                      <h4>Default Implementation</h4>
-                      <div class="default_impl abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">getTable</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Table</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="n">findAll</span><span class="o">&lt;</span><span class="kt">Q</span><span class="p">:</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM11QueryParamsa">QueryParams</a></span><span class="p">,</span> <span class="kt">I</span><span class="p">:</span> <span class="kt">Identifier</span><span class="o">&gt;</span><span class="p">(</span><span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?,</span> <span class="n">matching</span> <span class="nv">queryParams</span><span class="p">:</span> <span class="kt">Q</span><span class="p">?,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">([</span><span class="kt">I</span><span class="p">:</span> <span class="k">Self</span><span class="p">]?,</span> <span class="kt"><a href="../Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a></span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -830,7 +839,7 @@ handler. The callback is passed an optional error</p>
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2018 <a class="link" href="" target="_blank" rel="external">IBM</a>. All rights reserved. (Last updated: 2018-04-17)</p>
+      <p>&copy; 2018 <a class="link" href="" target="_blank" rel="external">IBM</a>. All rights reserved. (Last updated: 2018-06-06)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.1</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>
