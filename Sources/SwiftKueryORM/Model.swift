@@ -397,7 +397,7 @@ public extension Model {
             return
           }
 
-          // No values from model given - returning original model
+          // No values given - returning original model
           guard var values = values else {
             onCompletion(self, nil)
             return

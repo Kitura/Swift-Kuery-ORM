@@ -76,7 +76,7 @@ public class TableInfo {
           if key == idColumn.name && !idColumnIsSet {
             var column: Column
             // If the idColumn type is an optional type and an integer then make
-            // the field the primary key and auto increment in the database.
+            // the field the primary key and auto increment it in the database.
             // Else just make it the primary key in the database.
             if optionalBool && (SQLType == Int64.self || SQLType == Int32.self || SQLType == Int16.self) {
               column = Column(key, SQLType, autoIncrement: true, primaryKey: true)

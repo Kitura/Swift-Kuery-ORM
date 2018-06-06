@@ -148,7 +148,7 @@ class TestSave: XCTestCase {
                 }
                 XCTAssertNotNil(p, "Save Failed: No model returned")
                 if let p = p { 
-                    print("person:", p)
+                    XCTAssertEqual(p.id, 1, "Save Failed: \(String(describing: p.name)) is not equal to \(String(describing: person.name))")
                     XCTAssertEqual(p.name, person.name, "Save Failed: \(String(describing: p.name)) is not equal to \(String(describing: person.name))")
                     XCTAssertEqual(p.age, person.age, "Save Failed: \(String(describing: p.age)) is not equal to \(String(describing: person.age))")
                 }
