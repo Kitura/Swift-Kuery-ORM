@@ -17,6 +17,7 @@
 import KituraContracts
 import SwiftKuery
 import Foundation
+import TypeDecoder
 
 /// Class caching the tables for the models of the application
 
