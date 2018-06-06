@@ -19,15 +19,6 @@ import KituraContracts
 import Foundation
 import Dispatch
 
-/// Type Alias for RequestError from [KituraContracts](https://github.com/IBM-Swift/KituraContracts)
-public typealias RequestError = KituraContracts.RequestError
-
-/// Type Alias for QueryParams from [KituraContracts](https://github.com/IBM-Swift/KituraContracts)
-public typealias QueryParams = KituraContracts.QueryParams
-
-/// Type Alias for SQLDataType from [SwiftKuery](https://github.com/IBM-Swift/Swift-Kuery)
-public typealias SQLDataType = SwiftKuery.SQLDataType
-
 /// Protocol Model conforming to Codable defining the available operations
 public protocol Model: Codable {
   /// Defines the tableName in the Database
