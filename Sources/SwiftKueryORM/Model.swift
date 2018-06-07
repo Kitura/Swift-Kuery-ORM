@@ -37,6 +37,9 @@ public protocol Model: Codable {
   /// Defines the id column type in the Database
   static var idColumnType: SQLDataType.Type {get}
 
+  /// Mapping the field names to the column names
+  static var columnNames: [String: String] {get}
+
   /// Call to create the table in the database synchronously
   static func createTableSync(using db: Database?) throws -> Bool
 
@@ -120,6 +123,9 @@ public extension Model {
   static var idColumnName: String { return "id" }
   /// Defaults to Int64
   static var idColumnType: SQLDataType.Type { return Int64.self }
+
+  /// Default to empty dictionary
+  static var columnNames: [String: String] { return [:] }
 
   @discardableResult
   static func createTableSync(using db: Database? = nil) throws -> Bool {
@@ -238,11 +244,24 @@ public extension Model {
       return
     }
 
-    let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
-    let parameters: [Any?] = columns.map({values[$0.name]!})
-    let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
-    let query = Insert(into: table, columns: columns, values: parameterPlaceHolders)
-    self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
+    var columns: [Column]  = []
+    var parameters: [Any?] = []
+    var parameterPlaceHolders: [Parameter] = []
+    for column in table.columns where column.autoIncrement != true {
+      let columnName = Self.columnNames.key(forValue: column.name) ?? column.name
+      if let value = values[columnName] {
+        columns.append(column)
+        parameters.append(value)
+        parameterPlaceHolders.append(Parameter())
+      }
+    }
+
+    if columns.count > 0 {
+      let query = Insert(into: table, columns: columns, values: parameterPlaceHolders)
+      self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
+    } else {
+      onCompletion(nil, RequestError(.ormQueryError, reason: "No columns where found in the table matching fields in the Model"))
+    } 
   }
 
   func save<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
@@ -256,11 +275,24 @@ public extension Model {
       return
     }
 
-    let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
-    let parameters: [Any?] = columns.map({values[$0.name]!})
-    let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
-    let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: true)
-    self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
+    var columns: [Column]  = []
+    var parameters: [Any?] = []
+    var parameterPlaceHolders: [Parameter] = []
+    for column in table.columns where column.autoIncrement != true {
+      let columnName = Self.columnNames.key(forValue: column.name) ?? column.name
+      if let value = values[columnName] {
+        columns.append(column)
+        parameters.append(value)
+        parameterPlaceHolders.append(Parameter())
+      }
+    }
+
+    if columns.count > 0 {
+      let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: true)
+      self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
+    } else {
+      onCompletion(nil, nil, RequestError(.ormQueryError, reason: "No columns where found in the table matching fields in the Model"))
+    }
   }
 
   func update<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
@@ -274,17 +306,30 @@ public extension Model {
       return
     }
 
-    let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
-    var parameters: [Any?] = columns.map({values[$0.name]!})
-    let parameterPlaceHolders: [(Column, Any)] = columns.map({($0, Parameter())})
+    var columns: [Column]  = []
+    var parameters: [Any?] = []
+    var parameterPlaceHolders: [(Column, Any)] = []
+    for column in table.columns where column.autoIncrement != true {
+      let columnName = Self.columnNames.key(forValue: column.name) ?? column.name
+      if let value = values[columnName] {
+        columns.append(column)
+        parameters.append(value)
+        parameterPlaceHolders.append((column, Parameter()))
+      }
+    }
+
     guard let idColumn = table.columns.first(where: {$0.name == Self.idColumnName}) else {
       onCompletion(nil, RequestError(rawValue: 708, reason: "Could not find id column"))
       return
     }
 
-    let query = Update(table, set: parameterPlaceHolders).where(idColumn == Parameter())
-    parameters.append(id.value)
-    executeQuery(query: query, parameters: parameters, using: db, onCompletion)
+    if columns.count > 0 {
+      let query = Update(table, set: parameterPlaceHolders).where(idColumn == Parameter())
+      parameters.append(id.value)
+      executeQuery(query: query, parameters: parameters, using: db, onCompletion)
+    } else {
+      onCompletion(nil, RequestError(.ormQueryError, reason: "No columns where found in the table matching fields in the Model"))
+    }
   }
 
   static func delete(id: Identifier, using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void) {
@@ -477,9 +522,22 @@ public extension Model {
 
           dictionaryTitleToValue = rows[0]
 
+          var decodingDictionary: [String: Any?] = [:]
+          if Self.columnNames.count > 0 {
+            for (key, value) in dictionaryTitleToValue {
+              if let fieldName = Self.columnNames.key(forValue: key) {
+                decodingDictionary[fieldName] = value
+              } else {
+                decodingDictionary[key] = value
+              }
+            }
+          } else {
+            decodingDictionary = dictionaryTitleToValue
+          }
+
           var decodedModel: Self
           do {
-            decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
+            decodedModel = try DatabaseDecoder().decode(Self.self, decodingDictionary)
           } catch {
             onCompletion(nil, Self.convertError(error))
             return
@@ -542,9 +600,22 @@ public extension Model {
             return
           }
 
+          var decodingDictionary: [String: Any?] = [:]
+          if Self.columnNames.count > 0 {
+            for (key, value) in dictionaryTitleToValue {
+              if let fieldName = Self.columnNames.key(forValue: key) {
+                decodingDictionary[fieldName] = value
+              } else {
+                decodingDictionary[key] = value
+              }
+            }
+          } else {
+            decodingDictionary = dictionaryTitleToValue
+          }
+
           var decodedModel: Self
           do {
-            decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
+            decodedModel = try DatabaseDecoder().decode(Self.self, decodingDictionary)
           } catch {
             onCompletion(nil, nil, Self.convertError(error))
             return
@@ -600,9 +671,22 @@ public extension Model {
 
           var list = [Self]()
           for dictionary in dictionariesTitleToValue {
+            var decodingDictionary: [String: Any?] = [:]
+            if Self.columnNames.count > 0 {
+              for (key, value) in dictionary {
+                if let fieldName = Self.columnNames.key(forValue: key) {
+                  decodingDictionary[fieldName] = value
+                } else {
+                  decodingDictionary[key] = value
+                }
+              }
+            } else {
+              decodingDictionary = dictionary
+            }
+
             var decodedModel: Self
             do {
-              decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
+              decodedModel = try DatabaseDecoder().decode(Self.self, decodingDictionary)
             } catch {
               onCompletion(nil, Self.convertError(error))
               return
@@ -667,9 +751,22 @@ public extension Model {
 
           var result = [(I, Self)]()
           for dictionary in dictionariesTitleToValue {
+            var decodingDictionary: [String: Any?] = [:]
+            if Self.columnNames.count > 0 {
+              for (key, value) in dictionary {
+                if let fieldName = Self.columnNames.key(forValue: key) {
+                  decodingDictionary[fieldName] = value
+                } else {
+                  decodingDictionary[key] = value
+                }
+              }
+            } else {
+              decodingDictionary = dictionary
+            }
+
             var decodedModel: Self
             do {
-              decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
+              decodedModel = try DatabaseDecoder().decode(Self.self, decodingDictionary)
             } catch let error {
               onCompletion(nil, Self.convertError(error))
               return
@@ -743,7 +840,7 @@ public extension Model {
   }
 
   static func getTable() throws -> Table {
-    return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType), Self.tableName, for: Self.self)
+    return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType), Self.tableName, Self.columnNames, for: Self.self)
   }
 
   /**
@@ -799,10 +896,24 @@ public extension Model {
   /// 7 - Finally, return the Filter
 
   private static func getFilter(values: [String: Any], table: Table) throws -> (filter: Filter?, parameters: [Any?]?) {
+
+    var filterValues: [String: Any] = [:]
+    if Self.columnNames.count > 0 {
+      for (key, value) in values {
+        if let fieldName = Self.columnNames[key] {
+          filterValues[fieldName] = value
+        } else {
+          filterValues[key] = value
+        }
+      }
+    } else {
+      filterValues = values
+    }
+
     var columnsToValues: [(column: Column, opr: Operator, value: String)] = []
 
     for column in table.columns {
-      if let value = values[column.name] {
+      if let value = filterValues[column.name] {
         var stringValue = String(describing: value)
         var opr: Operator = .equal
         if let operation = value as? KituraContracts.Operation {
@@ -1155,3 +1266,10 @@ extension RequestError {
   /// Error when retrieving a connection from the database fails
   public static let ormConnectionFailed = RequestError(rawValue: 711, reason: "Failed to retrieve a connection from the database")
 }
+
+extension Dictionary where Value: Equatable {
+    func key(forValue value: Value) -> Key? {
+        return first { $0.1 == value }?.0
+    }
+}
+

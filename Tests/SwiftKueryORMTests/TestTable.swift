@@ -11,6 +11,7 @@ class TestTable: XCTestCase {
             ("testDropTable", testDropTable),
             ("testCreateTableWithFieldAsId", testCreateTableWithFieldAsId),
             ("testCreateTableWithCustomIdNameAndType", testCreateTableWithCustomIdNameAndType),
+            ("testCreateTableWithCustomColumnNames", testCreateTableWithCustomColumnNames),
         ]
     }
 
@@ -102,6 +103,31 @@ class TestTable: XCTestCase {
                 XCTAssertNotNil(connection.raw, "Table Creation Failed: Query is nil")
                 if let raw = connection.raw {
                   let expectedQuery = "CREATE TABLE Grades (grade double NOT NULL, course text NOT NULL, MyId integer AUTO_INCREMENT PRIMARY KEY)"
+                  XCTAssertEqual(raw, expectedQuery, "Table Creation Failed: Invalid query")
+                }
+                expectation.fulfill()
+            }
+        })
+    }
+
+    struct Student: Model {
+        static var columnNames = ["name": "my_name", "age": "my_age"]
+        var name: String
+        var age: Int
+    }
+
+    /**
+      Testing that the correct SQL Query is created to create a table with the PRIMARY KEY having a specific name and type
+    */
+    func testCreateTableWithCustomColumnNames() {
+        let connection: TestConnection = createConnection(.returnEmpty)
+        Database.default = Database(single: connection)
+        performTest(asyncTasks: { expectation in
+            Student.createTable { result, error in
+                XCTAssertNil(error, "Table Creation Failed: \(String(describing: error))")
+                XCTAssertNotNil(connection.raw, "Table Creation Failed: Query is nil")
+                if let raw = connection.raw {
+                  let expectedQuery = "CREATE TABLE Students (my_name text NOT NULL, my_age bigint NOT NULL, id bigint AUTO_INCREMENT PRIMARY KEY)"
                   XCTAssertEqual(raw, expectedQuery, "Table Creation Failed: Invalid query")
                 }
                 expectation.fulfill()
