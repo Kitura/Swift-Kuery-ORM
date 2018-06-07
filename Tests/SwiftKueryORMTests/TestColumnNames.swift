@@ -51,6 +51,39 @@ class TestColumnNames: XCTestCase {
         })
     }
 
+    /**
+      Testing that the correct SQL Query is created to save a Model
+      Testing that an id is correcly returned
+    */
+    func testSaveWithId() {
+        let connection: TestConnection = createConnection(.returnOneRow)
+        Database.default = Database(single: connection)
+        performTest(asyncTasks: { expectation in
+            let student = Student(name: "Joe", age: 38)
+            student.save { (id: Int?, newStudent: Student?, error: RequestError?) in
+                XCTAssertNil(error, "Save Failed: \(String(describing: error))")
+                XCTAssertNotNil(connection.query, "Save Failed: Query is nil")
+                if let query = connection.query {
+                  let expectedPrefix = "INSERT INTO Students"
+                  let expectedSQLStatement = "VALUES"
+                  let expectedDictionary = ["my_name": "?1,?2", "my_age": "?1,?2"]
+
+                  let resultQuery = connection.descriptionOf(query: query)
+                  XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
+                  XCTAssertTrue(resultQuery.contains(expectedSQLStatement))
+                  verifyColumnsAndValues(resultQuery: resultQuery, expectedDictionary: expectedDictionary)
+                }
+                XCTAssertNotNil(newStudent, "Save Failed: No model returned")
+                XCTAssertEqual(id, 1, "Save Failed: \(String(describing: id)) is not equal to 1)")
+                if let newStudent = newStudent {
+                    XCTAssertEqual(newStudent.name, student.name, "Save Failed: \(String(describing: newStudent.name)) is not equal to \(String(describing: student.name))")
+                    XCTAssertEqual(newStudent.age, student.age, "Save Failed: \(String(describing: newStudent.age)) is not equal to \(String(describing: student.age))")
+                }
+                expectation.fulfill()
+            }
+        })
+    }
+
     struct Filter: QueryParams {
       let name: String
       let age: Int

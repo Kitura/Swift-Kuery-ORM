@@ -615,7 +615,7 @@ public extension Model {
 
           var decodedModel: Self
           do {
-            decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
+            decodedModel = try DatabaseDecoder().decode(Self.self, decodingDictionary)
           } catch {
             onCompletion(nil, nil, Self.convertError(error))
             return
