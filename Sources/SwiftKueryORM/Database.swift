@@ -53,7 +53,7 @@ public class Database {
     /// Constructor for a single connection which becomes a connection pool
     public convenience init(single connection: Connection) {
         // Create single entry connection pool for thread safety
-        let singleConnectionPool = ConnectionPool(options: ConnectionPoolOptions(initialCapacity: 1, maxCapacity: 1, timeout: 10),
+        let singleConnectionPool = ConnectionPool(options: ConnectionPoolOptions(initialCapacity: 1, maxCapacity: 1, timeout: 10000),
                                                   connectionGenerator: {
                                                     connection.connect { _ in }
                                                     if !connection.isConnected {
