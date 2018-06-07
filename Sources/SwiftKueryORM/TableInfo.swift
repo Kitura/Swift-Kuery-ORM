@@ -71,7 +71,7 @@ public class TableInfo {
         }
         if let SQLType = valueType as? SQLDataType.Type {
           let columnName = columnNames[key] ?? key
-          if key == idColumn.name && !idColumnIsSet {
+          if columnName == idColumn.name && !idColumnIsSet {
             columns.append(Column(columnName, SQLType, primaryKey: true, notNull: !optionalBool))
             idColumnIsSet = true
           } else {
