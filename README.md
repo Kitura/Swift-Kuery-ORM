@@ -223,6 +223,37 @@ Grade.deleteAll { error in
 }
 ```
 
+### Table Customization
+
+If you'd like to change the table name in the database, you can set the `tableName` variable like so:
+```
+extension Grade: Model {
+  static var tableName = "MyGrades"
+}
+```
+
+If you'd like to change the id column name in the database, you can set the `idColumnName` variable like so:
+```
+extension Grade: Model {
+  static var idColumnName = "MyId"
+}
+```
+Note: If the name is the same as one of the field in the model, it will set that field as the Primary Key of the Table.
+
+If you'd like to change the autoincrementing id column type in the database, you can set the `idColumnType` variable like so:
+```
+extension Grade: Model {
+  static var idColumnType = Int32.self
+}
+
+
+If you'd like to change the column names in the database, you can set the `columnNames` variable like so:
+```
+extension Grade: Model {
+  static var columnNames = ["course": "my_course", "grade": "my_grade"]
+}
+```
+
 ### Customization
 
 The ORM uses [Swift-Kuery](https://github.com/IBM-Swift/Swift-Kuery) which allows you to customize and execute your own queries without breaking any existing ORM functionality. You'll want to have access to the table for your object, which you can get with the `getTable()` function:

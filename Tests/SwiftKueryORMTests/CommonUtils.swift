@@ -171,3 +171,68 @@ func createConnection(withDeleteRequiresUsing: Bool = false, withUpdateRequiresF
 
 // Dummy class for test framework
 class CommonUtils { }
+
+
+/*
+  Function to extract the captured groups from a Regex match operation:
+  https://samwize.com/2016/07/21/how-to-capture-multiple-groups-in-a-regex-with-swift/
+**/
+extension String {
+    func capturedGroups(withRegex pattern: String) -> [String] {
+        var results = [String]()
+
+        var regex: NSRegularExpression
+        do {
+            regex = try NSRegularExpression(pattern: pattern, options: [])
+        } catch {
+            return results
+        }
+
+        let matches = regex.matches(in: self, options: [], range: NSRange(location:0, length: self.count))
+
+        guard let match = matches.first else { return results }
+
+        let lastRangeIndex = match.numberOfRanges - 1
+        guard lastRangeIndex >= 1 else { return results }
+
+        for i in 1...lastRangeIndex {
+            let capturedGroupIndex = match.range(at: i)
+            let nsString = NSString(string: self)
+            let matchedString = nsString.substring(with: capturedGroupIndex)
+            results.append(matchedString)
+        }
+
+        return results
+    }
+}
+
+func verifyColumnsAndValues(resultQuery: String, expectedDictionary: [String: String]) {
+  //Regex to extract the columns and values of an insert
+  //statement, such as:
+  //INSERT into table (columns) VALUES (values)
+  let regexPattern = ".*\\((.*)\\)[^\\(\\)]*\\((.*)\\)"
+  let groups = resultQuery.capturedGroups(withRegex: regexPattern)
+  XCTAssertEqual(groups.count, 2)
+
+  // Extracting the columns and values from the captured groups
+  let columns = groups[0].filter { $0 != " " }.split(separator: ",")
+  let values = groups[1].filter { $0 != " " && $0 != "'" }.split(separator: ",")
+  // Creating the result dictionary [Column: Value]
+  var resultDictionary: [String: String] = [:]
+  for (column, value) in zip(columns, values) {
+    resultDictionary[String(column)] = String(value)
+  }
+
+  // Asserting the results which the expectations
+  XCTAssertEqual(resultDictionary.count, expectedDictionary.count)
+  for (key, value) in expectedDictionary {
+    XCTAssertNotNil(resultDictionary[key], "Value for key: \(String(describing: key)) is nil in the result dictionary")
+    var values = value.split(separator: ",")
+    var success = false
+    for value in values where resultDictionary[key] == String(value) {
+      success = true
+    }
+    XCTAssertTrue(success)
+  }
+}
+
