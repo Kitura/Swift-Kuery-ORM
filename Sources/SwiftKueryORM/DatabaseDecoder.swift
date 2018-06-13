@@ -31,7 +31,7 @@ open class DatabaseDecoder {
   fileprivate class _DatabaseDecoder : Decoder {
     public var codingPath: [CodingKey]
     public var userInfo: [CodingUserInfoKey:Any] = [:]
-    public var values = [String:Any?]()
+    public var values = [AnyHashable: Any?]()
 
     fileprivate init(at codingPath: [CodingKey] = []){
       self.codingPath = codingPath
@@ -63,7 +63,15 @@ open class DatabaseDecoder {
     }
 
     public var allKeys: [Key] {
-      return []
+      return decoder.values.keys.map {
+        if let intKey = $0 as? Int, let key = Key(intValue: intKey) {
+          return key
+        } else if let stringKey = $0 as? String, let key = Key(stringValue: stringKey) {
+          return key
+        } else {
+          return Key(stringValue: String(describing: $0))!
+        }
+      }
     }
 
     public func contains(_ key: Key) -> Bool {
@@ -193,9 +201,21 @@ open class DatabaseDecoder {
         return try castedValue(uuid, type, key)
       } else if type is Date.Type && value != nil {
         let castValue = try castedValue(value, Double.self, key)
+        print(castValue)
         let date = Date(timeIntervalSinceReferenceDate: castValue)
         return try castedValue(date, type, key)
       } else {
+        print("--TYPE-GENERIC----", key)
+        print("--TYPE-GENERIC----", type)
+        if let dictionary = value as? [AnyHashable: Any?] {
+          var stringDictionary: [String: Any?] = [:]
+          for (key, value) in dictionary {
+            stringDictionary[String(describing: key)] = value
+          }
+          let result = try DatabaseDecoder().decode(T.self, stringDictionary)
+          return result
+        }
+
         throw RequestError(.ormDatabaseDecodingError, reason: "Unsupported type: \(String(describing: type)) for value: \(String(describing: value))")
       }
     }
@@ -339,7 +359,9 @@ open class DatabaseDecoder {
       return true
     }
 
+
     public func decode<T: Decodable>(_ type: T.Type) throws -> T {
+      print(type)
       let child = _DatabaseDecoder()
       let result = try T(from: child)
       return result

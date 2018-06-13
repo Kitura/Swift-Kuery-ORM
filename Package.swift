@@ -14,7 +14,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url:"https://github.com/IBM-Swift/Swift-Kuery.git", from: "1.3.0"),
+        .package(url:"https://github.com/IBM-Swift/Swift-Kuery.git", from: "2.0.0"),
         .package(url:"https://github.com/IBM-Swift/KituraContracts.git", from: "1.0.0")
     ],
     targets: [
