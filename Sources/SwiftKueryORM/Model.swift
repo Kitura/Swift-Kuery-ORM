@@ -27,9 +27,12 @@ public typealias QueryParams = KituraContracts.QueryParams
 
 /// Type Alias for SQLDataType from [SwiftKuery](https://github.com/IBM-Swift/Swift-Kuery)
 public typealias SQLDataType = SwiftKuery.SQLDataType
+public protocol ItsAModel {
+  func save() -> RequestError?
+}
 
 /// Protocol Model conforming to Codable defining the available operations
-public protocol Model: Codable {
+public protocol Model: Codable, ItsAModel {
   /// Defines the tableName in the Database
   static var tableName: String {get}
   /// Defines the id column name in the Database
@@ -51,15 +54,15 @@ public protocol Model: Codable {
 
   /// Call to save a model to the database that accepts a completion
   /// handler. The callback is passed a model or an error
-  func save(using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
+  func save(using db: Database?, _ onCompletion: @escaping (Model?, RequestError?) -> Void)
 
   /// Call to save a model to the database that accepts a completion
   /// handler. The callback is passed an id, a model or an error
-  func save<I: Identifier>(using db: Database?, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void)
+  func save<I: Identifier>(using db: Database?, _ onCompletion: @escaping (I?, Model?, RequestError?) -> Void)
 
   /// Call to update a model in the database with an id that accepts a completion
   /// handler. The callback is passed a updated model or an error
-  func update<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
+  func update<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Model?, RequestError?) -> Void)
 
   /// Call to delete a model in the database with an id that accepts a completion
   /// handler. The callback is passed an optional error
@@ -78,35 +81,43 @@ public protocol Model: Codable {
 
   /// Call to find a model in the database with an id that accepts a completion
   /// handler. The callback is passed the model or an error
-  static func find<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
+  static func find<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Model?, RequestError?) -> Void)
 
   /// Call to find all the models in the database that accepts a completion
   /// handler. The callback is passed an array of models or an error
-  static func findAll(using db: Database?, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
+  static func findAll(using db: Database?, _ onCompletion: @escaping ([Model]?, RequestError?) -> Void)
 
   /// Call to find all the models in the database that accepts a completion
   /// handler. The callback is passed an array of tuples (id, model) or an error
-  static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
+  static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([(I, Model)]?, RequestError?) -> Void)
 
   /// Call to find all the models in the database that accepts a completion
   /// handler. The callback is passed a dictionary [id: model] or an error
-  static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
+  static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([I: Model]?, RequestError?) -> Void)
 
   /// Call to find all the models in the database matching the QueryParams that accepts a completion
   /// handler. The callback is passed an array of models or an error
-  static func findAll<Q: QueryParams>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
+  static func findAll<Q: QueryParams>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([Model]?, RequestError?) -> Void)
 
   /// Call to find all the models in the database matching the QueryParams that accepts a completion
   /// handler. The callback is passed an array of tuples (id, model) or an error
-  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([(I, Model)]?, RequestError?) -> Void)
 
   /// Call to find all the models in the database matching the QueryParams that accepts a completion
   /// handler. The callback is passed a dictionary [id: model] or an error
-  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([I: Model]?, RequestError?) -> Void)
 
 }
 
 public extension Model {
+  func save() -> RequestError? {
+    var error: RequestError? = nil
+    self.save(using: nil) { _, err in 
+      error = err
+    }
+    return error
+  }
+
   /// Defaults to the name of the model + "s"
   static var tableName: String {
     let structName = String(describing: self)
@@ -250,7 +261,7 @@ public extension Model {
     }
   }
 
-  func save(using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
+  func save(using db: Database? = nil, _ onCompletion: @escaping (Model?, RequestError?) -> Void) {
     var table: Table
     var nestedTables: [Table]
     var values: [String : Any]
@@ -263,17 +274,38 @@ public extension Model {
       return
     }
 
+    print(nestedTables)
+    print(values)
+    for nestedTable in nestedTables {
+      let nestedTableName = nestedTable.nameInQuery
+      if let modelValue = values[nestedTableName.lowercased()] as? Model {
+        print(modelValue)
+        modelValue.save(using: nil) { (id: String?, _: Model?, error: RequestError?) in
+          if let id = id {
+            values[nestedTableName + "_id"] = id
+          }
+          print("VALUES:", values)
+
+          if let error = error {
+            onCompletion(nil, error)
+            return
+          }
+        }
+      }
+    }
+
     let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
     let parameters: [Any?] = columns.map({values[$0.name]!})
     let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
     let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: true)
 
-    self.executeQuery(query: query, parameters: parameters, using: db) { (id: Int64?, model: Self?, error: RequestError?) in
+    self.executeQuery(query: query, parameters: parameters, using: db) { (id: String?, model: Model?, error: RequestError?) in
       for nestedTable in nestedTables where values[nestedTable.nameInQuery] != nil {
         let nestedTableName = nestedTable.nameInQuery
         if let nestedValues = values[nestedTableName] as? [AnyHashable: Any] {
           for (key, value) in nestedValues {
             let columns = nestedTable.columns.filter({ $0.name == "\(nestedTableName)_key" || $0.name == "\(nestedTableName)_value" || $0.name == Self.tableName })
+
             guard let modelId = id else {
               onCompletion(nil, .ormQueryError)
               return
@@ -289,7 +321,6 @@ public extension Model {
                 parameters.append(modelId)
               }
             }
-            print(parameters)
 
             let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
 
@@ -301,6 +332,9 @@ public extension Model {
               }
             }
           }
+        } else if let arrayValues = values[nestedTableName] as? [Any] {
+          print(arrayValues)
+        } else if let modelValue = values[nestedTableName] as? Model {
         }
       }
 
@@ -308,7 +342,7 @@ public extension Model {
     }
   }
 
-  func save<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
+  func save<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping (I?, Model?, RequestError?) -> Void) {
     var table: Table
     var values: [String : Any]
     do {
@@ -326,7 +360,7 @@ public extension Model {
     self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
   }
 
-  func update<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
+  func update<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Model?, RequestError?) -> Void) {
     var table: Table
     var values: [String: Any]
     do {
@@ -449,7 +483,7 @@ public extension Model {
     }
   }
 
-  internal func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
+  internal func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Model?, RequestError?) -> Void ) {
 
     var connection: Connection
     do {
@@ -507,7 +541,7 @@ public extension Model {
     }
   }
 
-  internal static func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
+  internal static func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Model?, RequestError?) -> Void ) {
     var connection: Connection
     do {
       connection = try Self.getConnection(using: db)
@@ -554,7 +588,7 @@ public extension Model {
     }
   }
 
-  internal static func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
+  internal static func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Model?, RequestError?) -> Void ) {
     var connection: Connection
     do {
       connection = try Self.getConnection(using: db)
@@ -621,7 +655,7 @@ public extension Model {
 
   /// - Parameter using: Optional Database to use
   /// - Returns: A tuple ([Model], RequestError)
-  internal static func executeQuery(query: Query, parameters: [Any?]? = nil, nestedTables: [Table]? = nil, using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?)-> Void ) {
+  internal static func executeQuery(query: Query, parameters: [Any?]? = nil, nestedTables: [Table]? = nil, using db: Database? = nil, _ onCompletion: @escaping ([Model]?, RequestError?)-> Void ) {
     var connection: Connection
     do {
       connection = try Self.getConnection(using: db)
@@ -661,10 +695,21 @@ public extension Model {
           if let nestedTables = nestedTables {
             for nestedTable in nestedTables {
               let nestedTableName = nestedTable.nameInQuery
+              /// CHECK FOR DICTIONARY NESTED TYPE
               let keyName = nestedTableName + "_key"
               let valueName = nestedTableName + "_value"
               for row in rows {
-                guard let id = row[Self.tableName] as? Int64, let key = row[keyName] as? AnyHashable, let value = row[valueName] else {
+                guard let id = row[Self.tableName] as? Int64 else {
+                  onCompletion(nil, .ormQueryError)
+                  return
+                }
+
+                guard let key = row[keyName] as? AnyHashable else {
+                  onCompletion(nil, .ormQueryError)
+                  return
+                }
+
+                guard let value = row[valueName] else {
                   onCompletion(nil, .ormQueryError)
                   return
                 }
@@ -699,13 +744,12 @@ public extension Model {
           }
 
           var dictionariesToDecode: [[String: Any?]] = []
-          for (key, value) in dictionariesTitleToValue {
+          for (_, value) in dictionariesTitleToValue {
             dictionariesToDecode.append(value)
           }
 
           var list = [Self]()
           for dictionary in dictionariesToDecode {
-            print(dictionary)
             var decodedModel: Self
             do {
               decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
@@ -1067,7 +1111,7 @@ public extension Model {
   /// Find a model with an id
   /// - Parameter using: Optional Database to use
   /// - Returns: A tuple (Model, RequestError)
-  static func find<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
+  static func find<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Model?, RequestError?) -> Void) {
     var table: Table
     do {
       table = try Self.getTable()
@@ -1088,7 +1132,7 @@ public extension Model {
 
 
   ///
-  static func findAll(using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
+  static func findAll(using db: Database? = nil, _ onCompletion: @escaping ([Model]?, RequestError?) -> Void) {
     var table: Table
     var nestedTables: [Table]
     do {
@@ -1106,14 +1150,13 @@ public extension Model {
         query = query.join(nestedTable).on(idColumn == modelIdColumn)
       }
     }
-    print(query)
     Self.executeQuery(query: query, nestedTables: nestedTables, using: db, onCompletion)
   }
 
   /// Find all the models
   /// - Parameter using: Optional Database to use
   /// - Returns: An array of tuples (id, model)
-  static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
+  static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([(I, Model)]?, RequestError?) -> Void) {
     var table: Table
     do {
       table = try Self.getTable()
@@ -1127,7 +1170,7 @@ public extension Model {
   }
 
   /// :nodoc:
-  static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
+  static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([I: Model]?, RequestError?) -> Void) {
     var table: Table
     do {
       table = try Self.getTable()
@@ -1156,7 +1199,7 @@ public extension Model {
 
   /// - Parameter matching: Optional QueryParams to use
   /// - Returns: An array of model
-  static func findAll<Q: QueryParams>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
+  static func findAll<Q: QueryParams>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([Model]?, RequestError?) -> Void) {
     var table: Table
     do {
       table = try Self.getTable()
@@ -1181,7 +1224,7 @@ public extension Model {
   /// Find all the models matching the QueryParams
   /// - Parameter using: Optional Database to use
   /// - Returns: An array of tuples (id, model)
-  static func findAll<Q: QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([(I, Model)]?, RequestError?) -> Void) {
     var table: Table
     do {
       table = try Self.getTable()
@@ -1206,7 +1249,7 @@ public extension Model {
   /// Find all the models matching the QueryParams
   /// - Parameter using: Optional Database to use
   /// - Returns: A dictionary [id: model]
-  static func findAll<Q:QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
+  static func findAll<Q:QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([I: Model]?, RequestError?) -> Void) {
     var table: Table
     do {
       table = try Self.getTable()

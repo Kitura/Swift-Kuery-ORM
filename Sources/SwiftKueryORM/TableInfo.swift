@@ -51,9 +51,11 @@ public class TableInfo {
     switch typeInfo {
     case .keyed(_, let dict):
       for (key, value) in dict {
+        var columnName = key
         var keyedTypeInfo = value
         var optionalBool = false
-        var noColumn = false
+        var createColumn = true
+
         if case .optional(let optionalType) = keyedTypeInfo {
           optionalBool = true
           keyedTypeInfo = optionalType
@@ -71,21 +73,15 @@ public class TableInfo {
           valueType = String.self
         case .keyed(_ as URL.Type, _):
           valueType = String.self
-        case .keyed:
-          throw RequestError(.ormTableCreationError, reason: "Nested structs or dictionaries are not supported")
-        case .unkeyed(let type, let typeInfo):
-          /*
-          let tableInfoUnKeyed = try? constructTable((name: "id", type: idColumn.type), key, value)
+        case .keyed(let type, _):
+          guard let keyedInfo = codableMap["\(type)"] else {
+            throw RequestError(.ormTableCreationError, reason: "Please create table for \(type) Model")
+          }
 
-          var error: Error? = nil
-          createNestedTable(table: table!) { returnedError in 
-            error = returnedError
-          }
-          if let error = error {
-            throw error
-          }
-          nestedTables.append(tableInfo.table)
-          foreignKey = table.*/
+          nestedTables.append(keyedInfo.table)
+          valueType = idColumn.type
+          columnName = "\(type)_id"
+        case .unkeyed(_, _):
           throw RequestError(.ormTableCreationError, reason: "Arrays or sets are not supported")
         case .dynamicKeyed(_, _, _):
           let tableInfoDictionary = try constructTable((name: "id", type: idColumn.type), key, value, tableName)
@@ -96,17 +92,17 @@ public class TableInfo {
           }
 
           valueType = idColumn.type
-          noColumn = true
+          createColumn = false
         default:
           throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: keyedTypeInfo)) is not supported")
         }
-        if !noColumn {
+        if createColumn {
           if let SQLType = valueType as? SQLDataType.Type {
             if key == idColumn.name && !idColumnIsSet {
-              columns.append(Column(key, SQLType, primaryKey: true, notNull: !optionalBool))
+              columns.append(Column(columnName, SQLType, primaryKey: true, notNull: !optionalBool))
               idColumnIsSet = true
             } else {
-              let column = Column(key, SQLType, notNull: !optionalBool)
+              let column = Column(columnName, SQLType, notNull: !optionalBool)
               columns.append(column)
             }
           } else {
@@ -114,6 +110,7 @@ public class TableInfo {
           }
         }
       }
+
     case .unkeyed(_, let tableInfo):
       var valueType: Any? = nil
       switch tableInfo {
@@ -128,40 +125,53 @@ public class TableInfo {
       } else {
         throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: valueType)) of Key: \(String(describing: "value")) is not a SQLDataType")
       }
+
     case .dynamicKeyed(_, let key, let value):
       var keyValueType: Any? = nil
       var valueType: Any? = nil
 
       switch key {
+      case .single(_ as UUID.Type, _):
+        keyValueType = UUID.self
       case .single(_, let singleType):
         keyValueType = singleType
         if keyValueType is Int.Type {
           keyValueType = Int64.self
         }
-      default: 
-        throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: typeInfo)) is not supported")
+      case .unkeyed(_ as Data.Type, _):
+        keyValueType = String.self
+      case .keyed(_ as URL.Type, _):
+        keyValueType = String.self
+      default:
+        throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: key)) for key in dictionary is not supported")
       }
 
       if let SQLType = keyValueType as? SQLDataType.Type {
         columns.append(Column("\(tableName)_key", SQLType))
       } else {
-        throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: valueType)) of Key: \(String(describing: "value")) is not a SQLDataType")
+        throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: valueType)) of key in Dictionary is not a SQLDataType")
       }
 
       switch value {
+      case .single(_ as UUID.Type, _):
+        valueType = UUID.self
       case .single(_, let singleType):
         valueType = singleType
         if valueType is Int.Type {
           valueType = Int64.self
         }
+      case .unkeyed(_ as Data.Type, _):
+        valueType = String.self
+      case .keyed(_ as URL.Type, _):
+        valueType = String.self
       default: 
-        throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: typeInfo)) is not supported")
+        throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: value)) for value in Dictionary is not supported")
       }
 
       if let SQLType = valueType as? SQLDataType.Type {
         columns.append(Column("\(tableName)_value", SQLType))
       } else {
-        throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: valueType)) of Key: \(String(describing: "value")) is not a SQLDataType")
+        throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: valueType)) of value in Dictionary is not a SQLDataType")
       }
 
       let modelIdColumnName = parentTableName ?? "Model_id"
@@ -174,7 +184,7 @@ public class TableInfo {
       columns.append(Column(idColumn.name, idColumn.type, autoIncrement: true, primaryKey: true))
     }
 
-    var table = Table(tableName: tableName, columns: columns)
+    let table = Table(tableName: tableName, columns: columns)
     return (table: table, nestedTables: nestedTables)
   }
 

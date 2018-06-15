@@ -201,12 +201,9 @@ open class DatabaseDecoder {
         return try castedValue(uuid, type, key)
       } else if type is Date.Type && value != nil {
         let castValue = try castedValue(value, Double.self, key)
-        print(castValue)
         let date = Date(timeIntervalSinceReferenceDate: castValue)
         return try castedValue(date, type, key)
       } else {
-        print("--TYPE-GENERIC----", key)
-        print("--TYPE-GENERIC----", type)
         if let dictionary = value as? [AnyHashable: Any?] {
           var stringDictionary: [String: Any?] = [:]
           for (key, value) in dictionary {
@@ -216,8 +213,18 @@ open class DatabaseDecoder {
           return result
         }
 
+        if value != nil {
+          let dictionary = ["single": value]
+          let result = try DatabaseDecoder().decode(T.self, dictionary)
+          return result
+        }
+
         throw RequestError(.ormDatabaseDecodingError, reason: "Unsupported type: \(String(describing: type)) for value: \(String(describing: value))")
       }
+    }
+
+    func getType<T: Decodable>(inputType: T.Type) -> T.Type.Type{
+      return type(of: inputType)
     }
 
     public func decodeIfPresent(_ type: Int.Type, forKey key: Key) throws -> Int? {
@@ -361,7 +368,12 @@ open class DatabaseDecoder {
 
 
     public func decode<T: Decodable>(_ type: T.Type) throws -> T {
-      print(type)
+      if decoder.values.count > 0 {
+        guard let result = decoder.values["single"] as? T else {
+          throw RequestError(.ormDatabaseDecodingError, reason: "Unsupported type: \(String(describing: type))")
+        }
+        return result
+      }
       let child = _DatabaseDecoder()
       let result = try T(from: child)
       return result

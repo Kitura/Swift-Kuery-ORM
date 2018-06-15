@@ -70,7 +70,6 @@ fileprivate struct _DatabaseKeyedEncodingContainer<K: CodingKey> : KeyedEncoding
       throw RequestError(.ormDatabaseEncodingError, reason: "Encoding an array is not currently supported")
     } else if value is [AnyHashable: Any] {
       encoder.values[key.stringValue] = try DatabaseEncoder().encode(value)
-      //throw RequestError(.ormDatabaseEncodingError, reason: "Encoding a dictionary is not currently supported")
     } else {
       encoder.values[key.stringValue] = value
     }
