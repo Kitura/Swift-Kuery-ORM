@@ -6,13 +6,13 @@
 
 
 <p align="center">
-    <a href="http://www.kitura.io/">
-    <img src="https://img.shields.io/badge/docs-kitura.io-1FBCE4.svg" alt="Docs">
+    <a href="https://ibm-swift.github.io/Swift-Kuery-ORM/index.html">
+    <img src="https://img.shields.io/badge/apidoc-SwiftKueryORM-1FBCE4.svg?style=flat" alt="APIDoc">
     </a>
     <a href="https://travis-ci.org/IBM-Swift/Swift-Kuery-ORM">
     <img src="https://travis-ci.org/IBM-Swift/Swift-Kuery-ORM.svg?branch=master" alt="Build Status - Master">
     </a>
-    <img src="https://img.shields.io/badge/os-macOS-green.svg?style=flat" alt="Mac OS X">
+    <img src="https://img.shields.io/badge/os-macOS-green.svg?style=flat" alt="macOS">
     <img src="https://img.shields.io/badge/os-linux-green.svg?style=flat" alt="Linux">
     <img src="https://img.shields.io/badge/license-Apache2-blue.svg?style=flat" alt="Apache 2">
     <a href="http://swift-at-ibm-slack.mybluemix.net/">
@@ -22,13 +22,12 @@
 
 # Swift-Kuery-ORM
 
-## Summary
 Swift-Kuery-ORM is an ORM (Object Relational Mapping) library built for Swift. Using it allows you to simplify persistence of model objects with your server.
 
 Swift-Kuery-ORM is built on top of [Swift-Kuery](http://github.com/IBM-Swift/Swift-Kuery), which means that its possible to use Swift-Kuery to customize SQL queries made to the database, if the functionality of the ORM is insufficient.
 
 ## The Model Protocol
-The key component of Swift-Kuery-ORM is the protocol `Model`. 
+The key component of Swift-Kuery-ORM is the protocol `Model`.
 
 Let's propose a struct to use as an example. We can declare an object that looks like so:
 
@@ -63,18 +62,18 @@ The `Model` protocol is the key to using the ORM. Let's walk through how to full
 
 ## Example
 
-You'll want to go [here](http://www.kitura.io/en/starter/gettingstarted.html) to create a server from the CLI to get started. You'll be using the [PostgreSQL plugin of Swift Kuery](https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL), so you will want to make sure that you have PostgreSQL running on your local machine, which you can install with `brew install postgresql`. The default port for PostgreSQL is 5432.
+Follow [Getting Started](https://www.kitura.io/guides/gettingstarted.html) to create a Kitura server. In this example you'll be using the [Swift Kuery PostgreSQL plugin](https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL), so you will need PostgreSQL running on your local machine, which you can install with `brew install postgresql`. The default port for PostgreSQL is 5432.
 
 ### Update your Package.swift file
 
-Add Swift-Kuery-ORM and Swift-Kuery-PostgreSQL to your `Package.swift`:
+Add Swift-Kuery-ORM and Swift-Kuery-PostgreSQL to your application's `Package.swift`. Substitute `"x.x.x"` with the latest `Swift-Kuery-ORM` [release](https://github.com/IBM-Swift/Swift-Kuery-ORM/releases) and the latest `Swift-Kuery-PostgreSQL` [release](https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL/releases).
 
 ```swift
 dependencies: [
     ...
     // Add these two lines
-    .package(url: "https://github.com/IBM-Swift/Swift-Kuery-ORM.git", from: "0.1.0"),
-    .package(url: "https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL.git", from: "1.0.0"),
+    .package(url: "https://github.com/IBM-Swift/Swift-Kuery-ORM.git", from: "x.x.x"),
+    .package(url: "https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL.git", from: "x.x.x"),
   ],
   targets: [
     .target(
@@ -84,7 +83,7 @@ dependencies: [
   ]
 ```
 
-Let's assume you want to add ORM functionality to a file called `Application.swift`. You'll need to make the following import statements at the top of the file:
+Let's assume you want to add ORM functionality to a file called `Application.swift`. You'll need to add the following import statements at the top of the file:
 
 ```swift
 import SwiftKueryORM
@@ -122,7 +121,7 @@ struct Grade : Codable {
 In your `Application.swift` file, extend `Grade` to conform to `Model`
 
 ```swift
-extension Grade : Model { 
+extension Grade : Model {
     // here, you can add any server-side specific logic to your object
 }
 ```
@@ -257,13 +256,20 @@ executeQuery(query: Query) { error in
 
 If you'd like to learn more about how you can customize queries, check out the [Swift-Kuery](https://github.com/IBM-Swift/Swift-Kuery) repository for more information.
 
-## List of plugins:
+## List of plugins
 
 * [PostgreSQL](https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL)
 
 * [SQLite](https://github.com/IBM-Swift/Swift-Kuery-SQLite)
 
 * [MySQL](https://github.com/IBM-Swift/SwiftKueryMySQL)
+
+## API Documentation
+For more information visit our [API reference](https://ibm-swift.github.io/Swift-Kuery-ORM/index.html).
+
+## Community
+
+We love to talk server-side Swift, and Kitura. Join our [Slack](http://swift-at-ibm-slack.mybluemix.net/) to meet the team!
 
 ## License
 This library is licensed under Apache 2.0. Full license text is available in [LICENSE](LICENSE.txt).
