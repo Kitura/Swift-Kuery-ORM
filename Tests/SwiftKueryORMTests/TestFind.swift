@@ -31,7 +31,7 @@ class TestFind: XCTestCase {
                 XCTAssertNil(error, "Find Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedQuery = "SELECT * FROM People WHERE People.id = ?1"
+                  let expectedQuery = "SELECT * FROM \"People\" WHERE \"People\".\"id\" = ?1"
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertEqual(resultQuery, expectedQuery, "Find Failed: Invalid query")
                 }
@@ -57,7 +57,7 @@ class TestFind: XCTestCase {
                 XCTAssertNil(error, "Find Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedQuery = "SELECT * FROM People"
+                  let expectedQuery = "SELECT * FROM \"People\""
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertEqual(resultQuery, expectedQuery, "Find Failed: Invalid query")
                 }
@@ -88,8 +88,8 @@ class TestFind: XCTestCase {
                 XCTAssertNil(error, "Find Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedPrefix = "SELECT * FROM People WHERE"
-                  let expectedClauses = [["People.name = ?1", "People.name = ?2"], ["People.age = ?1", "People.age = ?2"]]
+                  let expectedPrefix = "SELECT * FROM \"People\" WHERE"
+                  let expectedClauses = [["\"People\".\"name\" = ?1", "\"People\".\"name\" = ?2"], ["\"People\".\"age\" = ?1", "\"People\".\"age\" = ?2"]]
                   let expectedOperator = "AND"
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))

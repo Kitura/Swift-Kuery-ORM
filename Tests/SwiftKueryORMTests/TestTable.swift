@@ -30,7 +30,7 @@ class TestTable: XCTestCase {
                 XCTAssertNil(error, "Table Creation Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.raw, "Table Creation Failed: Query is nil")
                 if let raw = connection.raw {
-                  let expectedQuery = "CREATE TABLE Users (username text NOT NULL, password text NOT NULL, id bigint AUTO_INCREMENT PRIMARY KEY)"
+                  let expectedQuery = "CREATE TABLE \"Users\" (\"username\" text NOT NULL, \"password\" text NOT NULL, \"id\" bigint AUTO_INCREMENT PRIMARY KEY)"
                   XCTAssertEqual(raw, expectedQuery, "Table Creation Failed: Invalid query")
                 }
                 expectation.fulfill()
@@ -49,7 +49,7 @@ class TestTable: XCTestCase {
                 XCTAssertNil(error, "Table Drop Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Table Drop Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedQuery = "DROP TABLE Users"
+                  let expectedQuery = "DROP TABLE \"Users\""
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertEqual(resultQuery, expectedQuery, "Table Drop Failed: Invalid query")
                 }
@@ -75,7 +75,7 @@ class TestTable: XCTestCase {
                 XCTAssertNil(error, "Table Creation Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.raw, "Table Creation Failed: Query is nil")
                 if let raw = connection.raw {
-                  let expectedQuery = "CREATE TABLE Meals (name text PRIMARY KEY NOT NULL, rating bigint NOT NULL)"
+                  let expectedQuery = "CREATE TABLE \"Meals\" (\"name\" text PRIMARY KEY NOT NULL, \"rating\" bigint NOT NULL)"
                   XCTAssertEqual(raw, expectedQuery, "Table Creation Failed: Invalid query")
                 }
                 expectation.fulfill()
@@ -101,7 +101,7 @@ class TestTable: XCTestCase {
                 XCTAssertNil(error, "Table Creation Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.raw, "Table Creation Failed: Query is nil")
                 if let raw = connection.raw {
-                  let expectedQuery = "CREATE TABLE Grades (grade double NOT NULL, course text NOT NULL, MyId integer AUTO_INCREMENT PRIMARY KEY)"
+                  let expectedQuery = "CREATE TABLE \"Grades\" (\"grade\" double NOT NULL, \"course\" text NOT NULL, \"MyId\" integer AUTO_INCREMENT PRIMARY KEY)"
                   XCTAssertEqual(raw, expectedQuery, "Table Creation Failed: Invalid query")
                 }
                 expectation.fulfill()
