@@ -927,10 +927,8 @@ public extension Model {
       return RequestError(.ormQueryError, reason: String(describing: queryError))
     case let decodingError as DecodingError:
       return RequestError(.ormCodableDecodingError, reason: String(describing: decodingError))
-    case let internalError as InternalError:
-      return RequestError(.ormInternalError, reason: String(describing: internalError))
     default:
-      return RequestError(.ormDatabaseDecodingError, reason: String(describing: error))
+      return RequestError(.ormInternalError, reason: String(describing: error))
     }
   }
 
