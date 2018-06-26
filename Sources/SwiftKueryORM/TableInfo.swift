@@ -71,12 +71,24 @@ public class TableInfo {
           throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: keyedTypeInfo)) is not supported")
         }
         if let SQLType = valueType as? SQLDataType.Type {
-          if key == idColumn.name && !idColumnIsSet {
+
+          // In the case of an IdentifiedModel, an `id` field exists. This maps
+          // to the auto incrementing column in the database.
+          // Note: the name of the column will be the idColumn.name which can be
+          // set by the user to override the default `id` value.
+          if key == "id" && !idColumnIsSet {
+            columns.append(Column(idColumn.name, idColumn.type, autoIncrement: true, primaryKey: true))
+            idColumnIsSet = true
+          } else if key == idColumn.name  && !idColumnIsSet {
+            // If the idColumn.name matches one of the fields then make that
+            // field the PrimaryKey of the Table
+            // Note: Not Auto Incrementing
             columns.append(Column(key, SQLType, primaryKey: true, notNull: !optionalBool))
             idColumnIsSet = true
           } else {
             columns.append(Column(key, SQLType, notNull: !optionalBool))
           }
+
         } else {
           throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: valueType)) of Key: \(String(describing: key)) is not a SQLDataType")
         }
@@ -85,6 +97,7 @@ public class TableInfo {
       //TODO enhance error message
       throw RequestError(.ormTableCreationError, reason: "Can only save a struct to the database")
     }
+
     if !idColumnIsSet {
       columns.append(Column(idColumn.name, idColumn.type, autoIncrement: true, primaryKey: true))
     }
