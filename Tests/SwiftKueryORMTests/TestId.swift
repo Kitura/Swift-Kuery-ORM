@@ -36,7 +36,7 @@ class TestId: XCTestCase {
                 XCTAssertNil(error, "Find Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedQuery = "SELECT * FROM People WHERE People.name = ?1"
+                  let expectedQuery = "SELECT * FROM \"People\" WHERE \"People\".\"name\" = ?1"
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertEqual(resultQuery, expectedQuery, "Find Failed: Invalid query")
                 }
@@ -62,9 +62,9 @@ class TestId: XCTestCase {
                 XCTAssertNil(error, "Update Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Update Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedPrefix = "UPDATE People SET"
-                  let expectedSuffix = "WHERE People.name = ?3"
-                  let expectedUpdates = [["name = ?1", "name = ?2"], ["age = ?1", "age = ?2"]]
+                  let expectedPrefix = "UPDATE \"People\" SET"
+                  let expectedSuffix = "WHERE \"People\".\"name\" = ?3"
+                  let expectedUpdates = [["\"name\" = ?1", "\"name\" = ?2"], ["\"age\" = ?1", "\"age\" = ?2"]]
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
                   XCTAssertTrue(resultQuery.hasSuffix(expectedSuffix))
@@ -97,7 +97,7 @@ class TestId: XCTestCase {
                 XCTAssertNil(error, "Delete Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Delete Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedQuery = "DELETE FROM People WHERE People.name = ?1"
+                  let expectedQuery = "DELETE FROM \"People\" WHERE \"People\".\"name\" = ?1"
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertEqual(resultQuery, expectedQuery, "Expected query \(String(describing: expectedQuery)) did not match result query: \(String(describing: resultQuery))")
                 }

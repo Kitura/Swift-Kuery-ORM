@@ -30,7 +30,7 @@ class TestDelete: XCTestCase {
                 XCTAssertNil(error, "Delete Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Delete Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedQuery = "DELETE FROM People WHERE People.id = ?1"
+                  let expectedQuery = "DELETE FROM \"People\" WHERE \"People\".\"id\" = ?1"
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertEqual(resultQuery, expectedQuery, "Expected query \(String(describing: expectedQuery)) did not match result query: \(String(describing: resultQuery))")
                 }
@@ -50,7 +50,7 @@ class TestDelete: XCTestCase {
                 XCTAssertNil(error, "Delete Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Delete Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedQuery = "DELETE FROM People"
+                  let expectedQuery = "DELETE FROM \"People\""
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertEqual(resultQuery, expectedQuery, "Expected query \(String(describing: expectedQuery)) did not match result query: \(String(describing: resultQuery))")
                 }
@@ -76,8 +76,8 @@ class TestDelete: XCTestCase {
                 XCTAssertNil(error, "Delete Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Delete Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedPrefix = "DELETE FROM People WHERE"
-                  let expectedClauses = [["People.name = ?1", "People.name = ?2"], ["People.age = ?1", "People.age = ?2"]]
+                  let expectedPrefix = "DELETE FROM \"People\" WHERE"
+                  let expectedClauses = [["\"People\".\"name\" = ?1", "\"People\".\"name\" = ?2"], ["\"People\".\"age\" = ?1", "\"People\".\"age\" = ?2"]]
                   let expectedOperator = "AND"
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))

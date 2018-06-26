@@ -62,9 +62,9 @@ class TestSave: XCTestCase {
                 XCTAssertNil(error, "Save Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Save Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedPrefix = "INSERT INTO People"
+                  let expectedPrefix = "INSERT INTO \"People\""
                   let expectedSQLStatement = "VALUES"
-                  let expectedDictionary = ["name": "?1,?2", "age": "?1,?2"]
+                  let expectedDictionary = ["\"name\"": "?1,?2", "\"age\"": "?1,?2"]
 
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
@@ -94,9 +94,9 @@ class TestSave: XCTestCase {
                 XCTAssertNil(error, "Save Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.query, "Save Failed: Query is nil")
                 if let query = connection.query {
-                  let expectedPrefix = "INSERT INTO People"
+                  let expectedPrefix = "INSERT INTO \"People\""
                   let expectedSQLStatement = "VALUES"
-                  let expectedDictionary = ["name": "?1,?2", "age": "?1,?2"]
+                  let expectedDictionary = ["\"name\"": "?1,?2", "\"age\"": "?1,?2"]
 
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
