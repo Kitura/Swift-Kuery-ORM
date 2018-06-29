@@ -23,8 +23,17 @@ import Dispatch
 public protocol Model: Codable {
   /// Defines the tableName in the Database
   static var tableName: String {get}
-  /// Defines the id column name in the Database
+
+  /// Defines the id column name in the Database and if set to the same name as
+  /// a field in the model it will make that field the Primary Key of the table in the Database.
+  ///
+  /// If that field is of type Int?, it will set it as auto increment in the
+  /// Database and will populate the field when the model is returned.
+  ///
+  /// If when saving a model, that field has a value it will not save it but
+  /// instead get an auto increment value.
   static var idColumnName: String {get}
+
   /// Defines the id column type in the Database
   static var idColumnType: SQLDataType.Type {get}
 
@@ -232,8 +241,14 @@ public extension Model {
     let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
     let parameters: [Any?] = columns.map({values[$0.name]!})
     let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
-    let query = Insert(into: table, columns: columns, values: parameterPlaceHolders)
-    self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
+
+    // Check if a field in the database maps to the auto incrementing id in the database
+    // If yes, when inserting the Model return the id to populate the field in the Model
+    let idColumn: [Column] = table.columns.filter({$0.autoIncrement == true && $0.name == Self.idColumnName})
+    let returnID = (idColumn.count > 0)
+
+    let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: returnID)
+    self.executeQuery(query: query, values: values, parameters: parameters, using: db, onCompletion)
   }
 
   func save<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
@@ -347,7 +362,7 @@ public extension Model {
     Self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
   }
 
-  internal func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
+  internal func executeQuery(query: Query, values: [String: Any?]? = nil, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
     var connection: Connection
     do {
       connection = try Self.getConnection(using: db)
@@ -355,6 +370,8 @@ public extension Model {
       onCompletion(nil, Self.convertError(error))
       return
     }
+
+    var dictionaryTitleToValue = [String: Any?]()
 
     connection.connect { error in
       if let error = error {
@@ -371,7 +388,45 @@ public extension Model {
             return
           }
 
-          onCompletion(self, nil)
+          // No values given - returning original model
+          guard var values = values else {
+            onCompletion(self, nil)
+            return
+          }
+
+          // Retrieve the rows from the database
+          guard let rows = result.asRows, rows.count > 0 else {
+            onCompletion(self, nil)
+            return
+          }
+
+          dictionaryTitleToValue = rows[0]
+
+          // Extract the ID value
+          guard let value = dictionaryTitleToValue[Self.idColumnName] else {
+            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not set id field"))
+            return
+          }
+
+          guard let unwrappedValue: Any = value else {
+            onCompletion(nil, RequestError(.ormNotFound, reason: "Id field is nil"))
+            return
+          }
+
+          // Append the ID value to the current values of the model
+          values[Self.idColumnName] = unwrappedValue
+
+          // Construct a model from the values - effectively decoding the values
+          // dictionary containing the id value into an instance of the Model type
+          var decodedModel: Self
+          do {
+            decodedModel = try DatabaseDecoder().decode(Self.self, values)
+          } catch {
+            onCompletion(nil, Self.convertError(error))
+            return
+          }
+
+          onCompletion(decodedModel, nil)
         }
       }
     }

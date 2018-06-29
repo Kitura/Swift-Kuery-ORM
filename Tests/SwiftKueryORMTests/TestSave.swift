@@ -47,8 +47,16 @@ class TestSave: XCTestCase {
 
     struct Person: Model {
         static var tableName = "People"
+        static var idColumnName = "id"
+        var id: Int?
         var name: String
         var age: Int
+
+        init(name: String, age: Int) {
+          self.id = nil
+          self.name = name
+          self.age = age
+        }
     }
     /**
       Testing that the correct SQL Query is created to save a Model
@@ -114,6 +122,41 @@ class TestSave: XCTestCase {
         })
     }
 
+    /**
+      Testing that the correct SQL Query is created to save a Model which contains an ID of type Int? 
+      which will be set to auto increment
+      Testing that an id is correcly set inside the Model
+    */
+
+    func testSaveWithAutoIncrementFieldID() {
+        let connection: TestConnection = createConnection(.returnOneRow)
+        Database.default = Database(single: connection)
+        performTest(asyncTasks: { expectation in
+            let person = Person(name: "Joe", age: 38)
+            person.save { (p: Person?, error: RequestError?) in
+                XCTAssertNil(error, "Save Failed: \(String(describing: error))")
+                XCTAssertNotNil(connection.query, "Save Failed: Query is nil")
+                if let query = connection.query {
+                  let expectedPrefix = "INSERT INTO People"
+                  let expectedSQLStatement = "VALUES"
+                  let expectedDictionary = ["name": "?1,?2", "age": "?1,?2"]
+
+                  let resultQuery = connection.descriptionOf(query: query)
+                  XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
+                  XCTAssertTrue(resultQuery.contains(expectedSQLStatement))
+                  self.verifyColumnsAndValues(resultQuery: resultQuery, expectedDictionary: expectedDictionary)
+                }
+                XCTAssertNotNil(p, "Save Failed: No model returned")
+                if let p = p { 
+                    XCTAssertEqual(p.id, 1, "Save Failed: \(String(describing: p.name)) is not equal to \(String(describing: person.name))")
+                    XCTAssertEqual(p.name, person.name, "Save Failed: \(String(describing: p.name)) is not equal to \(String(describing: person.name))")
+                    XCTAssertEqual(p.age, person.age, "Save Failed: \(String(describing: p.age)) is not equal to \(String(describing: person.age))")
+                }
+                expectation.fulfill()
+            }
+        })
+    }
+
     private func verifyColumnsAndValues(resultQuery: String, expectedDictionary: [String: String]) {
       //Regex to extract the columns and values of an insert
       //statement, such as:
@@ -135,7 +178,7 @@ class TestSave: XCTestCase {
       XCTAssertEqual(resultDictionary.count, expectedDictionary.count)
       for (key, value) in expectedDictionary {
         XCTAssertNotNil(resultDictionary[key], "Value for key: \(String(describing: key)) is nil in the result dictionary")
-        var values = value.split(separator: ",")
+        let values = value.split(separator: ",")
         var success = false
         for value in values where resultDictionary[key] == String(value) {
           success = true

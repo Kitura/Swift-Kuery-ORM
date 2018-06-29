@@ -71,8 +71,20 @@ public class TableInfo {
           throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: keyedTypeInfo)) is not supported")
         }
         if let SQLType = valueType as? SQLDataType.Type {
+          // if the idColumn name matches one of the fields and the idColumn
+          // hasn't been set - then set the field to be the primary key of the
+          // table
           if key == idColumn.name && !idColumnIsSet {
-            columns.append(Column(key, SQLType, primaryKey: true, notNull: !optionalBool))
+            var column: Column
+            // If the idColumn type is an optional type and an integer then make
+            // the field the primary key and auto increment it in the database.
+            // Else just make it the primary key in the database.
+            if optionalBool && (SQLType == Int64.self || SQLType == Int32.self || SQLType == Int16.self) {
+              column = Column(key, SQLType, autoIncrement: true, primaryKey: true)
+            } else {
+              column = Column(key, SQLType, primaryKey: true, notNull: !optionalBool)
+            }
+            columns.append(column)
             idColumnIsSet = true
           } else {
             columns.append(Column(key, SQLType, notNull: !optionalBool))
