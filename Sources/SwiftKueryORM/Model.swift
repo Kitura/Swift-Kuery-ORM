@@ -592,6 +592,7 @@ public extension Model {
           var list = [Self]()
           for dictionary in dictionariesTitleToValue {
             var decodedModel: Self
+
             do {
               decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
             } catch {
@@ -667,6 +668,7 @@ public extension Model {
             }
 
             guard let value = dictionary[idColumnName] else {
+              
               onCompletion(nil, RequestError(.ormNotFound, reason: "Could not find return id"))
               return
             }
@@ -741,7 +743,7 @@ public extension Model {
     This functions accepts a Select query, an instance of QueryParams and the database table.
     It returns the updated Select query containing the filtering values extracted from the QueryParameters and the parameters to inject in the SQL Query (this is to prevent SQL Injection)
   */
-  private static func getSelectQueryWithFilters<Q: QueryParams>(query: Select, queryParams: Q, table: Table) throws -> (query: Select, parameters: [Any?]?) {
+  internal static func getSelectQueryWithFilters<Q: QueryParams>(query: Select, queryParams: Q, table: Table) throws -> (query: Select, parameters: [Any?]?) {
       let values: [String: Any] = try QueryEncoder().encode(queryParams)
       if values.count < 1 {
         throw RequestError(.ormQueryError, reason: "Could not extract values for Query Parameters")
@@ -919,7 +921,7 @@ public extension Model {
     return orderByArray
   }
 
-  private static func convertError(_ error: Error) -> RequestError {
+  internal static func convertError(_ error: Error) -> RequestError {
     switch error {
     case let requestError as RequestError:
       return requestError
@@ -932,7 +934,7 @@ public extension Model {
     }
   }
 
-  private static func getConnection(using db: Database? = nil) throws -> Connection {
+  internal static func getConnection(using db: Database? = nil) throws -> Connection {
     guard let database = db ?? Database.default else {
       throw RequestError.ormDatabaseNotInitialized
     }
@@ -1143,4 +1145,5 @@ extension RequestError {
   public static let ormInternalError = RequestError(rawValue: 710)
   /// Error when retrieving a connection from the database fails
   public static let ormConnectionFailed = RequestError(rawValue: 711, reason: "Failed to retrieve a connection from the database")
+  public static let ormNotAvailable = RequestError(rawValue: 712)
 }

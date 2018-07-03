@@ -8,6 +8,7 @@ class TestUpdate: XCTestCase {
     static var allTests: [(String, (TestUpdate) -> () throws -> Void)] {
         return [
             ("testUpdate", testUpdate),
+            ("testUpdateWithIdentifiedModel", testUpdateWithIdentifiedModel)
         ]
     }
 
@@ -47,6 +48,53 @@ class TestUpdate: XCTestCase {
                 if let p = p {
                     XCTAssertEqual(p.name, person.name, "Update Failed: \(String(describing: p.name)) is not equal to \(String(describing: person.name))")
                     XCTAssertEqual(p.age, person.age, "Update Failed: \(String(describing: p.age)) is not equal to \(String(describing: person.age))")
+                }
+                expectation.fulfill()
+            }
+        })
+    }
+
+    struct Employee: IdentifiedModel {
+      var id: Int? = 1
+      let name: String
+      let age: Int
+
+      init(name: String, age: Int) {
+        self.name = name
+        self.age = age
+      }
+    }
+
+    /**
+      Testing that the correct SQL Query is created to update an IdentifiedModel.
+    */
+    func testUpdateWithIdentifiedModel() {
+        let connection: TestConnection = createConnection()
+        Database.default = Database(single: connection)
+        performTest(asyncTasks: { expectation in
+            let employee = Employee(name: "Joe", age: 38)
+            employee.update { employeeUpdated, error in
+                XCTAssertNil(error, "Update Failed: \(String(describing: error))")
+                XCTAssertNotNil(connection.query, "Update Failed: Query is nil")
+                if let query = connection.query {
+                  let expectedPrefix = "UPDATE \"Employees\" SET"
+                  let expectedSuffix = "WHERE \"Employees\".\"id\" = ?3"
+                  let expectedUpdates = [["\"name\" = ?1", "\"name\" = ?2"], ["\"age\" = ?1", "\"age\" = ?2"]]
+                  let resultQuery = connection.descriptionOf(query: query)
+                  XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
+                  XCTAssertTrue(resultQuery.hasSuffix(expectedSuffix))
+                  for updates in expectedUpdates {
+                      var success = false
+                      for update in updates where resultQuery.contains(update) {
+                        success = true
+                      }
+                      XCTAssertTrue(success)
+                  }
+                }
+                XCTAssertNotNil(employeeUpdated, "Update Failed: No model returned")
+                if let employeeUpdated = employeeUpdated {
+                    XCTAssertEqual(employeeUpdated.name, employee.name, "Update Failed: \(String(describing: employeeUpdated.name)) is not equal to \(String(describing: employee.name))")
+                    XCTAssertEqual(employeeUpdated.age, employee.age, "Update Failed: \(String(describing: employeeUpdated.age)) is not equal to \(String(describing: employee.age))")
                 }
                 expectation.fulfill()
             }
