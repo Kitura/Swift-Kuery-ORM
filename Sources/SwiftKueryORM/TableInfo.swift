@@ -21,7 +21,7 @@ import Foundation
 /// Class caching the tables for the models of the application
 
 public class TableInfo {
-  private var codableMap = [String: (info: TypeInfo, table: Table, nestedTables: [Table])]()
+  private var codableMap = [String: (info: TypeInfo, table: Table, nestedInfo: [NestedType])]()
 
   /// Get the table for a model
   func getTable<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, for type: T.Type) throws -> Table {
@@ -29,24 +29,26 @@ public class TableInfo {
   }
 
   /// Get the table for a model
-  func getNestedTables<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, for type: T.Type) throws -> [Table] {
-    return try getInfo(idColumn, tableName, type).nestedTables
+  func getNestedInfo<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, for type: T.Type) throws -> [NestedType] {
+    return try getInfo(idColumn, tableName, type).nestedInfo
   }
 
-  func getInfo<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, _ type: T.Type) throws -> (info: TypeInfo, table: Table, nestedTables: [Table]) {
+  func getInfo<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, _ type: T.Type) throws -> (info: TypeInfo, table: Table, nestedInfo: [NestedType]) {
     if codableMap["\(type)"] == nil {
       let typeInfo = try TypeDecoder.decode(type)
       let tableInfo = try constructTable(idColumn, tableName, typeInfo)
-      codableMap["\(type)"] = (info: typeInfo, table: tableInfo.table, tableInfo.nestedTables)
+      codableMap["\(type)"] = (info: typeInfo, table: tableInfo.table, tableInfo.nestedInfo)
     }
     return codableMap["\(type)"]!
   }
 
   /// Construct the table for a Model
-  func constructTable(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, _ typeInfo: TypeInfo, _ parentTableName: String? = nil) throws -> (table: Table, nestedTables: [Table]) {
-    var columns: [Column] = []
-    var nestedTables: [Table] = []
+  func constructTable(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, _ typeInfo: TypeInfo, _ parentTableName: String? = nil) throws -> (table: Table, nestedInfo: [NestedType]) {
+    var columns = [Column]()
+    var nestedInfo = [NestedType]()
     var idColumnIsSet = false
+    var foreignKeys = [Column]()
+    var referencingForeignKeys = [Column]()
 
     switch typeInfo {
     case .keyed(_, let dict):
@@ -55,11 +57,13 @@ public class TableInfo {
         var keyedTypeInfo = value
         var optionalBool = false
         var createColumn = true
+        var isForeignKey = false
 
         if case .optional(let optionalType) = keyedTypeInfo {
           optionalBool = true
           keyedTypeInfo = optionalType
         }
+
         var valueType: Any? = nil
         switch keyedTypeInfo {
         case .single(_ as UUID.Type, _):
@@ -74,37 +78,43 @@ public class TableInfo {
         case .keyed(_ as URL.Type, _):
           valueType = String.self
         case .keyed(let type, _):
+          // TODO async locking
           guard let keyedInfo = codableMap["\(type)"] else {
             throw RequestError(.ormTableCreationError, reason: "Please create table for \(type) Model")
           }
 
-          nestedTables.append(keyedInfo.table)
-          valueType = idColumn.type
-          columnName = "\(type)_id"
+          nestedModels.append(keyedInfo.table)
+          createColumn = false
         case .unkeyed(_, _):
           throw RequestError(.ormTableCreationError, reason: "Arrays or sets are not supported")
         case .dynamicKeyed(_, _, _):
-          let tableInfoDictionary = try constructTable((name: "id", type: idColumn.type), key, value, tableName)
+          let dictionaryTableName = "\(tableName)_\(key)"
+          let tableInfoDictionary = try constructTable((name: "id", type: idColumn.type), dictionaryTableName, value, tableName)
 
-          nestedTables.append(tableInfoDictionary.table)
-          tableInfoDictionary.nestedTables.forEach { table in
-            nestedTables.append(table)
-          }
+          let nestedDictionaryTable = tableInfoDictionary.table
+          let nestedDictionaryInfo = tableInfoDictionary.nestedInfo
+          if nestedDictionaryInfo.count == 2 {}
+          nestedInfo.append(.dictionary(nestedDictionaryTable, key, nestedDictionaryInfo,))
 
           valueType = idColumn.type
           createColumn = false
         default:
           throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: keyedTypeInfo)) is not supported")
         }
+
         if createColumn {
           if let SQLType = valueType as? SQLDataType.Type {
+            var column: Column
+
             if key == idColumn.name && !idColumnIsSet {
-              columns.append(Column(columnName, SQLType, primaryKey: true, notNull: !optionalBool))
+              column = Column(columnName, SQLType, primaryKey: true, notNull: !optionalBool)
               idColumnIsSet = true
             } else {
-              let column = Column(columnName, SQLType, notNull: !optionalBool)
-              columns.append(column)
+              column = Column(columnName, SQLType, notNull: !optionalBool)
             }
+
+            if isForeignKey { foreignKeys.append(column) }
+            columns.append(column)
           } else {
             throw RequestError(.ormTableCreationError, reason: "Type: \(String(describing: valueType)) of Key: \(String(describing: key)) is not a SQLDataType")
           }
@@ -180,40 +190,34 @@ public class TableInfo {
       //TODO enhance error message
       throw RequestError(.ormTableCreationError, reason: "Can only save a struct to the database")
     }
+
     if !idColumnIsSet {
       columns.append(Column(idColumn.name, idColumn.type, autoIncrement: true, primaryKey: true))
     }
 
-    let table = Table(tableName: tableName, columns: columns)
-    return (table: table, nestedTables: nestedTables)
-  }
-
-  private func createNestedTable(table: Table, completion: @escaping (Error?) -> Void) {
-    guard let database = Database.default else {
-      completion(RequestError.ormDatabaseNotInitialized)
-      return
+    var table = Table(tableName: tableName, columns: columns)
+    if foreignKeys.count > 0 && referencingForeignKeys.count > 0 {
+      table = table.foreignKey(foreignKeys, references: referencingForeignKeys)
     }
 
-    guard let connection = database.getConnection() else {
-      completion(RequestError.ormConnectionFailed)
-      return
-    }
-
-    connection.connect { error in
-      if let error = error {
-        completion(error)
-      } else {
-        table.create(connection: connection) { result in
-          guard result.success else {
-            guard let error = result.asError else {
-              completion(QueryError.databaseError("Query failed to execute but error was nil"))
-              return
-            }
-            completion(error)
-            return
-          }
-        }
+    for nestedModelTable in nestedModels {
+      let nestedModelTableName = nestedModelTable.nameInQuery
+      guard let nestedModelIdColumn = nestedModelTable.columns.first(where: { $0.isPrimaryKey }) else {
+        // TODO change error
+        throw RequestError(.ormTableCreationError, reason: "Could not find ID column for \(nestedtModelTableName)")
       }
+
+      guard let currentModelIdColumn = table.columns.first(where: { $0.isPrimaryKey }) else {
+        // TODO change error
+        throw RequestError(.ormTableCreationError, reason: "Could not find ID column for \(tableName)")
+      }
+
+      let relationshipTableName = "\(tableName)_\(nestedModelTableName)"
+      let columns = [Column("\(tableName)_id", idColumn.type), Column("\(nestedModelTableName)_id", nestedModelIdColumn.type, isUnique: true)]
+      let relationshipTable = Table(tableName: tableName, columns: columns).foreignkey(columns[0], currentModelIdColumn).foreignKey(columns[1], nestedModelIdColumn)
+      nestedInfo.append(.model(nestedModelTable, relationshipTable, , ))
     }
+
+    return (table: table, nestedInfo: nestedInfo)
   }
 }

@@ -83,7 +83,7 @@ open class DatabaseDecoder {
 
     /// Check that value exists in the data return from the database
     private func checkValueExitence(_ key: Key) throws -> Any? {
-      let keyName = key.stringValue.lowercased()
+      let keyName = key.stringValue
       guard let value = decoder.values[keyName] else {
         throw DecodingError.keyNotFound(key, DecodingError.Context(
           codingPath: [key],

@@ -27,12 +27,9 @@ public typealias QueryParams = KituraContracts.QueryParams
 
 /// Type Alias for SQLDataType from [SwiftKuery](https://github.com/IBM-Swift/Swift-Kuery)
 public typealias SQLDataType = SwiftKuery.SQLDataType
-public protocol ItsAModel {
-  func save() -> RequestError?
-}
 
 /// Protocol Model conforming to Codable defining the available operations
-public protocol Model: Codable, ItsAModel {
+public protocol Model: Codable {
   /// Defines the tableName in the Database
   static var tableName: String {get}
   /// Defines the id column name in the Database
@@ -54,15 +51,15 @@ public protocol Model: Codable, ItsAModel {
 
   /// Call to save a model to the database that accepts a completion
   /// handler. The callback is passed a model or an error
-  func save(using db: Database?, _ onCompletion: @escaping (Model?, RequestError?) -> Void)
+  func save(using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
 
   /// Call to save a model to the database that accepts a completion
   /// handler. The callback is passed an id, a model or an error
-  func save<I: Identifier>(using db: Database?, _ onCompletion: @escaping (I?, Model?, RequestError?) -> Void)
+  func save<I: Identifier>(using db: Database?, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void)
 
   /// Call to update a model in the database with an id that accepts a completion
   /// handler. The callback is passed a updated model or an error
-  func update<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Model?, RequestError?) -> Void)
+  func update<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
 
   /// Call to delete a model in the database with an id that accepts a completion
   /// handler. The callback is passed an optional error
@@ -81,43 +78,35 @@ public protocol Model: Codable, ItsAModel {
 
   /// Call to find a model in the database with an id that accepts a completion
   /// handler. The callback is passed the model or an error
-  static func find<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Model?, RequestError?) -> Void)
+  static func find<I: Identifier>(id: I, using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
 
   /// Call to find all the models in the database that accepts a completion
   /// handler. The callback is passed an array of models or an error
-  static func findAll(using db: Database?, _ onCompletion: @escaping ([Model]?, RequestError?) -> Void)
+  static func findAll(using db: Database?, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
 
   /// Call to find all the models in the database that accepts a completion
   /// handler. The callback is passed an array of tuples (id, model) or an error
-  static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([(I, Model)]?, RequestError?) -> Void)
+  static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
 
   /// Call to find all the models in the database that accepts a completion
   /// handler. The callback is passed a dictionary [id: model] or an error
-  static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([I: Model]?, RequestError?) -> Void)
+  static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
 
   /// Call to find all the models in the database matching the QueryParams that accepts a completion
   /// handler. The callback is passed an array of models or an error
-  static func findAll<Q: QueryParams>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([Model]?, RequestError?) -> Void)
+  static func findAll<Q: QueryParams>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
 
   /// Call to find all the models in the database matching the QueryParams that accepts a completion
   /// handler. The callback is passed an array of tuples (id, model) or an error
-  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([(I, Model)]?, RequestError?) -> Void)
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
 
   /// Call to find all the models in the database matching the QueryParams that accepts a completion
   /// handler. The callback is passed a dictionary [id: model] or an error
-  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([I: Model]?, RequestError?) -> Void)
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
 
 }
 
 public extension Model {
-  func save() -> RequestError? {
-    var error: RequestError? = nil
-    self.save(using: nil) { _, err in 
-      error = err
-    }
-    return error
-  }
-
   /// Defaults to the name of the model + "s"
   static var tableName: String {
     let structName = String(describing: self)
@@ -154,20 +143,48 @@ public extension Model {
     return resultUnwrapped
   }
 
+  private static func getNestedTables(of nestedType: NestedType) -> [Table] {
+     var tables = [Table]()
+     switch nestedType {
+     case .dictionary(_, _, let keyNestedType, let valueNestedType):
+       if let keyNestedType = keyNestedType {
+         tables.append(contentsOf: getNestedTables(of: keyNestedType))
+       }
+
+       if let valueNestedType = valueNestedType {
+         tables.append(contentsOf: getNestedTables(of: valueNestedType))
+       }
+        
+        
+     case .array(_, _, let nestedType):
+       if let nestedType = nestedType {
+         tables.append(contentsOf: getNestedTables(of: nestedType))
+       }
+     case .model(_, _, let nestedTypes):
+       // Throw Error
+     }
+    
+     return tables
+  }
+
   static func createTable(using db: Database? = nil, _ onCompletion: @escaping (Bool?, RequestError?) -> Void) {
     var table: Table
-    var nestedTables: [Table]
+    var nestedTypes: [NestedType]
     do {
       table = try Self.getTable()
-      nestedTables = try Self.getNestedTables()
+      nestedTypes = try Self.getNestedInfo()
     } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
 
-    var tablesToCreate = nestedTables
+    var tablesToCreate = [Table]()
+    for nestedType in nestedTypes {
+      tablesToCreate.append(contentsOf: getNestedTables(of: nestedType))
+    }
     tablesToCreate.append(table)
 
+    // Does not work! Change to sync versions
     for table in tablesToCreate {
       var connection: Connection
       do {
@@ -221,17 +238,21 @@ public extension Model {
 
   static func dropTable(using db : Database? = nil, _ onCompletion: @escaping (Bool?, RequestError?) -> Void) {
     var table: Table
-    var nestedTables: [Table]
+    var nestedTypes: [NestedType]
     do {
       table = try Self.getTable()
-      nestedTables = try Self.getNestedTables()
+      nestedTypes = try Self.getNestedInfo()
     } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
 
-    var tablesToDrop: [Table] = nestedTables
+    var tablesToDrop = [Table]()
+    for nestedType in nestedTypes {
+      tablesToDrop.append(contentsOf: getNestedTables(of: nestedType))
+    }
     tablesToDrop.append(table)
+
     for table in tablesToDrop {
       var connection: Connection
       do {
@@ -245,7 +266,8 @@ public extension Model {
           onCompletion(nil, Self.convertError(error))
           return
         } else {
-          connection.execute(query: table.drop()) { result in
+          let query = Raw(query: "DROP TABLE \"\(table.nameInQuery)\" CASCADE")
+          connection.execute(query: query) { result in
             guard result.success else {
               guard let error = result.asError else {
                 onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
@@ -261,37 +283,143 @@ public extension Model {
     }
   }
 
-  func save(using db: Database? = nil, _ onCompletion: @escaping (Model?, RequestError?) -> Void) {
+  private func saveNestedModel<I: Identifier>(values: values, table: Table, onCompletion: @escaping (I?, RequestError?) -> Void ) {
+    let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
+    let idName = table.columns.first(where: { $0.isPrimaryKey })?.name ?? "id"
+    let parameters: [Any?] = columns.map({values[$0.name]!})
+    let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
+    let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: true)
+    self.executeQuery(idName: idName, query: query, parameters: parameters, using: db) { id, error in
+      if let error = errror {
+        onCompletion(nil, error)
+        return
+      }
+
+      guard let id = id else {
+        onCompletion(nil, RequestError.IdentifierError(reason: "could not find id of nested model")
+      }
+
+      // Array and Dictionary
+      onCompletion(id, error)
+    }
+  }
+
+  private func saveNestedModels(values: [String: Any], models: [NestedType], _ onCompletion: ([String: Any]?, RequestError?) -> Void) {
+    if models.isEmpty {
+      onCompletion(values)
+    } else {
+      var remainingModels = models
+      let model = remainingModels.removeFirst()
+      if case .model(let table, let fieldName, let nestedTypes) = model {
+        if var nestedValues = values[fieldName] as? [String: Any] {
+          let savingSingleModelCompletion = { (id: Identifier?, error: RequestError?) in
+            if let error = error {
+              onCompletion(nil, error)
+              return
+            }
+
+            guard let id = id else {
+              onCompletion(nil, RequestError.IdentifierError(reason: "could not find id of nested model")
+            }
+
+            values[fieldName] = nil
+            values["\(fieldName)_id"] = id
+
+            saveNestedModels(values: values, models: remainingModels, onCompletion)
+          }
+
+          if nestedTypes.count > 0 {
+            let nestedModels = nestedTypes.filter { if case .model == $0 { return true }; return false }
+            saveNestedModels(values: nestedValues, models: nestedModels) { nestedIDs in
+              updatedValues.append(contentsOf: nestedIDs)
+              saveNestedModel(values: updatedValues, table: table, savingSingleModelCompletion)
+            }
+          } else {
+            /// No nested types
+            saveNestedModel(values: nestedValues, table: table, savingSingleModelCompletion)
+        } else {
+          // ERROR
+        }
+      } else {
+        // ERROR
+      }
+    }
+    for model in models {
+      if case .model(let table, let fieldName, let nestedTypes) = model {
+        if nestedTypes.count > 0 {
+          let nestedModels = nestedTypes.filter { if case .model == $0 { return true }; return false }
+          saveNestedModels(values: values, models: nestedModels) {
+            let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
+            let idName = table.columns.first(where: { $0.isPrimaryKey })?.name ?? "id"
+            let parameters: [Any?] = columns.map({values[$0.name]!})
+            let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
+            let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: true)
+            self.executeQuery(idName: idName, query: query, parameters: parameters, using: db) { (id: I?, error: RequestError?) in 
+              if let id = id {
+                values["\(fieldName)_id"] = id
+              }
+
+              onCompletion(values)
+            }
+          }
+        } else {
+        
+        }
+      }
+    }
+  }
+
+  func save(using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
     var table: Table
-    var nestedTables: [Table]
+    var nestedTypes: [NestedType]
     var values: [String : Any]
     do {
       table = try Self.getTable()
-      nestedTables = try Self.getNestedTables()
+      nestedTypes = try Self.getNestedInfo()
       values = try DatabaseEncoder().encode(self)
     } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
 
-    print(nestedTables)
-    print(values)
-    for nestedTable in nestedTables {
-      let nestedTableName = nestedTable.nameInQuery
-      if let modelValue = values[nestedTableName.lowercased()] as? Model {
-        print(modelValue)
-        modelValue.save(using: nil) { (id: String?, _: Model?, error: RequestError?) in
-          if let id = id {
-            values[nestedTableName + "_id"] = id
-          }
-          print("VALUES:", values)
+    var errors = [Error]()
 
-          if let error = error {
-            onCompletion(nil, error)
-            return
+    if nestedTypes.count > 0 {
+      let semaphore = DispatchSemaphore(value: 0)
+      let updateLock = DispatchSemaphore(value: 1)
+
+      var nestedModels = nestedTypes.filter { if case .model == $0 { return true }; return false }
+      
+      /**
+      for nestedType in nestedTypes {
+        if case .model(let table, let fieldName, let nestedTypes) = nestedType {
+          if let nestedModelValues = values[fieldName] as? [String: Any] {
+            saveNestedModel(table: table, values: nestedModelValues, nestedTypes: nestedTypes) { (id: String?, error: RequestError?) in
+              if let id = id {
+                updateLock.wait()
+                values["\(fieldName)_id"] = id
+                updateLock.signal()
+              }
+
+              if let error = error {
+                updateLock.wait()
+                errors.append(error)
+                updateLock.signal()
+              }
+
+              semaphore.signal()
+            }
+          } else {
+            semaphore.signal()
           }
+        } else {
+          semaphore.signal()
         }
       }
+
+      for _ in 1...nestedTypes.count {
+        semaphore.wait()
+      }*/
     }
 
     let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
@@ -299,68 +427,211 @@ public extension Model {
     let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
     let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: true)
 
-    self.executeQuery(query: query, parameters: parameters, using: db) { (id: String?, model: Model?, error: RequestError?) in
-      for nestedTable in nestedTables where values[nestedTable.nameInQuery] != nil {
-        let nestedTableName = nestedTable.nameInQuery
-        if let nestedValues = values[nestedTableName] as? [AnyHashable: Any] {
-          for (key, value) in nestedValues {
-            let columns = nestedTable.columns.filter({ $0.name == "\(nestedTableName)_key" || $0.name == "\(nestedTableName)_value" || $0.name == Self.tableName })
+    self.executeQuery(query: query, parameters: parameters, using: db) { (id: String?, model: Self?, error: RequestError?) in
+      if let error = error {
+        onCompletion(nil, error)
+        return
+      }
 
-            guard let modelId = id else {
-              onCompletion(nil, .ormQueryError)
-              return
-            }
+      for nestedType in nestedTypes {
+        if case .dictionary(let nestedTable, let keyName, let keyNestedType, let valueNestedType) = nestedType {
+          let nestedTableName = nestedTable.nameInQuery
+          if let nestedValues = values[keyName] as? [AnyHashable: Any] {
+            for (var key, var value) in nestedValues {
+              let columns = nestedTable.columns.filter({ $0.name == "\(nestedTableName)_key" || $0.name == "\(nestedTableName)_value" || $0.name == Self.tableName })
 
-            var parameters: [Any] = []
-            columns.forEach { column in
-              if column.name == "\(nestedTableName)_key" {
-                parameters.append(key)
-              } else if column.name == "\(nestedTableName)_value" {
-                parameters.append(value)
-              } else {
-                parameters.append(modelId)
+              guard let modelId = id else {
+                onCompletion(nil, .ormQueryError)
+                return
+              }
+
+              var parameters: [Any] = []
+              columns.forEach { column in
+                if column.name == "\(nestedTableName)_key" {
+                  parameters.append(key)
+                } else if column.name == "\(nestedTableName)_value" {
+                  parameters.append(value)
+                } else {
+                  parameters.append(modelId)
+                }
+              }
+
+              let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
+
+              let query = Insert(into: nestedTable, columns: columns, values: parameterPlaceHolders)
+              self.executeQuery(query: query, parameters: parameters, using: db) { _, error in
+                if let error = error {
+                  onCompletion(nil, error)
+                  return
+                }
               }
             }
+          }
+        }
+      }
 
-            let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
+      onCompletion(self, error)
+    }
+  }
 
-            let query = Insert(into: nestedTable, columns: columns, values: parameterPlaceHolders)
-            self.executeQuery(query: query, parameters: parameters, using: db) { _, error in
+  private func saveNestedModel<I: Identifier>(using db: Database? = nil, table: Table, values: [String: Any], nestedTypes: [NestedType]?, _ onCompletion: @escaping (I?, RequestError?) -> Void) {
+    var modelValues = values
+
+    if let nestedTypes = nestedTypes {
+      let nestedModels = nestedTypes.filter { case .model(_, _, _ ) = $0 }
+      let semaphore = DispatchSemaphore(value: nestedModels.count)
+      for nestedModel in nestedModels {
+        if case .model(let table, let fieldName, let nestedTypes) = nestedModel {
+          if let nestedModelValues = modelValues[fieldName] as? [String: Any] {
+            saveNestedModel(table: table, values: nestedModelValues, nestedTypes: nestedTypes) { (id: String?, error: RequestError?) in
+              if let id = id {
+                modelValues["\(fieldName)_id"] = id
+              }
+
+              semaphore.signal()
+
               if let error = error {
                 onCompletion(nil, error)
                 return
               }
             }
           }
-        } else if let arrayValues = values[nestedTableName] as? [Any] {
-          print(arrayValues)
-        } else if let modelValue = values[nestedTableName] as? Model {
+        }
+      }
+      semaphore.wait()
+    }
+
+    let columns = table.columns.filter({$0.autoIncrement != true && modelValues[$0.name] != nil})
+    let idName = table.columns.first(where: { $0.isPrimaryKey })?.name ?? "id"
+    let parameters: [Any?] = columns.map({modelValues[$0.name]!})
+    let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
+    let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: true)
+    self.executeQuery(idName: idName, query: query, parameters: parameters, using: db) { (id: I?, error: RequestError?) in
+      if let error = error {
+        onCompletion(nil, error)
+        return
+      }
+
+      if let nestedTypes = nestedTypes {
+        for nestedType in nestedTypes {
+          if case .dictionary(let nestedTable, let keyName, _, _) = nestedType {
+            let nestedTableName = nestedTable.nameInQuery
+            if let nestedValues = values[keyName] as? [AnyHashable: Any] {
+              for (key, value) in nestedValues {
+                let columns = nestedTable.columns.filter({ $0.name == "\(nestedTableName)_key" || $0.name == "\(nestedTableName)_value" || $0.name == table.nameInQuery })
+
+                guard let modelId = id else {
+                  onCompletion(nil, .ormQueryError)
+                  return
+                }
+
+                var parameters: [Any] = []
+                columns.forEach { column in
+                  if column.name == "\(nestedTableName)_key" {
+                    parameters.append(key)
+                  } else if column.name == "\(nestedTableName)_value" {
+                    parameters.append(value)
+                  } else {
+                    parameters.append(modelId)
+                  }
+                }
+
+                let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
+
+                let query = Insert(into: nestedTable, columns: columns, values: parameterPlaceHolders)
+                self.executeQuery(query: query, parameters: parameters, using: db) { _, error in
+                  if let error = error {
+                    onCompletion(nil, error)
+                    return
+                  }
+                }
+              }
+            }
+          }
         }
       }
 
-      onCompletion(model, error)
+      onCompletion(id, error)
     }
   }
 
-  func save<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping (I?, Model?, RequestError?) -> Void) {
+  func save<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
     var table: Table
-    var values: [String : Any]
+    var nestedTypes: [NestedType]
+    var values: [String: Any]
     do {
       table = try Self.getTable()
+      nestedTypes = try Self.getNestedInfo()
       values = try DatabaseEncoder().encode(self)
     } catch let error {
       onCompletion(nil, nil, Self.convertError(error))
       return
     }
 
+    for nestedType in nestedTypes {
+      if case .model(let table, let fieldName, let nestedTypes) = nestedType {
+        if let nestedModelValues = values[fieldName] as? [String: Any] {
+          saveNestedModel(table: table, values: nestedModelValues, nestedTypes: nestedTypes) { (id: String?, error: RequestError?) in
+            if let id = id {
+              values["\(fieldName)_id"] = id
+            }
+
+            if let error = error {
+              onCompletion(nil, nil, error)
+              return
+            }
+          }
+        }
+      }
+    }
+
     let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
     let parameters: [Any?] = columns.map({values[$0.name]!})
     let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
     let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: true)
-    self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
+    self.executeQuery(query: query, parameters: parameters, using: db) { (id: I?, model: Self?, error: RequestError?) in
+      for nestedType in nestedTypes {
+        if case .dictionary(let nestedTable, let keyName, _, _) = nestedType {
+          let nestedTableName = nestedTable.nameInQuery
+          if let nestedValues = values[keyName] as? [AnyHashable: Any] {
+            for (key, value) in nestedValues {
+              let columns = nestedTable.columns.filter({ $0.name == "\(nestedTableName)_key" || $0.name == "\(nestedTableName)_value" || $0.name == Self.tableName })
+
+              guard let modelId = id else {
+                onCompletion(nil, nil, .ormQueryError)
+                return
+              }
+
+              var parameters: [Any] = []
+              columns.forEach { column in
+                if column.name == "\(nestedTableName)_key" {
+                  parameters.append(key)
+                } else if column.name == "\(nestedTableName)_value" {
+                  parameters.append(value)
+                } else {
+                  parameters.append(modelId)
+                }
+              }
+
+              let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
+
+              let query = Insert(into: nestedTable, columns: columns, values: parameterPlaceHolders)
+              self.executeQuery(query: query, parameters: parameters, using: db) { _, error in
+                if let error = error {
+                  onCompletion(nil, nil, error)
+                  return
+                }
+              }
+            }
+          }
+        }
+      }
+
+      onCompletion(id, model, error)
+    }
   }
 
-  func update<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Model?, RequestError?) -> Void) {
+  func update<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
     var table: Table
     var values: [String: Any]
     do {
@@ -483,7 +754,7 @@ public extension Model {
     }
   }
 
-  internal func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Model?, RequestError?) -> Void ) {
+  internal func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
 
     var connection: Connection
     do {
@@ -541,7 +812,65 @@ public extension Model {
     }
   }
 
-  internal static func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Model?, RequestError?) -> Void ) {
+  internal func executeQuery<I: Identifier>(idName: String, query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, RequestError?) -> Void ) {
+
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    var dictionaryTitleToValue = [String: Any?]()
+
+    connection.connect { error in
+      if let error = error {
+        onCompletion(nil, Self.convertError(error))
+        return
+      } else {
+        connection.execute(query: query, parameters: parameters) { result in
+          guard result.success else {
+            guard let error = result.asError else {
+              onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
+              return
+            }
+            onCompletion(nil, Self.convertError(error))
+            return
+          }
+
+          guard let rows = result.asRows, rows.count > 0 else {
+            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve value for Query: \(String(describing: query))"))
+            return
+          }
+
+          dictionaryTitleToValue = rows[0]
+
+          guard let value = dictionaryTitleToValue[idName] else {
+            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not find return id"))
+            return
+          }
+
+          guard let unwrappedValue: Any = value else {
+            onCompletion(nil, RequestError(.ormNotFound, reason: "Return id is nil"))
+            return
+          }
+
+          var identifier: I
+          do {
+            identifier = try I(value: String(describing: unwrappedValue))
+          } catch {
+            onCompletion(nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
+            return
+          }
+
+          onCompletion(identifier, nil)
+        }
+      }
+    }
+  }
+
+  internal static func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
     var connection: Connection
     do {
       connection = try Self.getConnection(using: db)
@@ -588,7 +917,7 @@ public extension Model {
     }
   }
 
-  internal static func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Model?, RequestError?) -> Void ) {
+  internal static func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
     var connection: Connection
     do {
       connection = try Self.getConnection(using: db)
@@ -654,8 +983,8 @@ public extension Model {
   }
 
   /// - Parameter using: Optional Database to use
-  /// - Returns: A tuple ([Model], RequestError)
-  internal static func executeQuery(query: Query, parameters: [Any?]? = nil, nestedTables: [Table]? = nil, using db: Database? = nil, _ onCompletion: @escaping ([Model]?, RequestError?)-> Void ) {
+  /// - Returns: A tuple ([Self], RequestError)
+  internal static func executeQuery(query: Query, parameters: [Any?]? = nil, nestedType: [NestedType]? = nil, using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?)-> Void ) {
     var connection: Connection
     do {
       connection = try Self.getConnection(using: db)
@@ -691,35 +1020,46 @@ public extension Model {
             return
           }
 
-          var nestedValues: [Int64: [String: [AnyHashable: Any?]]] = [:]
-          if let nestedTables = nestedTables {
-            for nestedTable in nestedTables {
-              let nestedTableName = nestedTable.nameInQuery
-              /// CHECK FOR DICTIONARY NESTED TYPE
-              let keyName = nestedTableName + "_key"
-              let valueName = nestedTableName + "_value"
-              for row in rows {
-                guard let id = row[Self.tableName] as? Int64 else {
-                  onCompletion(nil, .ormQueryError)
-                  return
-                }
+          var nestedValues: [Int64: [String: Any?]] = [:]
+          if let nestedType = nestedType {
+            for row in rows {
+              guard let id = row[Self.tableName] as? Int64 else {
+                onCompletion(nil, .ormQueryError)
+                return
+              }
 
-                guard let key = row[keyName] as? AnyHashable else {
-                  onCompletion(nil, .ormQueryError)
-                  return
-                }
+              for nestedType in nestedType {
+                var nestedValue: Any? = extractNestedValue(row: row, nestedType: nestedType)
+                switch nestedType {
+                case .dictionary(_, let fieldName, _, _):
+                  // Restruct this CODE
+                  if nestedValues[id] == nil {
+                    nestedValues[id] = [fieldName: nestedValue]
+                  } else if nestedValues[id]![fieldName] == nil {
+                    nestedValues[id]![fieldName] = nestedValue
+                  } else {
+                    if let dictionaryValue = nestedValue as? [AnyHashable: Any] {
+                      guard let idNestedValues = nestedValues[id],
+                            var dictionary = idNestedValues[fieldName] as? [AnyHashable: Any] else {
+                        onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve values from table: \(String(describing: Self.tableName)))"))
+                        return
+                      }
 
-                guard let value = row[valueName] else {
-                  onCompletion(nil, .ormQueryError)
-                  return
-                }
+                      dictionaryValue.forEach { value in
+                        dictionary[value.key] = value.value
+                      }
 
-                if nestedValues[id] == nil {
-                  nestedValues[id] = [nestedTableName: [key: value]]
-                } else if nestedValues[id]![nestedTableName] == nil {
-                  nestedValues[id]![nestedTableName] = [key: value]
-                } else {
-                  nestedValues[id]![nestedTableName]![key] = value
+                      nestedValues[id]?[fieldName] = dictionary
+                    }
+                  }
+                case .array(_, _, _):
+                  print("hello")
+                case .model(_, let keyName, _):
+                  if nestedValues[id] == nil {
+                    nestedValues[id] = [keyName: nestedValue]
+                  } else if nestedValues[id]![keyName] == nil {
+                    nestedValues[id]![keyName] = nestedValue
+                  }
                 }
               }
             }
@@ -749,6 +1089,7 @@ public extension Model {
           }
 
           var list = [Self]()
+          print(dictionariesToDecode)
           for dictionary in dictionariesToDecode {
             var decodedModel: Self
             do {
@@ -774,7 +1115,7 @@ public extension Model {
   }
 
   /// - Parameter using: Optional Database to use
-  /// - Returns: A tuple ([Model], RequestError)
+  /// - Returns: A tuple ([Self], RequestError)
   internal static func executeQuery<I: Identifier>(query: Query, parameters: [Any?]? = nil, using db: Database? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void ) {
     var connection: Connection
     do {
@@ -896,8 +1237,8 @@ public extension Model {
     return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType), Self.tableName, for: Self.self)
   }
 
-  static func getNestedTables() throws -> [Table] {
-    return try Database.tableInfo.getNestedTables((Self.idColumnName, Self.idColumnType), Self.tableName, for: Self.self)
+  static private func getNestedInfo() throws -> [NestedType] {
+    return try Database.tableInfo.getNestedInfo((Self.idColumnName, Self.idColumnType), Self.tableName, for: Self.self)
   }
 
   /**
@@ -1108,10 +1449,52 @@ public extension Model {
 
     return connection
   }
+
+  /**
+    Recursively extract the nested values from the row
+  */
+  private static func extractNestedValue(row: [String: Any], nestedType: NestedType) -> Any? {
+
+    //TODO - nestedTypes
+    switch nestedType {
+    case .dictionary(let nestedTable, let keyName, let keyNestedType, let valueNestedType):
+      let nestedTableName = nestedTable.nameInQuery
+      let keyName = nestedTableName + "_key"
+      let valueName = nestedTableName + "_value"
+
+      guard let key = row[keyName] as? AnyHashable else {
+        return nil
+      }
+
+      guard let value = row[valueName] else {
+        return nil
+      }
+
+      return [key: value]
+    case .array(let table, let keyName, let nestedType):
+      print("hello")
+      return nil
+    case .model(let nestedTable, let keyName, let nestedTypes):
+      var nestedValue: [String: Any?] = [:]
+      for column in nestedTable.columns where row[column.name] != nil {
+        nestedValue[column.name] = row[column.name]
+      }
+
+      if let nestedTypes = nestedTypes {
+        for nestedType in nestedTypes {
+          let nestedKeyName = nestedType.fieldName
+          nestedValue[nestedKeyName] = extractNestedValue(row: row, nestedType: nestedType)
+        }
+      }
+
+      return nestedValue as Any
+    }
+  }
+
   /// Find a model with an id
-  /// - Parameter using: Optional Database to use
+  /// - Parameter using: Optional Database to get
   /// - Returns: A tuple (Model, RequestError)
-  static func find<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Model?, RequestError?) -> Void) {
+  static func find<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
     var table: Table
     do {
       table = try Self.getTable()
@@ -1132,31 +1515,80 @@ public extension Model {
 
 
   ///
-  static func findAll(using db: Database? = nil, _ onCompletion: @escaping ([Model]?, RequestError?) -> Void) {
+  static func findAll(using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
     var table: Table
-    var nestedTables: [Table]
+    var nestedType: [NestedType]
     do {
       table = try Self.getTable()
-      nestedTables = try Self.getNestedTables()
+      nestedType = try Self.getNestedInfo()
     } catch let error {
       onCompletion(nil, Self.convertError(error))
       return
     }
 
     var query = Select(from: table)
-    for nestedTable in nestedTables {
-      if let idColumn = table.columns.first(where: { $0.name == Self.idColumnName }), 
-      let modelIdColumn = nestedTable.columns.first(where: { $0.name == Self.tableName }) {
-        query = query.join(nestedTable).on(idColumn == modelIdColumn)
+    for nestedType in nestedType {
+      if case .dictionary(let nestedTable, _, _, _) = nestedType {
+        if let idColumn = table.columns.first(where: { $0.name == Self.idColumnName }),
+        let modelIdColumn = nestedTable.columns.first(where: { $0.name == Self.tableName }) {
+          query = query.join(nestedTable).on(idColumn == modelIdColumn)
+        }
+      } else if case .model(let nestedTable, _, let nestedTypes) = nestedType {
+        for foreignKey in table.foreignKeys {
+          let keyColumns = foreignKey.keyColumns
+          let refColumns = foreignKey.refColumns
+
+          for (keyColumn, refColumn) in zip(keyColumns, refColumns) {
+            if refColumn.table.nameInQuery == nestedTable.nameInQuery {
+              query = query.join(nestedTable).on(keyColumn == refColumn)
+            }
+          }
+        }
+
+        if let nestedTypes = nestedTypes {
+          for nestedType in nestedTypes {
+            query = getNestedQuery(query, nestedTable, nestedType)
+          }
+        }
       }
     }
-    Self.executeQuery(query: query, nestedTables: nestedTables, using: db, onCompletion)
+    Self.executeQuery(query: query, nestedType: nestedType, using: db, onCompletion)
+  }
+
+  private static func getNestedQuery(_ query: Select, _ table: Table, _ nestedType: NestedType) -> Select {
+    var resultQuery = query
+    if case .dictionary(let nestedTable, let keyName, _, _) = nestedType {
+      if let idColumn = table.columns.first(where: { $0.name == Self.idColumnName }),
+      let modelIdColumn = nestedTable.columns.first(where: { $0.name == table.nameInQuery }) {
+        resultQuery = resultQuery.join(nestedTable).on(idColumn == modelIdColumn)
+      }
+      return resultQuery
+    } else if case .model(let nestedTable, let keyName, let nestedTypes) = nestedType {
+      for foreignKey in table.foreignKeys {
+        let keyColumns = foreignKey.keyColumns
+        let refColumns = foreignKey.refColumns
+
+        for (keyColumn, refColumn) in zip(keyColumns, refColumns) {
+          if refColumn.table.nameInQuery == nestedTable.nameInQuery {
+            resultQuery = resultQuery.join(nestedTable).on(keyColumn == refColumn)
+          }
+        }
+      }
+
+      if let nestedTypes = nestedTypes {
+        for nestedType in nestedTypes {
+          resultQuery = getNestedQuery(resultQuery, nestedTable, nestedType)
+        }
+      }
+      return resultQuery
+    }
+    return resultQuery
   }
 
   /// Find all the models
   /// - Parameter using: Optional Database to use
   /// - Returns: An array of tuples (id, model)
-  static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([(I, Model)]?, RequestError?) -> Void) {
+  static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
     var table: Table
     do {
       table = try Self.getTable()
@@ -1170,7 +1602,7 @@ public extension Model {
   }
 
   /// :nodoc:
-  static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([I: Model]?, RequestError?) -> Void) {
+  static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
     var table: Table
     do {
       table = try Self.getTable()
@@ -1199,7 +1631,7 @@ public extension Model {
 
   /// - Parameter matching: Optional QueryParams to use
   /// - Returns: An array of model
-  static func findAll<Q: QueryParams>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([Model]?, RequestError?) -> Void) {
+  static func findAll<Q: QueryParams>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
     var table: Table
     do {
       table = try Self.getTable()
@@ -1224,7 +1656,7 @@ public extension Model {
   /// Find all the models matching the QueryParams
   /// - Parameter using: Optional Database to use
   /// - Returns: An array of tuples (id, model)
-  static func findAll<Q: QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([(I, Model)]?, RequestError?) -> Void) {
+  static func findAll<Q: QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
     var table: Table
     do {
       table = try Self.getTable()
@@ -1249,7 +1681,7 @@ public extension Model {
   /// Find all the models matching the QueryParams
   /// - Parameter using: Optional Database to use
   /// - Returns: A dictionary [id: model]
-  static func findAll<Q:QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([I: Model]?, RequestError?) -> Void) {
+  static func findAll<Q:QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
     var table: Table
     do {
       table = try Self.getTable()

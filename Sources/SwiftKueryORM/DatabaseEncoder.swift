@@ -57,6 +57,63 @@ fileprivate struct _DatabaseKeyedEncodingContainer<K: CodingKey> : KeyedEncoding
 
   public mutating func encodeNil(forKey key: Key) throws {}
 
+
+  public mutating func encode(_ value: Int, forKey key: Key) throws {
+      encoder.values[key.stringValue] = value
+  }
+
+  public mutating func encode(_ value: Int8, forKey key: Key) throws {
+      encoder.values[key.stringValue] = value
+  }
+
+  public mutating func encode(_ value: Int16, forKey key: Key) throws {
+      encoder.values[key.stringValue] = value
+  }
+
+  public mutating func encode(_ value: Int32, forKey key: Key) throws {
+      encoder.values[key.stringValue] = value
+  }
+
+  public mutating func encode(_ value: Int64, forKey key: Key) throws {
+      encoder.values[key.stringValue] = value
+  }
+
+  public mutating func encode(_ value: UInt, forKey key: Key) throws {
+      encoder.values[key.stringValue] = value
+  }
+
+  public mutating func encode(_ value: UInt8, forKey key: Key) throws {
+      encoder.values[key.stringValue] = value
+  }
+
+  public mutating func encode(_ value: UInt16, forKey key: Key) throws {
+      encoder.values[key.stringValue] = value
+  }
+
+  public mutating func encode(_ value: UInt32, forKey key: Key) throws {
+      encoder.values[key.stringValue] = value
+  }
+
+  public mutating func encode(_ value: UInt64, forKey key: Key) throws {
+      encoder.values[key.stringValue] = value
+  }
+
+  public mutating func encode(_ value: String, forKey key: Key) throws {
+      encoder.values[key.stringValue] = value
+  }
+
+  public mutating func encode(_ value: Double, forKey key: Key) throws {
+      encoder.values[key.stringValue] = value
+  }
+
+  public mutating func encode(_ value: Float, forKey key: Key) throws {
+      encoder.values[key.stringValue] = value
+  }
+
+  public mutating func encode(_ value: Bool, forKey key: Key) throws {
+      encoder.values[key.stringValue] = value
+  }
+
   public mutating func encode<T: Encodable>(_ value: T, forKey key: Key) throws {
     if let dataValue = value as? Data {
       encoder.values[key.stringValue] = dataValue.base64EncodedString()
@@ -69,9 +126,11 @@ fileprivate struct _DatabaseKeyedEncodingContainer<K: CodingKey> : KeyedEncoding
     } else if value is [Any] {
       throw RequestError(.ormDatabaseEncodingError, reason: "Encoding an array is not currently supported")
     } else if value is [AnyHashable: Any] {
-      encoder.values[key.stringValue] = try DatabaseEncoder().encode(value)
-    } else {
       encoder.values[key.stringValue] = value
+    } else {
+      let nestedEncoder = DatabaseEncoder()
+      let values = try nestedEncoder.encode(value)
+      encoder.values[key.stringValue] = values
     }
   }
 
