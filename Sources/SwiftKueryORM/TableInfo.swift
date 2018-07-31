@@ -18,6 +18,9 @@ import KituraContracts
 import SwiftKuery
 import Foundation
 import TypeDecoder
+#if os(Linux)
+    import Dispatch
+#endif
 
 /// Class caching the tables for the models of the application
 
