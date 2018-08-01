@@ -26,7 +26,7 @@ import TypeDecoder
 
 public class TableInfo {
   private var codableMap = [String: (info: TypeInfo, table: Table)]()
-  private var dictionaryLock = DispatchSemaphore(value: 1)
+  private var codableMapLock = DispatchSemaphore(value: 1)
 
   /// Get the table for a model
   func getTable<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, for type: T.Type) throws -> Table {
@@ -34,16 +34,17 @@ public class TableInfo {
   }
 
   func getInfo<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, _ type: T.Type) throws -> (info: TypeInfo, table: Table) {
-    if let result = codableMap["\(type)"] {
+    let typeString = "\(type)"
+    if let result = codableMap[typeString] {
         return result
     }
     
-    dictionaryLock.wait()
-    defer{ dictionaryLock.signal() }
+    codableMapLock.wait()
+    defer { codableMapLock.signal() }
     
     let typeInfo = try TypeDecoder.decode(type)
     let result = (info: typeInfo, table: try constructTable(idColumn, tableName, typeInfo))
-    codableMap["\(type)"] = result
+    codableMap[typeString] = result
     
     return result
   }
