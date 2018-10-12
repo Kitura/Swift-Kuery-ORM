@@ -229,8 +229,8 @@ public extension Model {
       return
     }
 
-    let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
-    let parameters: [Any?] = columns.map({values[$0.name]!})
+    let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name.lowercased()] != nil})
+    let parameters: [Any?] = columns.map({values[$0.name.lowercased()]!})
     let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
     let query = Insert(into: table, columns: columns, values: parameterPlaceHolders)
     self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
@@ -247,8 +247,8 @@ public extension Model {
       return
     }
 
-    let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
-    let parameters: [Any?] = columns.map({values[$0.name]!})
+    let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name.lowercased()] != nil})
+    let parameters: [Any?] = columns.map({values[$0.name.lowercased()]!})
     let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
     let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: true)
     self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
@@ -266,9 +266,9 @@ public extension Model {
     }
 
     let columns = table.columns.filter({$0.autoIncrement != true})
-    var parameters: [Any?] = columns.map({values[$0.name]})
+    var parameters: [Any?] = columns.map({values[$0.name.lowercased()]})
     let parameterPlaceHolders: [(Column, Any)] = columns.map({($0, Parameter())})
-    guard let idColumn = table.columns.first(where: {$0.name == Self.idColumnName}) else {
+    guard let idColumn = table.columns.first(where: {$0.name.lowercased() == Self.idColumnName}) else {
       onCompletion(nil, RequestError(rawValue: 708, reason: "Could not find id column"))
       return
     }
@@ -287,7 +287,7 @@ public extension Model {
       return
     }
 
-    guard let idColumn = table.columns.first(where: {$0.name == idColumnName}) else {
+    guard let idColumn = table.columns.first(where: {$0.name.lowercased() == idColumnName}) else {
       onCompletion(RequestError(.ormNotFound, reason: "Could not find id column"))
       return
     }
@@ -955,7 +955,7 @@ public extension Model {
       return
     }
 
-    guard let idColumn = table.columns.first(where: {$0.name == Self.idColumnName}) else {
+    guard let idColumn = table.columns.first(where: {$0.name.lowercased() == Self.idColumnName}) else {
       onCompletion(nil, RequestError(.ormInvalidTableDefinition, reason: "Could not find id column"))
       return
     }
