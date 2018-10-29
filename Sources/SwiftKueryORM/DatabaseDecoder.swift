@@ -18,6 +18,7 @@ import SwiftKuery
 import Foundation
 import KituraContracts
 
+
 /// Class used to construct a Model from a row in the database
 open class DatabaseDecoder {
   fileprivate let decoder = _DatabaseDecoder()
@@ -76,15 +77,16 @@ open class DatabaseDecoder {
     /// Check that value exists in the data return from the database
     private func checkValueExitence(_ key: Key) throws -> Any? {
         let keyNameLower = key.stringValue.lowercased()
-        let keyNameUpper = key.stringValue.uppercased()
+        
+        for key in decoder.values {
+            decoder.values[key.key.lowercased()] = decoder.values.removeValue(forKey: key.key)
+        }
+        
         guard let value = decoder.values[keyNameLower] else {
-            guard let value2 = decoder.values[keyNameUpper] else {
-                throw DecodingError.keyNotFound(key, DecodingError.Context(
-                    codingPath: [key],
-                    debugDescription: "No value for property with this key"
-                ))
-            }
-            return value2
+            throw DecodingError.keyNotFound(key, DecodingError.Context(
+                codingPath: [key],
+                debugDescription: "No value for property with this key"
+            ))
         }
         return value
     }

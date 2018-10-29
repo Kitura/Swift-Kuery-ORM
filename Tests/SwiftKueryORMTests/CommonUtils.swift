@@ -137,7 +137,7 @@ class TestConnection: Connection {
 class TestResultFetcher: ResultFetcher {
     let numberOfRows: Int
     let rows = [[1, "Joe", Int32(38)], [2, "Adam", Int32(28)], [3, "Chris", Int32(36)]]
-    let titles = ["id", "NAME", "age"]
+    let titles = ["id", "Name", "AGE"]
     var fetched = 0
 
     init(numberOfRows: Int) {
