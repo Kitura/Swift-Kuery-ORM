@@ -75,14 +75,18 @@ open class DatabaseDecoder {
 
     /// Check that value exists in the data return from the database
     private func checkValueExitence(_ key: Key) throws -> Any? {
-      let keyName = key.stringValue.lowercased()
-      guard let value = decoder.values[keyName] else {
-        throw DecodingError.keyNotFound(key, DecodingError.Context(
-          codingPath: [key],
-          debugDescription: "No value for property with this key"
-        ))
-      }
-      return value
+        let keyNameLower = key.stringValue.lowercased()
+        let keyNameUpper = key.stringValue.uppercased()
+        guard let value = decoder.values[keyNameLower] else {
+            guard let value2 = decoder.values[keyNameUpper] else {
+                throw DecodingError.keyNotFound(key, DecodingError.Context(
+                    codingPath: [key],
+                    debugDescription: "No value for property with this key"
+                ))
+            }
+            return value2
+        }
+        return value
     }
 
     /// Unwrap value from database

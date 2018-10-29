@@ -83,7 +83,7 @@ class TestSave: XCTestCase {
 
     /**
       Testing that the correct SQL Query is created to save a Model
-      Testing that an id is correcly returned
+      Testing that an id is correctly returned
     */
     func testSaveWithId() {
         let connection: TestConnection = createConnection(.returnOneRow)
