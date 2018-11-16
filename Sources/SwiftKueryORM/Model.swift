@@ -265,8 +265,8 @@ public extension Model {
       return
     }
 
-    let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
-    var parameters: [Any?] = columns.map({values[$0.name]!})
+    let columns = table.columns.filter({$0.autoIncrement != true})
+    var parameters: [Any?] = columns.map({values[$0.name]})
     let parameterPlaceHolders: [(Column, Any)] = columns.map({($0, Parameter())})
     guard let idColumn = table.columns.first(where: {$0.name == Self.idColumnName}) else {
       onCompletion(nil, RequestError(rawValue: 708, reason: "Could not find id column"))
