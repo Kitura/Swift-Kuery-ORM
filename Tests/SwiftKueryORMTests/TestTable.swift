@@ -30,7 +30,7 @@ class TestTable: XCTestCase {
                 XCTAssertNil(error, "Table Creation Failed: \(String(describing: error))")
                 XCTAssertNotNil(connection.raw, "Table Creation Failed: Query is nil")
                 if let raw = connection.raw {
-                  let expectedQuery = "CREATE TABLE \"Users\" (\"username\" text NOT NULL, \"password\" text NOT NULL, \"id\" bigint AUTO_INCREMENT PRIMARY KEY)"
+                  let expectedQuery = "CREATE TABLE \"Users\" (\"username\" text NOT NULL, \"password\" text NOT NULL, \"id\" integer AUTO_INCREMENT PRIMARY KEY)"
                   XCTAssertEqual(raw, expectedQuery, "Table Creation Failed: Invalid query")
                 }
                 expectation.fulfill()
@@ -85,7 +85,7 @@ class TestTable: XCTestCase {
 
     struct Grade: Model {
         static var idColumnName = "MyId"
-        static var idColumnType: SQLDataType.Type = Int32.self
+        static var idColumnType: SQLDataType.Type = Int64.self
         var grade: Double
         var course: String
     }
