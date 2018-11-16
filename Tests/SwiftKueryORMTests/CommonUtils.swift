@@ -172,7 +172,7 @@ func createConnection(withDeleteRequiresUsing: Bool = false, withUpdateRequiresF
 // Dummy class for test framework
 class CommonUtils { }
 
-// Custom Tets class that returns values that match expected testcase query output
+// Classes that conform to Connection are required to provide a QueryBuilder which in turn requires an implementation conforming to ColumnCreator. The TestColumnBuilder class fulfils this requirement.
 class TestColumnBuilder: ColumnCreator {
     func buildColumn(for column: Column, using queryBuilder: QueryBuilder) -> String? {
         guard let type = column.type else {
