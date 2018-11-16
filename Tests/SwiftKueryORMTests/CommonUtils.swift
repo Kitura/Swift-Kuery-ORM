@@ -35,6 +35,8 @@ class TestConnection: Connection {
         case returnEmpty
         case returnOneRow
         case returnThreeRows
+        case returnThreeRowsSortedAscending
+        case returnThreeRowsSortedDescending
         case returnError
         case returnValue
     }
@@ -100,6 +102,10 @@ class TestConnection: Connection {
             onCompletion(.resultSet(ResultSet(TestResultFetcher(numberOfRows: 1))))
         case .returnThreeRows:
             onCompletion(.resultSet(ResultSet(TestResultFetcher(numberOfRows: 3))))
+        case .returnThreeRowsSortedAscending:
+            onCompletion(.resultSet(ResultSet(TestResultFetcher(numberOfRows: 3, sortedByAge: "ascending"))))
+        case .returnThreeRowsSortedDescending:
+            onCompletion(.resultSet(ResultSet(TestResultFetcher(numberOfRows: 3, sortedByAge: "descending"))))
         case .returnError:
             onCompletion(.error(QueryError.noResult("Error in query execution.")))
         case .returnValue:
@@ -136,12 +142,19 @@ class TestConnection: Connection {
 
 class TestResultFetcher: ResultFetcher {
     let numberOfRows: Int
-    let rows = [[1, "Joe", Int32(38)], [2, "Adam", Int32(28)], [3, "Chris", Int32(36)]]
+    var rows = [[1, "Joe", Int32(38)], [2, "Adam", Int32(28)], [3, "Chris", Int32(36)]]
     let titles = ["id", "name", "age"]
     var fetched = 0
 
-    init(numberOfRows: Int) {
+    init(numberOfRows: Int, sortedByAge: String? = nil) {
         self.numberOfRows = numberOfRows
+        if let sortedByAge = sortedByAge {
+          if sortedByAge == "descending" {
+            rows.sort {($0[2] as! Int32) > ($1[2] as! Int32)}
+          } else if sortedByAge == "ascending" {
+            rows.sort {($0[2] as! Int32) < ($1[2] as! Int32)}
+          }
+        }
     }
 
     func fetchNext() -> [Any?]? {

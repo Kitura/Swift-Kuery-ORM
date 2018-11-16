@@ -73,15 +73,15 @@ public protocol Model: Codable {
 
   /// Call to find all the models in the database that accepts a completion
   /// handler. The callback is passed an array of models or an error
-  static func findAll(using db: Database?, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
+  static func findAll(using db: Database?, order: Order..., offset: Int?, limit: Int?, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void)
 
   /// Call to find all the models in the database that accepts a completion
   /// handler. The callback is passed an array of tuples (id, model) or an error
-  static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
+  static func findAll<I: Identifier>(using db: Database?, order: Order..., offset: Int?, limit: Int?, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void)
 
   /// Call to find all the models in the database that accepts a completion
   /// handler. The callback is passed a dictionary [id: model] or an error
-  static func findAll<I: Identifier>(using db: Database?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
+  static func findAll<I: Identifier>(using db: Database?, order: Order..., offset: Int?, limit: Int?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
 
   /// Call to find all the models in the database matching the QueryParams that accepts a completion
   /// handler. The callback is passed an array of models or an error
@@ -895,25 +895,32 @@ public extension Model {
   }
 
   /**
-    This function constructs an array of OrderBy from the QueryParameters values
+    This function constructs an array of OrderBy from the QueryParameters or the Order values
   */
-  private static func getOrderBy(values: [String: Any], table: Table) -> [OrderBy] {
+  private static func getOrderBy(values: [String: Any]? = nil, order: [Order]? = nil, table: Table) -> [OrderBy] {
     var orderByArray: [OrderBy] = []
-    for (_, value) in values {
-       if let orderValue = value as? Ordering {
-         let columnDictionary = table.columns.reduce(into: [String: Column]()) { dict, value in
-            dict[value.name] = value
-         }
-         let orders = orderValue.getValues()
-         for order in orders where columnDictionary[order.value] != nil {
-           let column = columnDictionary[order.value]!
-           if case .asc(_) = order {
-             orderByArray.append(.ASC(column))
-           } else {
-             orderByArray.append(.DESC(column))
-           }
-         }
-       }
+    var orders: [Order] = []
+    let columnDictionary = table.columns.reduce(into: [String: Column]()) { dict, value in
+        dict[value.name] = value
+    }
+
+    if let order = order {
+        orders = order
+    } else if let values = values {
+      for (_, value) in values {
+        if let orderValue = value as? Ordering {
+          orders = orderValue.getValues()
+        }
+      }
+    }
+
+    for order in orders where columnDictionary[order.value] != nil {
+      let column = columnDictionary[order.value]!
+      if case .asc(_) = order {
+        orderByArray.append(.ASC(column))
+      } else {
+        orderByArray.append(.DESC(column))
+      }
     }
 
     return orderByArray
@@ -967,7 +974,7 @@ public extension Model {
 
 
   ///
-  static func findAll(using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
+  static func findAll(using db: Database? = nil, order: Order..., offset: Int? = nil, limit: Int? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
     var table: Table
     do {
       table = try Self.getTable()
@@ -975,15 +982,26 @@ public extension Model {
       onCompletion(nil, Self.convertError(error))
       return
     }
+    let orderBy: [OrderBy] = Self.getOrderBy(order: order, table: table)
 
-    let query = Select(from: table)
+    var query = Select(from: table)
+    if orderBy.count > 0 {
+        query = query.order(by: orderBy)
+    }
+    if let offset = offset {
+        query = query.offset(offset)
+    }
+    if let limit = limit {
+        query = query.limit(to: limit)
+    }
+
     Self.executeQuery(query: query, using: db, onCompletion)
   }
 
   /// Find all the models
   /// - Parameter using: Optional Database to use
   /// - Returns: An array of tuples (id, model)
-  static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
+  static func findAll<I: Identifier>(using db: Database? = nil, order: Order..., offset: Int? = nil, limit: Int? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
     var table: Table
     do {
       table = try Self.getTable()
@@ -991,13 +1009,24 @@ public extension Model {
       onCompletion(nil, Self.convertError(error))
       return
     }
+    let orderBy: [OrderBy] = Self.getOrderBy(order: order, table: table)
 
-    let query = Select(from: table)
+    var query = Select(from: table)
+    if orderBy.count > 0 {
+        query = query.order(by: orderBy)
+    }
+    if let offset = offset {
+        query = query.offset(offset)
+    }
+    if let limit = limit {
+        query = query.limit(to: limit)
+    }
+
     Self.executeQuery(query: query, using: db, onCompletion)
   }
 
   /// :nodoc:
-  static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
+  static func findAll<I: Identifier>(using db: Database? = nil, order: Order..., offset: Int? = nil, limit: Int? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
     var table: Table
     do {
       table = try Self.getTable()
@@ -1005,8 +1034,19 @@ public extension Model {
       onCompletion(nil, Self.convertError(error))
       return
     }
+    let orderBy: [OrderBy] = Self.getOrderBy(order: order, table: table)
 
-    let query = Select(from: table)
+    var query = Select(from: table)
+    if orderBy.count > 0 {
+        query = query.order(by: orderBy)
+    }
+    if let offset = offset {
+        query = query.offset(offset)
+    }
+    if let limit = limit {
+        query = query.limit(to: limit)
+    }
+
     Self.executeQuery(query: query, using: db) { (tuples: [(I, Self)]?, error: RequestError?) in
       if let error = error {
         onCompletion(nil, error)
