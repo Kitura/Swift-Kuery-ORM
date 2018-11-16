@@ -175,9 +175,6 @@ class CommonUtils { }
 // Classes that conform to Connection are required to provide a QueryBuilder which in turn requires an implementation conforming to ColumnCreator. The TestColumnBuilder class fulfils this requirement.
 class TestColumnBuilder: ColumnCreator {
     func buildColumn(for column: Column, using queryBuilder: QueryBuilder) -> String? {
-        guard let type = column.type else {
-            return nil
-        }
 
         var result = column.name
         let identifierQuoteCharacter = queryBuilder.substitutions[QueryBuilder.QuerySubstitutionNames.identifierQuoteCharacter.rawValue]
@@ -185,14 +182,10 @@ class TestColumnBuilder: ColumnCreator {
             result = identifierQuoteCharacter + result + identifierQuoteCharacter + " "
         }
 
-        var typeString = type.create(queryBuilder: queryBuilder)
-        if let length = column.length {
-            typeString += "(\(length))"
-        }
+        result += "type"
+
         if column.autoIncrement {
-            result += "integer AUTO_INCREMENT"
-        } else {
-            result += typeString
+            result += " AUTO_INCREMENT"
         }
 
         if column.isPrimaryKey {
@@ -201,43 +194,6 @@ class TestColumnBuilder: ColumnCreator {
         if column.isNotNullable {
             result += " NOT NULL"
         }
-        if column.isUnique {
-            result += " UNIQUE"
-        }
-        if let defaultValue = column.defaultValue {
-            var packedType: String
-            do {
-                packedType = try packType(defaultValue, queryBuilder: queryBuilder)
-            } catch {
-                return nil
-            }
-            result += " DEFAULT " + packedType
-        }
-        if let checkExpression = column.checkExpression {
-            result += checkExpression.contains(column.name) ? " CHECK (" + checkExpression.replacingOccurrences(of: column.name, with: "\"\(column.name)\"") + ")" : " CHECK (" + checkExpression + ")"
-        }
-        if let collate = column.collate {
-            result += " COLLATE \"" + collate + "\""
-        }
         return result
-    }
-
-    func packType(_ item: Any, queryBuilder: QueryBuilder) throws -> String {
-        switch item {
-        case let val as String:
-            return "'\(val)'"
-        case let val as Bool:
-            return val ? queryBuilder.substitutions[QueryBuilder.QuerySubstitutionNames.booleanTrue.rawValue]
-                : queryBuilder.substitutions[QueryBuilder.QuerySubstitutionNames.booleanFalse.rawValue]
-        case let val as Parameter:
-            return try val.build(queryBuilder: queryBuilder)
-        case let value as Date:
-            if let dateFormatter = queryBuilder.dateFormatter {
-                return dateFormatter.string(from: value)
-            }
-            return "'\(String(describing: value))'"
-        default:
-            return String(describing: item)
-        }
     }
 }
