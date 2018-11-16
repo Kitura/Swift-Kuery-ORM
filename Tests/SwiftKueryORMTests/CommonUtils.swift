@@ -40,7 +40,7 @@ class TestConnection: Connection {
     }
 
     init(result: Result, withDeleteRequiresUsing: Bool = false, withUpdateRequiresFrom: Bool = false, createAutoIncrement: ((String, Bool) -> String)? = nil) {
-        self.queryBuilder = QueryBuilder(withDeleteRequiresUsing: withDeleteRequiresUsing, withUpdateRequiresFrom: withUpdateRequiresFrom, createAutoIncrement: createAutoIncrement)
+        self.queryBuilder = QueryBuilder(withDeleteRequiresUsing: withDeleteRequiresUsing, withUpdateRequiresFrom: withUpdateRequiresFrom, columnBuilder: TestColumnBuilder())
         self.result = result
     }
 
@@ -171,3 +171,29 @@ func createConnection(withDeleteRequiresUsing: Bool = false, withUpdateRequiresF
 
 // Dummy class for test framework
 class CommonUtils { }
+
+// Classes that conform to Connection are required to provide a QueryBuilder which in turn requires an implementation conforming to ColumnCreator. The TestColumnBuilder class fulfils this requirement.
+class TestColumnBuilder: ColumnCreator {
+    func buildColumn(for column: Column, using queryBuilder: QueryBuilder) -> String? {
+
+        var result = column.name
+        let identifierQuoteCharacter = queryBuilder.substitutions[QueryBuilder.QuerySubstitutionNames.identifierQuoteCharacter.rawValue]
+        if !result.hasPrefix(identifierQuoteCharacter) {
+            result = identifierQuoteCharacter + result + identifierQuoteCharacter + " "
+        }
+
+        result += "type"
+
+        if column.autoIncrement {
+            result += " AUTO_INCREMENT"
+        }
+
+        if column.isPrimaryKey {
+            result += " PRIMARY KEY"
+        }
+        if column.isNotNullable {
+            result += " NOT NULL"
+        }
+        return result
+    }
+}
