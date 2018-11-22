@@ -84,7 +84,12 @@ public class TableInfo {
         }
         if let SQLType = valueType as? SQLDataType.Type {
           if key == idColumn.name && !idColumnIsSet {
-            columns.append(Column(key, SQLType, primaryKey: true, notNull: !optionalBool))
+            // If this is an optional id field create an autoincrementing column
+            if optionalBool {
+                columns.append(Column(key, SQLType, autoIncrement: true, primaryKey: true))
+            } else {
+                columns.append(Column(key, SQLType, primaryKey: true, notNull: !optionalBool))
+            }
             idColumnIsSet = true
           } else {
             columns.append(Column(key, SQLType, notNull: !optionalBool))
