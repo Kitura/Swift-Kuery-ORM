@@ -44,6 +44,8 @@ public protocol Model: Codable {
   /// handler. The callback is passed a model or an error
   func save(using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
 
+  func saveAutoID<I: Identifier>(idKeyPath idKey: WritableKeyPath<Self, I?>, using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
+
   /// Call to save a model to the database that accepts a completion
   /// handler. The callback is passed an id, a model or an error
   func save<I: Identifier>(using db: Database?, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void)
@@ -236,6 +238,24 @@ public extension Model {
     self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
   }
 
+    func saveAutoID<I: Identifier>(idKeyPath idKey: WritableKeyPath<Self, I?>, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
+        var table: Table
+        var values: [String : Any]
+        do {
+            table = try Self.getTable()
+            values = try DatabaseEncoder().encode(self)
+        } catch let error {
+            onCompletion(nil, Self.convertError(error))
+            return
+        }
+
+        let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
+        let parameters: [Any?] = columns.map({values[$0.name]!})
+        let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
+        let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: true)
+        self.executeQuery(query: query, parameters: parameters, idKey: idKey, using: db, onCompletion)
+    }
+
   func save<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
     var table: Table
     var values: [String : Any]
@@ -346,6 +366,66 @@ public extension Model {
     }
     Self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
   }
+
+    internal func executeQuery<I: Identifier>(query: Query, parameters: [Any?], idKey: WritableKeyPath<Self, I?>, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
+        var connection: Connection
+        do {
+            connection = try Self.getConnection(using: db)
+        } catch let error {
+            onCompletion(nil, Self.convertError(error))
+            return
+        }
+
+        var dictionaryTitleToValue = [String: Any?]()
+
+        connection.connect { error in
+            if let error = error {
+                onCompletion(nil, Self.convertError(error))
+                return
+            } else {
+                connection.execute(query: query, parameters: parameters) { result in
+                    guard result.success else {
+                        guard let error = result.asError else {
+                            onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
+                            return
+                        }
+                        onCompletion(nil, Self.convertError(error))
+                        return
+                    }
+
+                    guard let rows = result.asRows, rows.count > 0 else {
+                        onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve value for Query: \(String(describing: query))"))
+                        return
+                    }
+
+                    dictionaryTitleToValue = rows[0]
+
+                    guard let value = dictionaryTitleToValue[Self.idColumnName] else {
+                        onCompletion(nil, RequestError(.ormNotFound, reason: "Could not find return id"))
+                        return
+                    }
+
+                    guard let unwrappedValue: Any = value else {
+                        onCompletion(nil, RequestError(.ormNotFound, reason: "Return id is nil"))
+                        return
+                    }
+
+                    var identifier: I
+                    do {
+                        identifier = try I(value: String(describing: unwrappedValue))
+                    } catch {
+                        onCompletion(nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
+                        return
+                    }
+
+                    var newSelf = self
+                    newSelf[keyPath: idKey] = identifier
+
+                    onCompletion(newSelf, nil)
+                }
+            }
+        }
+    }
 
   internal func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
     var connection: Connection
