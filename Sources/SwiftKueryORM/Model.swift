@@ -44,8 +44,6 @@ public protocol Model: Codable {
   /// handler. The callback is passed a model or an error
   func save(using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
 
-  func saveAutoID<I: Identifier>(idKeyPath idKey: WritableKeyPath<Self, I?>, using db: Database?, _ onCompletion: @escaping (Self?, RequestError?) -> Void)
-
   /// Call to save a model to the database that accepts a completion
   /// handler. The callback is passed an id, a model or an error
   func save<I: Identifier>(using db: Database?, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void)
@@ -97,6 +95,8 @@ public protocol Model: Codable {
   /// handler. The callback is passed a dictionary [id: model] or an error
   static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
 
+    mutating func setID(to value: String)
+
 }
 
 public extension Model {
@@ -113,6 +113,10 @@ public extension Model {
   static var idColumnName: String { return "id" }
   /// Defaults to Int64
   static var idColumnType: SQLDataType.Type { return Int64.self }
+
+    mutating func setID(to value: String) {
+        return
+    }
 
   @discardableResult
   static func createTableSync(using db: Database? = nil) throws -> Bool {
@@ -234,27 +238,11 @@ public extension Model {
     let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
     let parameters: [Any?] = columns.map({values[$0.name]!})
     let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
-    let query = Insert(into: table, columns: columns, values: parameterPlaceHolders)
+    let autoIncrementColumn = table.columns.filter { $0.isPrimaryKey && $0.autoIncrement }
+    let returnId = autoIncrementColumn.isEmpty ? false : true
+    let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: returnId)
     self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
   }
-
-    func saveAutoID<I: Identifier>(idKeyPath idKey: WritableKeyPath<Self, I?>, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
-        var table: Table
-        var values: [String : Any]
-        do {
-            table = try Self.getTable()
-            values = try DatabaseEncoder().encode(self)
-        } catch let error {
-            onCompletion(nil, Self.convertError(error))
-            return
-        }
-
-        let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
-        let parameters: [Any?] = columns.map({values[$0.name]!})
-        let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
-        let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: true)
-        self.executeQuery(query: query, parameters: parameters, idKey: idKey, using: db, onCompletion)
-    }
 
   func save<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
     var table: Table
@@ -367,32 +355,33 @@ public extension Model {
     Self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
   }
 
-    internal func executeQuery<I: Identifier>(query: Query, parameters: [Any?], idKey: WritableKeyPath<Self, I?>, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
-        var connection: Connection
-        do {
-            connection = try Self.getConnection(using: db)
-        } catch let error {
+  internal func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
+    var connection: Connection
+    do {
+      connection = try Self.getConnection(using: db)
+    } catch let error {
+      onCompletion(nil, Self.convertError(error))
+      return
+    }
+
+    var dictionaryTitleToValue = [String: Any?]()
+
+    connection.connect { error in
+        if let error = error {
             onCompletion(nil, Self.convertError(error))
             return
-        }
-
-        var dictionaryTitleToValue = [String: Any?]()
-
-        connection.connect { error in
-            if let error = error {
-                onCompletion(nil, Self.convertError(error))
-                return
-            } else {
-                connection.execute(query: query, parameters: parameters) { result in
-                    guard result.success else {
-                        guard let error = result.asError else {
-                            onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
-                            return
-                        }
-                        onCompletion(nil, Self.convertError(error))
+        } else {
+            connection.execute(query: query, parameters: parameters) { result in
+                guard result.success else {
+                    guard let error = result.asError else {
+                        onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
                         return
                     }
+                    onCompletion(nil, Self.convertError(error))
+                    return
+                }
 
+                if let insertQuery = query as? Insert, insertQuery.returnID {
                     guard let rows = result.asRows, rows.count > 0 else {
                         onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve value for Query: \(String(describing: query))"))
                         return
@@ -410,50 +399,14 @@ public extension Model {
                         return
                     }
 
-                    var identifier: I
-                    do {
-                        identifier = try I(value: String(describing: unwrappedValue))
-                    } catch {
-                        onCompletion(nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
-                        return
-                    }
-
                     var newSelf = self
-                    newSelf[keyPath: idKey] = identifier
+                    newSelf.setID(to: String(describing: unwrappedValue))
 
-                    onCompletion(newSelf, nil)
+                    return onCompletion(newSelf, nil)
                 }
+                return onCompletion(self, nil)
             }
         }
-    }
-
-  internal func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
-    var connection: Connection
-    do {
-      connection = try Self.getConnection(using: db)
-    } catch let error {
-      onCompletion(nil, Self.convertError(error))
-      return
-    }
-
-    connection.connect { error in
-      if let error = error {
-        onCompletion(nil, Self.convertError(error))
-        return
-      } else {
-        connection.execute(query: query, parameters: parameters) { result in
-          guard result.success else {
-            guard let error = result.asError else {
-              onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
-              return
-            }
-            onCompletion(nil, Self.convertError(error))
-            return
-          }
-
-          onCompletion(self, nil)
-        }
-      }
     }
   }
 
