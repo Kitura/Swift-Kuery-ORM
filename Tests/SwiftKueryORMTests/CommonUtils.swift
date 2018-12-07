@@ -26,6 +26,7 @@ import Foundation
 import SwiftKuery
 
 class TestConnection: Connection {
+
     let queryBuilder: QueryBuilder
     let result: Result
     var query: Query? = nil
@@ -44,7 +45,13 @@ class TestConnection: Connection {
         self.result = result
     }
 
-    func connect(onCompletion: (QueryError?) -> ()) {onCompletion(nil)}
+    func connect(onCompletion: @escaping (QueryResult) -> ()) {
+        onCompletion(QueryResult.successNoData)
+    }
+
+    func connectSync() -> QueryResult {
+        return QueryResult.successNoData
+    }
 
     public var isConnected: Bool { return true }
 
@@ -97,9 +104,9 @@ class TestConnection: Connection {
         case .returnEmpty:
             onCompletion(.successNoData)
         case .returnOneRow:
-            onCompletion(.resultSet(ResultSet(TestResultFetcher(numberOfRows: 1))))
+            onCompletion(.resultSet(ResultSet(TestResultFetcher(numberOfRows: 1), connection: self)))
         case .returnThreeRows:
-            onCompletion(.resultSet(ResultSet(TestResultFetcher(numberOfRows: 3))))
+            onCompletion(.resultSet(ResultSet(TestResultFetcher(numberOfRows: 3), connection: self)))
         case .returnError:
             onCompletion(.error(QueryError.noResult("Error in query execution.")))
         case .returnValue:
@@ -121,9 +128,13 @@ class TestConnection: Connection {
 
     struct TestPreparedStatement: PreparedStatement {}
 
-    func prepareStatement(_ query: Query) throws -> PreparedStatement { return TestPreparedStatement() }
+    func prepareStatement(_ query: Query, onCompletion: @escaping ((QueryResult) -> ())) {
+        onCompletion(QueryResult.success(TestPreparedStatement()))
+    }
 
-    func prepareStatement(_ raw: String) throws -> PreparedStatement { return TestPreparedStatement() }
+    func prepareStatement(_ raw: String, onCompletion: @escaping ((QueryResult) -> ())) {
+        onCompletion(QueryResult.success(TestPreparedStatement()))
+    }
 
     func execute(preparedStatement: PreparedStatement, onCompletion: @escaping ((QueryResult) -> ())) {}
 
@@ -135,6 +146,10 @@ class TestConnection: Connection {
 }
 
 class TestResultFetcher: ResultFetcher {
+    func done() {
+        return
+    }
+
     let numberOfRows: Int
     let rows = [[1, "Joe", Int32(38)], [2, "Adam", Int32(28)], [3, "Chris", Int32(36)]]
     let titles = ["id", "name", "age"]
