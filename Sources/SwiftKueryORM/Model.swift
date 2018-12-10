@@ -382,32 +382,34 @@ public extension Model {
                     return
                 }
 
-                guard let rows = result.asRows, rows.count > 0 else {
-                    onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Could not retrieve value for Query: \(String(describing: query))"))
-                    return
+                result.asRows() { rows, error in
+                    guard let rows = rows, rows.count > 0 else {
+                        onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Could not retrieve value for Query: \(String(describing: query))"))
+                        return
+                    }
+
+                    let dictionaryTitleToValue: [String: Any?] = rows[0]
+
+                    guard let value = dictionaryTitleToValue[Self.idColumnName] else {
+                        onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Could not find return id"))
+                        return
+                    }
+
+                    guard let unwrappedValue: Any = value else {
+                        onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Return id is nil"))
+                        return
+                    }
+
+                    var identifier: I
+                    do {
+                        identifier = try I(value: String(describing: unwrappedValue))
+                    } catch {
+                        onCompletion(nil, nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
+                        return
+                    }
+
+                    onCompletion(identifier, self, nil)
                 }
-
-                let dictionaryTitleToValue: [String: Any?] = rows[0]
-
-                guard let value = dictionaryTitleToValue[Self.idColumnName] else {
-                    onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Could not find return id"))
-                    return
-                }
-
-                guard let unwrappedValue: Any = value else {
-                    onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Return id is nil"))
-                    return
-                }
-
-                var identifier: I
-                do {
-                    identifier = try I(value: String(describing: unwrappedValue))
-                } catch {
-                    onCompletion(nil, nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
-                    return
-                }
-
-                onCompletion(identifier, self, nil)
             }
         }
     }
@@ -430,22 +432,24 @@ public extension Model {
                     return
                 }
 
-                guard let rows = result.asRows, rows.count > 0 else {
-                    onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve value for Query: \(String(describing: query))"))
-                    return
+                result.asRows() { rows, error in
+                    guard let rows = rows, rows.count > 0 else {
+                        onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve value for Query: \(String(describing: query))"))
+                        return
+                    }
+
+                    let dictionaryTitleToValue: [String: Any?] = rows[0]
+
+                    var decodedModel: Self
+                    do {
+                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
+                    } catch {
+                        onCompletion(nil, Self.convertError(error))
+                        return
+                    }
+
+                    onCompletion(decodedModel, nil)
                 }
-
-                let dictionaryTitleToValue: [String: Any?] = rows[0]
-
-                var decodedModel: Self
-                do {
-                    decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
-                } catch {
-                    onCompletion(nil, Self.convertError(error))
-                    return
-                }
-
-                onCompletion(decodedModel, nil)
             }
         }
     }
@@ -468,40 +472,42 @@ public extension Model {
                     return
                 }
 
-                guard let rows = result.asRows, rows.count > 0 else {
-                    onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Could not retrieve value for Query: \(String(describing: query))"))
-                    return
+                result.asRows() { rows, error in
+                    guard let rows = rows, rows.count > 0 else {
+                        onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Could not retrieve value for Query: \(String(describing: query))"))
+                        return
+                    }
+
+                    let dictionaryTitleToValue: [String: Any?] = rows[0]
+
+                    guard let value = dictionaryTitleToValue[Self.idColumnName] else {
+                        onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Could not find return id"))
+                        return
+                    }
+
+                    guard let unwrappedValue: Any = value else {
+                        onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Return id is nil"))
+                        return
+                    }
+
+                    var identifier: I
+                    do {
+                        identifier = try I(value: String(describing: unwrappedValue))
+                    } catch {
+                        onCompletion(nil, nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
+                        return
+                    }
+
+                    var decodedModel: Self
+                    do {
+                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
+                    } catch {
+                        onCompletion(nil, nil, Self.convertError(error))
+                        return
+                    }
+
+                    onCompletion(identifier, decodedModel, nil)
                 }
-
-                let dictionaryTitleToValue: [String: Any?] = rows[0]
-
-                guard let value = dictionaryTitleToValue[Self.idColumnName] else {
-                    onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Could not find return id"))
-                    return
-                }
-
-                guard let unwrappedValue: Any = value else {
-                    onCompletion(nil, nil, RequestError(.ormNotFound, reason: "Return id is nil"))
-                    return
-                }
-
-                var identifier: I
-                do {
-                    identifier = try I(value: String(describing: unwrappedValue))
-                } catch {
-                    onCompletion(nil, nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
-                    return
-                }
-
-                var decodedModel: Self
-                do {
-                    decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
-                } catch {
-                    onCompletion(nil, nil, Self.convertError(error))
-                    return
-                }
-
-                onCompletion(identifier, decodedModel, nil)
             }
         }
     }
@@ -531,31 +537,33 @@ public extension Model {
                     return
                 }
 
-                guard let rows = result.asRows else {
-                    onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve values from table: \(String(describing: Self.tableName)))"))
-                    return
-                }
-
-                var dictionariesTitleToValue = [[String: Any?]]()
-
-                for row in rows {
-                    dictionariesTitleToValue.append(row)
-                }
-
-                var list = [Self]()
-                for dictionary in dictionariesTitleToValue {
-                    var decodedModel: Self
-                    do {
-                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
-                    } catch {
-                        onCompletion(nil, Self.convertError(error))
+                result.asRows() { rows, error in
+                    guard let rows = rows else {
+                        onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve values from table: \(String(describing: Self.tableName)))"))
                         return
                     }
 
-                    list.append(decodedModel)
-                }
+                    var dictionariesTitleToValue = [[String: Any?]]()
 
-                onCompletion(list, nil)
+                    for row in rows {
+                        dictionariesTitleToValue.append(row)
+                    }
+
+                    var list = [Self]()
+                    for dictionary in dictionariesTitleToValue {
+                        var decodedModel: Self
+                        do {
+                            decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
+                        } catch {
+                            onCompletion(nil, Self.convertError(error))
+                            return
+                        }
+
+                        list.append(decodedModel)
+                    }
+
+                    onCompletion(list, nil)
+                }
             }
 
             if let parameters = parameters {
@@ -591,45 +599,47 @@ public extension Model {
                     return
                 }
 
-                guard let rows = result.asRows else {
-                    onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve values from table: \(String(describing: Self.tableName)))"))
-                    return
-                }
-
-                var dictionariesTitleToValue = [[String: Any?]]()
-
-                for row in rows {
-                    dictionariesTitleToValue.append(row)
-                }
-
-                var result = [(I, Self)]()
-                for dictionary in dictionariesTitleToValue {
-                    var decodedModel: Self
-                    do {
-                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
-                    } catch let error {
-                        onCompletion(nil, Self.convertError(error))
+                result.asRows() { rows, error in
+                    guard let rows = rows else {
+                        onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve values from table: \(String(describing: Self.tableName)))"))
                         return
                     }
 
-                    guard let value = dictionary[idColumnName] else {
-                        onCompletion(nil, RequestError(.ormNotFound, reason: "Could not find return id"))
-                        return
+                    var dictionariesTitleToValue = [[String: Any?]]()
+
+                    for row in rows {
+                        dictionariesTitleToValue.append(row)
                     }
 
-                    guard let unwrappedValue: Any = value else {
-                        onCompletion(nil, RequestError(.ormNotFound, reason: "Return id is nil"))
-                        return
-                    }
+                    var result = [(I, Self)]()
+                    for dictionary in dictionariesTitleToValue {
+                        var decodedModel: Self
+                        do {
+                            decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
+                        } catch let error {
+                            onCompletion(nil, Self.convertError(error))
+                            return
+                        }
 
-                    do {
-                        let identifier = try I(value: String(describing: unwrappedValue))
-                        result.append((identifier, decodedModel))
-                    } catch {
-                        onCompletion(nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
+                        guard let value = dictionary[idColumnName] else {
+                            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not find return id"))
+                            return
+                        }
+
+                        guard let unwrappedValue: Any = value else {
+                            onCompletion(nil, RequestError(.ormNotFound, reason: "Return id is nil"))
+                            return
+                        }
+
+                        do {
+                            let identifier = try I(value: String(describing: unwrappedValue))
+                            result.append((identifier, decodedModel))
+                        } catch {
+                            onCompletion(nil, RequestError(.ormIdentifierError, reason: "Could not construct Identifier"))
+                        }
                     }
+                    onCompletion(result, nil)
                 }
-                onCompletion(result, nil)
             }
 
             if let parameters = parameters {

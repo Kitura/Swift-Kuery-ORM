@@ -146,6 +146,7 @@ class TestConnection: Connection {
 }
 
 class TestResultFetcher: ResultFetcher {
+
     func done() {
         return
     }
@@ -159,20 +160,18 @@ class TestResultFetcher: ResultFetcher {
         self.numberOfRows = numberOfRows
     }
 
-    func fetchNext() -> [Any?]? {
-        if fetched < numberOfRows {
-            fetched += 1
-            return rows[fetched - 1]
+    func fetchNext(callback: @escaping (([Any?]?, Error?)) -> ()) {
+        DispatchQueue.global().async {
+            if self.fetched < self.numberOfRows {
+                self.fetched += 1
+                return callback((self.rows[self.fetched - 1], nil))
+            }
+            return callback((nil, nil))
         }
-        return nil
     }
 
-    func fetchNext(callback: ([Any?]?) ->()) {
-        callback(fetchNext())
-    }
-
-    func fetchTitles() -> [String] {
-        return titles
+    func fetchTitles(callback: @escaping (([String]?, Error?)) -> ()) {
+        callback((titles, nil))
     }
 }
 
