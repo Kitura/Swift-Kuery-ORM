@@ -22,6 +22,7 @@
 
 import XCTest
 import Foundation
+import Dispatch
 
 import SwiftKuery
 
