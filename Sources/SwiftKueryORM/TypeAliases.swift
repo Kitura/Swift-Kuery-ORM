@@ -18,9 +18,9 @@ import KituraContracts
 import SwiftKuery
 
 /*
-  This file declares public typealiases for types stored in the dependencies.
-  The purpose is to expose these types at the top level without having to import a specific dependency.
-*/
+ This file declares public typealiases for types stored in the dependencies.
+ The purpose is to expose these types at the top level without having to import a specific dependency.
+ */
 
 /// Type Alias for RequestError from [KituraContracts](https://github.com/IBM-Swift/KituraContracts)
 public typealias RequestError = KituraContracts.RequestError
