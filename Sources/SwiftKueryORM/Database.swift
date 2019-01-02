@@ -45,7 +45,7 @@ public class Database {
     /// connection generator
     private enum ConnectionStrategy {
         case pool(ConnectionPool)
-        case generator(() -> Connection?)
+        case generator((((Connection?, QueryError?) -> ())) -> ())
     }
 
     private let connectionStrategy: ConnectionStrategy
@@ -65,16 +65,23 @@ public class Database {
     }
 
     /// Constructor for a custom connection generator
-    public init(generator: @escaping () -> Connection?) {
+    public init(generator: @escaping ((Connection?, QueryError?) -> ()) -> ()) {
         self.connectionStrategy = .generator(generator)
     }
 
     /// Connection getter: either new connection from pool
     /// or call the custom generator
-    public func getConnection() -> Connection? {
+    public func getConnection(task: @escaping (Connection?, QueryError?) -> ()) {
         switch connectionStrategy {
-        case .pool(let pool): return pool.getConnection()
-        case .generator(let generator): return generator()
+        case .pool(let pool): return pool.getConnection(poolTask: task)
+        case .generator(let generator): return generator(task)
+        }
+    }
+
+    public func executeTask(task: @escaping (Connection?, QueryError?) -> ()) {
+        switch connectionStrategy {
+        case .pool(let pool): return pool.getConnection(poolTask: task)
+        case .generator(let generator): return generator(task)
         }
     }
 }

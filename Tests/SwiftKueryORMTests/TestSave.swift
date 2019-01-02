@@ -135,7 +135,7 @@ class TestSave: XCTestCase {
       XCTAssertEqual(resultDictionary.count, expectedDictionary.count)
       for (key, value) in expectedDictionary {
         XCTAssertNotNil(resultDictionary[key], "Value for key: \(String(describing: key)) is nil in the result dictionary")
-        var values = value.split(separator: ",")
+        let values = value.split(separator: ",")
         var success = false
         for value in values where resultDictionary[key] == String(value) {
           success = true
