@@ -35,6 +35,9 @@ public typealias ConnectionPoolOptions = SwiftKuery.ConnectionPoolOptions
 
 public class Database {
 
+    /// Definition of a databaseTask completion handler which accepts an optional Connection and optional Error
+    public typealias databaseTask = (Connection?, QueryError?) -> ()
+
     /// Global default Database for the application
     public static var `default`: Database?
 
@@ -65,20 +68,12 @@ public class Database {
     }
 
     /// Constructor for a custom connection generator
-    public init(generator: @escaping ((Connection?, QueryError?) -> ()) -> ()) {
+    public init(generator: @escaping (databaseTask) -> ()) {
         self.connectionStrategy = .generator(generator)
     }
 
-    /// Connection getter: either new connection from pool
-    /// or call the custom generator
-    public func getConnection(task: @escaping (Connection?, QueryError?) -> ()) {
-        switch connectionStrategy {
-        case .pool(let pool): return pool.getConnection(poolTask: task)
-        case .generator(let generator): return generator(task)
-        }
-    }
-
-    public func executeTask(task: @escaping (Connection?, QueryError?) -> ()) {
+    /// Function that redirects the passed task based on the current connectionStrategy
+    internal func executeTask(task: @escaping databaseTask) {
         switch connectionStrategy {
         case .pool(let pool): return pool.getConnection(poolTask: task)
         case .generator(let generator): return generator(task)
