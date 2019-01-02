@@ -69,6 +69,23 @@ public class Database {
 
     /// Constructor for a custom connection generator
     /// The generator must execute the supplied database task on a connected database Connection.
+    ///
+    /// ```func getConnectionAndRunTask(task: @escaping (Connection?, QueryError?) -> ()) {
+    ///     var opts = [ConnectionOptions]()
+    ///     opts.append(ConnectionOptions.userName("myUser"))
+    ///     opts.append(ConnectionOptions.password("myPassword"))
+    ///     let connection = PostgreSQLConnection(host: host, port: port, options: opts)
+    ///     connection.connect() { result in
+    ///         guard result.success else {
+    ///             // Handle error
+    ///             return task(nil, QueryError.connection(result.asError?.localizedDescription ?? "Unknown connection error"))
+    ///         }
+    ///         return task(connection, nil)
+    ///     }
+    /// }
+    ///
+    ///let db = Database(generator: getConnectionAndRunTask)
+    ///```
     public init(generator: @escaping (@escaping databaseTask) -> ()) {
         self.connectionStrategy = .generator(generator)
     }
