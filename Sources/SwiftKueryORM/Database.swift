@@ -48,7 +48,7 @@ public class Database {
     /// connection generator
     private enum ConnectionStrategy {
         case pool(ConnectionPool)
-        case generator((((Connection?, QueryError?) -> ())) -> ())
+        case generator(((databaseTask)) -> ())
     }
 
     private let connectionStrategy: ConnectionStrategy
@@ -68,11 +68,12 @@ public class Database {
     }
 
     /// Constructor for a custom connection generator
+    /// The generator must execute the supplied database task on a connected database Connection.
     public init(generator: @escaping (databaseTask) -> ()) {
         self.connectionStrategy = .generator(generator)
     }
 
-    /// Function that redirects the passed task based on the current connectionStrategy
+    /// Function that redirects the passed databaseTask based on the current connectionStrategy
     internal func executeTask(task: @escaping databaseTask) {
         switch connectionStrategy {
         case .pool(let pool): return pool.getConnection(poolTask: task)
