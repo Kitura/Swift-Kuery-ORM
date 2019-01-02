@@ -48,7 +48,7 @@ public class Database {
     /// connection generator
     private enum ConnectionStrategy {
         case pool(ConnectionPool)
-        case generator(((databaseTask)) -> ())
+        case generator(((@escaping databaseTask)) -> ())
     }
 
     private let connectionStrategy: ConnectionStrategy
@@ -69,7 +69,7 @@ public class Database {
 
     /// Constructor for a custom connection generator
     /// The generator must execute the supplied database task on a connected database Connection.
-    public init(generator: @escaping (databaseTask) -> ()) {
+    public init(generator: @escaping (@escaping databaseTask) -> ()) {
         self.connectionStrategy = .generator(generator)
     }
 
