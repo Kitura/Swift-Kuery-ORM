@@ -22,6 +22,7 @@
 
 import XCTest
 import Foundation
+import Dispatch
 
 import SwiftKuery
 
@@ -40,11 +41,17 @@ class TestConnection: Connection {
     }
 
     init(result: Result, withDeleteRequiresUsing: Bool = false, withUpdateRequiresFrom: Bool = false, createAutoIncrement: ((String, Bool) -> String)? = nil) {
-        self.queryBuilder = QueryBuilder(withDeleteRequiresUsing: withDeleteRequiresUsing, withUpdateRequiresFrom: withUpdateRequiresFrom, createAutoIncrement: createAutoIncrement)
+        self.queryBuilder = QueryBuilder(withDeleteRequiresUsing: withDeleteRequiresUsing, withUpdateRequiresFrom: withUpdateRequiresFrom, columnBuilder: TestColumnBuilder())
         self.result = result
     }
 
-    func connect(onCompletion: (QueryError?) -> ()) {onCompletion(nil)}
+    func connect(onCompletion: @escaping (QueryResult) -> ()) {
+        onCompletion(QueryResult.successNoData)
+    }
+
+    func connectSync() -> QueryResult {
+        return QueryResult.successNoData
+    }
 
     public var isConnected: Bool { return true }
 
@@ -97,9 +104,9 @@ class TestConnection: Connection {
         case .returnEmpty:
             onCompletion(.successNoData)
         case .returnOneRow:
-            onCompletion(.resultSet(ResultSet(TestResultFetcher(numberOfRows: 1))))
+            onCompletion(.resultSet(ResultSet(TestResultFetcher(numberOfRows: 1), connection: self)))
         case .returnThreeRows:
-            onCompletion(.resultSet(ResultSet(TestResultFetcher(numberOfRows: 3))))
+            onCompletion(.resultSet(ResultSet(TestResultFetcher(numberOfRows: 3), connection: self)))
         case .returnError:
             onCompletion(.error(QueryError.noResult("Error in query execution.")))
         case .returnValue:
@@ -121,9 +128,13 @@ class TestConnection: Connection {
 
     struct TestPreparedStatement: PreparedStatement {}
 
-    func prepareStatement(_ query: Query) throws -> PreparedStatement { return TestPreparedStatement() }
+    func prepareStatement(_ query: Query, onCompletion: @escaping ((QueryResult) -> ())) {
+        onCompletion(QueryResult.success(TestPreparedStatement()))
+    }
 
-    func prepareStatement(_ raw: String) throws -> PreparedStatement { return TestPreparedStatement() }
+    func prepareStatement(_ raw: String, onCompletion: @escaping ((QueryResult) -> ())) {
+        onCompletion(QueryResult.success(TestPreparedStatement()))
+    }
 
     func execute(preparedStatement: PreparedStatement, onCompletion: @escaping ((QueryResult) -> ())) {}
 
@@ -144,20 +155,22 @@ class TestResultFetcher: ResultFetcher {
         self.numberOfRows = numberOfRows
     }
 
-    func fetchNext() -> [Any?]? {
-        if fetched < numberOfRows {
-            fetched += 1
-            return rows[fetched - 1]
+    func done() {
+        return
+    }
+
+    func fetchNext(callback: @escaping (([Any?]?, Error?)) -> ()) {
+        DispatchQueue.global().async {
+            if self.fetched < self.numberOfRows {
+                self.fetched += 1
+                return callback((self.rows[self.fetched - 1], nil))
+            }
+            return callback((nil, nil))
         }
-        return nil
     }
 
-    func fetchNext(callback: ([Any?]?) ->()) {
-        callback(fetchNext())
-    }
-
-    func fetchTitles() -> [String] {
-        return titles
+    func fetchTitles(callback: @escaping (([String]?, Error?)) -> ()) {
+        callback((titles, nil))
     }
 }
 
@@ -171,3 +184,29 @@ func createConnection(withDeleteRequiresUsing: Bool = false, withUpdateRequiresF
 
 // Dummy class for test framework
 class CommonUtils { }
+
+// Classes that conform to Connection are required to provide a QueryBuilder which in turn requires an implementation conforming to ColumnCreator. The TestColumnBuilder class fulfils this requirement.
+class TestColumnBuilder: ColumnCreator {
+    func buildColumn(for column: Column, using queryBuilder: QueryBuilder) -> String? {
+
+        var result = column.name
+        let identifierQuoteCharacter = queryBuilder.substitutions[QueryBuilder.QuerySubstitutionNames.identifierQuoteCharacter.rawValue]
+        if !result.hasPrefix(identifierQuoteCharacter) {
+            result = identifierQuoteCharacter + result + identifierQuoteCharacter + " "
+        }
+
+        result += "type"
+
+        if column.autoIncrement {
+            result += " AUTO_INCREMENT"
+        }
+
+        if column.isPrimaryKey {
+            result += " PRIMARY KEY"
+        }
+        if column.isNotNullable {
+            result += " NOT NULL"
+        }
+        return result
+    }
+}
