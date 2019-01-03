@@ -2,14 +2,14 @@
   "warnings": [
     {
       "file": "/Users/travis/build/IBM-Swift/Swift-Kuery-ORM/Sources/SwiftKueryORM/Model.swift",
-      "line": 241,
+      "line": 223,
       "symbol": "Model.save(using:_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/IBM-Swift/Swift-Kuery-ORM/Sources/SwiftKueryORM/Model.swift",
-      "line": 291,
+      "line": 241,
       "symbol": "Model.save(using:_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
