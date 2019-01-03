@@ -54,9 +54,9 @@ public class Database {
     private let connectionStrategy: ConnectionStrategy
 
     /**
-     Create a Database instance which uses a single connection to perform each operation.
-     The connection is wrapped in a connection pool which prevents any concurrent operations being carried out on the connection
-     The connection will retain system resources for its lifetime.
+     Create a Database instance which uses a single connection to perform each operation. The connection will remain open for the lifetime of the Database.
+     It is safe for you to issue concurrent operations on the database: the ORM will ensure those operations are executed sequentially.
+     This connection strategy provides lower latency requests, as a new connection does not need to be established for each operation, and has a small resource overhead. However, scalability is limited as all database operations are serialized.
      Below is example code which creates a connection and uses it to create a Database instance:
      ```swift
      var opts = [ConnectionOptions]()
@@ -80,13 +80,13 @@ public class Database {
     }
 
     /**
-     Create a Database instance which uses a connection pool. A connection will be removed from the pool for each operation and returned to the pool nce the operation is complete.
-     The pooled connections will hold system resources while not in use but will result in more efficient processing of operations when the pool has an available connection.
+     Create a Database instance with multiple connections, managed by a connection pool, allowing operations to be performed concurrently. These connections will remain open for the lifetime of the Database.
+     This connection strategy provides lower latency requests, as a new connection does not need to be established for each operation. You can choose between better performance or lower resource consumption by adjusting the number of connections in the pool.
      Below is an example code which creates a connection pool and uses it to create a Database instance:
      ```swift
      let connectionPool = PostgreSQLConnection.createPool(host: host, port: port, options: [.userName("myUser"), .password("myPassword")], poolOptions: ConnectionPoolOptions(initialCapacity: 5, maxCapacity: 10))
 
-     let db = Database(pgresPool)
+     let db = Database(connectionPool)
      ```
      */
     public init(_ pool: ConnectionPool) {
@@ -95,7 +95,7 @@ public class Database {
 
     /**
      Create a Database instance which uses short-lived connections that are generated on demand. A new Connection is created for every operation, and will be closed once the operation completes.
-     An advantage of this approach is that memory and resources are not tied up with connections when they are not required, however, the process of establishing a connection will impact the time taken to process each operation.
+     This connection strategy allows for minimal resource consumption when idle, and allows multiple operations to be performed concurrently. However, the process of establishing a connection will increase the time taken to process each operation.
      Below is an example of a function that can be used as a connection generator and the call to create the Database instance:
      ```swift
      func getConnectionAndRunTask(task: @escaping (Connection?, QueryError?) -> ()) {
