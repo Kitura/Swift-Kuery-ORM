@@ -222,35 +222,70 @@ Grade.deleteAll { error in
 }
 ```
 
-### Customization
+### Customizing your Model
 
-The ORM uses [Swift-Kuery](https://github.com/IBM-Swift/Swift-Kuery) which allows you to customize and execute your own queries without breaking any existing ORM functionality. You'll want to have access to the table for your object, which you can get with the `getTable()` function:
+The ORM defines an extension to `Model` which provides a number of `public static executeQuery(…)` functions. These methods can be used to create custom functions within your model’s that perform more complex database operations. The example below defines and Info type and adds a custom method to it that will retrieve all database records which have an age over 20:
 
 ```swift
-do {
-  let table = Grade.getTable()
-} catch {
-  // Error
+// define the info struct
+struct Info: Codable {
+    var firstname: String
+    var surname: String
+    var age: Int
+}
+
+// extend Info to conform to model and add overTwenties function
+extension Info: Model {
+
+    // Define a synchronous function to retrieve all record of Info with age > 20
+    public static func getOverTwenties() -> [Info]? {
+        let wait = DispatchSemaphore(value: 0)
+        // First get the table
+        var table: Table
+        do {
+            table = try Info.getTable()
+        } catch {
+            // Handle error
+        }
+        // Define result, query and execute
+        var overTwenties: [Info]? = nil
+        let query = Select(from: table).where("age > 20")
+
+        Info.executeQuery(query: query, parameters: nil) { results, error in
+            guard let results = results else {
+                // Handle error
+            }
+            overTwenties = results
+            wait.signal()
+            return
+        }
+        wait.wait()
+        return overTwenties
+    }
 }
 ```
 
-After you retrieve your table, you can create a `Query` object to specify what you want to execute on your database, and perform it like so:
-
+Alternatively you can define and asynchronous getOverTwenties function:
 ```swift
-executeQuery(query: Query) { (grade: Grade?, error: RequestError?) in
-  ...
+public static func getOverTwenties(oncompletion: @escaping ([Info]?, RequestError?)-> Void) {
+    var table: Table
+    do {
+        table = try Info.getTable()
+    } catch {
+        // Handle error
+    }
+    let query = Select(from: table).where("age > 20")
+    Info.executeQuery(query: query, parameters: nil, oncompletion)
 }
 ```
 
-You can customize the parameters passed into your closure after you execute a `Query` like so:
-
+which can be called in a fashion similar to the following:
 ```swift
-executeQuery(query: Query) { grade, error in
-  ...
-}
-
-executeQuery(query: Query) { error in
-  ...
+Info.getOverTwenties() { result, error in
+    guard let result = result else {
+        // Handle error
+    }
+    // Use result
 }
 ```
 
