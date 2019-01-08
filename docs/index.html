@@ -89,10 +89,37 @@
                 <a class="nav-group-task-link" href="Typealiases.html#/s:13SwiftKueryORM21ConnectionPoolOptionsa">ConnectionPoolOptions</a>
               </li>
               <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Typealiases.html#/s:13SwiftKueryORM14ExclusiveRangea">ExclusiveRange</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Typealiases.html#/s:13SwiftKueryORM11GreaterThana">GreaterThan</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Typealiases.html#/s:13SwiftKueryORM18GreaterThanOrEquala">GreaterThanOrEqual</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Typealiases.html#/s:13SwiftKueryORM14InclusiveRangea">InclusiveRange</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Typealiases.html#/s:13SwiftKueryORM9LowerThana">LowerThan</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Typealiases.html#/s:13SwiftKueryORM16LowerThanOrEquala">LowerThanOrEqual</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Typealiases.html#/s:13SwiftKueryORM8Orderinga">Ordering</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Typealiases.html#/s:13SwiftKueryORM10Paginationa">Pagination</a>
+              </li>
+              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Typealiases.html#/s:13SwiftKueryORM11QueryParamsa">QueryParams</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Typealiases.html#/s:13SwiftKueryORM12RequestErrora">RequestError</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Typealiases.html#/s:13SwiftKueryORM11SQLDataTypea">SQLDataType</a>
               </li>
             </ul>
           </li>
@@ -110,13 +137,13 @@
 </p>
 
 <p align="center">
-    <a href="http://www.kitura.io/">
-    <img src="https://img.shields.io/badge/docs-kitura.io-1FBCE4.svg" alt="Docs">
+    <a href="https://ibm-swift.github.io/Swift-Kuery-ORM/index.html">
+    <img src="https://img.shields.io/badge/apidoc-SwiftKueryORM-1FBCE4.svg?style=flat" alt="APIDoc">
     </a>
     <a href="https://travis-ci.org/IBM-Swift/Swift-Kuery-ORM">
     <img src="https://travis-ci.org/IBM-Swift/Swift-Kuery-ORM.svg?branch=master" alt="Build Status - Master">
     </a>
-    <img src="https://img.shields.io/badge/os-macOS-green.svg?style=flat" alt="Mac OS X">
+    <img src="https://img.shields.io/badge/os-macOS-green.svg?style=flat" alt="macOS">
     <img src="https://img.shields.io/badge/os-linux-green.svg?style=flat" alt="Linux">
     <img src="https://img.shields.io/badge/license-Apache2-blue.svg?style=flat" alt="Apache 2">
     <a href="http://swift-at-ibm-slack.mybluemix.net/">
@@ -124,14 +151,13 @@
     </a>
 </p>
 <h1 id='swift-kuery-orm' class='heading'>Swift-Kuery-ORM</h1>
-<h2 id='summary' class='heading'>Summary</h2>
 
 <p>Swift-Kuery-ORM is an ORM (Object Relational Mapping) library built for Swift. Using it allows you to simplify persistence of model objects with your server.</p>
 
 <p>Swift-Kuery-ORM is built on top of <a href="http://github.com/IBM-Swift/Swift-Kuery">Swift-Kuery</a>, which means that its possible to use Swift-Kuery to customize SQL queries made to the database, if the functionality of the ORM is insufficient.</p>
 <h2 id='the-model-protocol' class='heading'>The Model Protocol</h2>
 
-<p>The key component of Swift-Kuery-ORM is the protocol <code><a href="Protocols/Model.html">Model</a></code>. </p>
+<p>The key component of Swift-Kuery-ORM is the protocol <code><a href="Protocols/Model.html">Model</a></code>.</p>
 
 <p>Let&rsquo;s propose a struct to use as an example. We can declare an object that looks like so:</p>
 <pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">Grade</span><span class="p">:</span> <span class="kt">Codable</span> <span class="p">{</span>
@@ -157,15 +183,15 @@
 <p>The <code><a href="Protocols/Model.html">Model</a></code> protocol is the key to using the ORM. Let&rsquo;s walk through how to fully set up an application to make use of the ORM.</p>
 <h2 id='example' class='heading'>Example</h2>
 
-<p>You&rsquo;ll want to go <a href="http://www.kitura.io/en/starter/gettingstarted.html">here</a> to create a server from the CLI to get started. You&rsquo;ll be using the <a href="https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL">PostgreSQL plugin of Swift Kuery</a>, so you will want to make sure that you have PostgreSQL running on your local machine, which you can install with <code>brew install postgresql</code>. The default port for PostgreSQL is 5432.</p>
+<p>Follow <a href="https://www.kitura.io/guides/gettingstarted.html">Getting Started</a> to create a Kitura server. In this example you&rsquo;ll be using the <a href="https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL">Swift Kuery PostgreSQL plugin</a>, so you will need PostgreSQL running on your local machine, which you can install with <code>brew install postgresql</code>. The default port for PostgreSQL is 5432.</p>
 <h3 id='update-your-package-swift-file' class='heading'>Update your Package.swift file</h3>
 
-<p>Add Swift-Kuery-ORM and Swift-Kuery-PostgreSQL to your <code>Package.swift</code>:</p>
+<p>Add Swift-Kuery-ORM and Swift-Kuery-PostgreSQL to your application&rsquo;s <code>Package.swift</code>. Substitute <code>&quot;x.x.x&quot;</code> with the latest <code>Swift-Kuery-ORM</code> <a href="https://github.com/IBM-Swift/Swift-Kuery-ORM/releases">release</a> and the latest <code>Swift-Kuery-PostgreSQL</code> <a href="https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL/releases">release</a>.</p>
 <pre class="highlight swift"><code><span class="nv">dependencies</span><span class="p">:</span> <span class="p">[</span>
     <span class="o">...</span>
     <span class="c1">// Add these two lines</span>
-    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/IBM-Swift/Swift-Kuery-ORM.git"</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span> <span class="s">"0.0.1"</span><span class="p">),</span>
-    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL.git"</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span> <span class="s">"1.0.0"</span><span class="p">),</span>
+    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/IBM-Swift/Swift-Kuery-ORM.git"</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span> <span class="s">"x.x.x"</span><span class="p">),</span>
+    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL.git"</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span> <span class="s">"x.x.x"</span><span class="p">),</span>
   <span class="p">],</span>
   <span class="nv">targets</span><span class="p">:</span> <span class="p">[</span>
     <span class="o">.</span><span class="nf">target</span><span class="p">(</span>
@@ -175,14 +201,14 @@
   <span class="p">]</span>
 </code></pre>
 
-<p>Let&rsquo;s assume you want to add ORM functionality to a file called <code>Application.swift</code>. You&rsquo;ll need to make the following import statements at the top of the file:</p>
+<p>Let&rsquo;s assume you want to add ORM functionality to a file called <code>Application.swift</code>. You&rsquo;ll need to add the following import statements at the top of the file:</p>
 <pre class="highlight swift"><code><span class="kd">import</span> <span class="kt">SwiftKueryORM</span>
 <span class="kd">import</span> <span class="kt">SwiftKueryPostgreSQL</span>
 </code></pre>
 <h3 id='create-your-database' class='heading'>Create Your Database</h3>
 
 <p>As mentioned before, we recommend you use <a href="https://brew.sh">Homebrew</a> to set up PostgreSQL on your machine. You can install PostgreSQL and set up your table like so:</p>
-<pre class="highlight shell"><code>brew install postgresql
+<pre class="highlight shell"><code>brew <span class="nb">install </span>postgresql
 brew services start postgresql
 createdb school
 </code></pre>
@@ -201,7 +227,7 @@ createdb school
 </code></pre>
 
 <p>In your <code>Application.swift</code> file, extend <code>Grade</code> to conform to <code><a href="Protocols/Model.html">Model</a></code></p>
-<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Grade</span> <span class="p">:</span> <span class="kt">Model</span> <span class="p">{</span> 
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Grade</span> <span class="p">:</span> <span class="kt">Model</span> <span class="p">{</span>
     <span class="c1">// here, you can add any server-side specific logic to your object</span>
 <span class="p">}</span>
 </code></pre>
@@ -306,13 +332,19 @@ createdb school
 </code></pre>
 
 <p>If you&rsquo;d like to learn more about how you can customize queries, check out the <a href="https://github.com/IBM-Swift/Swift-Kuery">Swift-Kuery</a> repository for more information.</p>
-<h2 id='list-of-plugins' class='heading'>List of plugins:</h2>
+<h2 id='list-of-plugins' class='heading'>List of plugins</h2>
 
 <ul>
 <li><p><a href="https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL">PostgreSQL</a></p></li>
 <li><p><a href="https://github.com/IBM-Swift/Swift-Kuery-SQLite">SQLite</a></p></li>
 <li><p><a href="https://github.com/IBM-Swift/SwiftKueryMySQL">MySQL</a></p></li>
 </ul>
+<h2 id='api-documentation' class='heading'>API Documentation</h2>
+
+<p>For more information visit our <a href="https://ibm-swift.github.io/Swift-Kuery-ORM/index.html">API reference</a>.</p>
+<h2 id='community' class='heading'>Community</h2>
+
+<p>We love to talk server-side Swift, and Kitura. Join our <a href="http://swift-at-ibm-slack.mybluemix.net/">Slack</a> to meet the team!</p>
 <h2 id='license' class='heading'>License</h2>
 
 <p>This library is licensed under Apache 2.0. Full license text is available in <a href="LICENSE.txt">LICENSE</a>.</p>
@@ -324,7 +356,7 @@ createdb school
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2018 <a class="link" href="" target="_blank" rel="external">IBM</a>. All rights reserved. (Last updated: 2018-04-17)</p>
+      <p>&copy; 2019 <a class="link" href="" target="_blank" rel="external">IBM</a>. All rights reserved. (Last updated: 2019-01-03)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.1</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>
