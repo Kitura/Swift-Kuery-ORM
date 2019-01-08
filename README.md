@@ -224,34 +224,34 @@ Grade.deleteAll { error in
 
 ### Customizing your Model
 
-The ORM defines an extension to `Model` which provides a number of `public static executeQuery(…)` functions. These methods can be used to create custom functions within your model’s that perform more complex database operations. The example below defines and Info type and adds a custom method to it that will retrieve all database records which have an age over 20:
+The ORM defines an extension to `Model` which provides a number of `public static executeQuery(…)` functions. These functions can be used to create custom functions within your model that perform more complex database operations. The example below defines a Person model and with a custom function that will retrieve all  records which have age > 20:
 
 ```swift
-// define the info struct
-struct Info: Codable {
+// define the Person struct
+struct Person: Codable {
     var firstname: String
     var surname: String
     var age: Int
 }
 
-// extend Info to conform to model and add overTwenties function
-extension Info: Model {
+// extend Person to conform to model and add overTwenties function
+extension Person: Model {
 
-    // Define a synchronous function to retrieve all record of Info with age > 20
-    public static func getOverTwenties() -> [Info]? {
+    // Define a synchronous function to retrieve all records of Person with age > 20
+    public static func getOverTwenties() -> [Person]? {
         let wait = DispatchSemaphore(value: 0)
         // First get the table
         var table: Table
         do {
-            table = try Info.getTable()
+            table = try Person.getTable()
         } catch {
             // Handle error
         }
         // Define result, query and execute
-        var overTwenties: [Info]? = nil
+        var overTwenties: [Person]? = nil
         let query = Select(from: table).where("age > 20")
 
-        Info.executeQuery(query: query, parameters: nil) { results, error in
+        Person.executeQuery(query: query, parameters: nil) { results, error in
             guard let results = results else {
                 // Handle error
             }
@@ -267,21 +267,21 @@ extension Info: Model {
 
 Alternatively you can define and asynchronous getOverTwenties function:
 ```swift
-public static func getOverTwenties(oncompletion: @escaping ([Info]?, RequestError?)-> Void) {
+public static func getOverTwenties(oncompletion: @escaping ([Person]?, RequestError?)-> Void) {
     var table: Table
     do {
-        table = try Info.getTable()
+        table = try Person.getTable()
     } catch {
         // Handle error
     }
     let query = Select(from: table).where("age > 20")
-    Info.executeQuery(query: query, parameters: nil, oncompletion)
+    Person.executeQuery(query: query, parameters: nil, oncompletion)
 }
 ```
 
 which can be called in a fashion similar to the following:
 ```swift
-Info.getOverTwenties() { result, error in
+Person.getOverTwenties() { result, error in
     guard let result = result else {
         // Handle error
     }
