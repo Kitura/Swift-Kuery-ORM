@@ -224,7 +224,7 @@ Grade.deleteAll { error in
 
 ### Customizing your Model
 
-The ORM defines an extension to `Model` which provides a number of `public static executeQuery(…)` functions. These functions can be used to create custom functions within your model that perform more complex database operations. The example below defines a Person model and with a custom function that will retrieve all  records which have age > 20:
+The ORM defines an extension to `Model` which provides a number of `public static executeQuery(…)` functions. These can be used to create custom functions within your model that perform more complex database operations. The example below defines a Person model and with a custom function that will retrieve all records which have age > 20:
 
 ```swift
 // define the Person struct
