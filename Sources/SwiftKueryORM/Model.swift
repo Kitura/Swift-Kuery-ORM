@@ -426,7 +426,7 @@ public extension Model {
     /// - Parameter query: The `Query` to execute
     /// - Parameter parameters: An optional array of parameters to pass to the query
     /// - Parameter using: Optional Database to use
-    /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple containing an optional `Self` and optional `RequestError`. On successful execution the `Self` will be non-nil and error nil, otherwise the `Self` will be nil and error non-nil.
+    /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of (Self?, RequestError?), of which one will be nil, depending on whether the query was successful.
     public static func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
         Self.executeTask() { connection, error in
             guard let connection = connection else {
@@ -471,7 +471,7 @@ public extension Model {
     /// - Parameter query: The `Query` to execute
     /// - Parameter parameters: An optional array of parameters to pass to the query
     /// - Parameter using: Optional Database to use
-    /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple containing an `Identifier`, an optional `Self` and optional `RequestError`. On successful execution the `Identifier` and `Self` will be non-nil and error nil, otherwise the `Identifier` and `Self` will be nil and error non-nil.
+    /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of (Identifier?, Self?, RequestError?), of which some will be nil, depending on whether the query was successful.
     public static func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
         Self.executeTask() { connection, error in
             guard let connection = connection else {
@@ -534,7 +534,7 @@ public extension Model {
     /// - Parameter query: The `Query` to execute
     /// - Parameter parameters: An optional array of parameters to pass to the query
     /// - Parameter using: Optional Database to use
-    /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple containing an optional array of `Self` and optional `RequestError`. On successful execution the arry will be non-nil and error nil, otherwise the array will be nil and error non-nil.
+    /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of ([Self]?, RequestError?), of which one will be nil, depending on whether the query was successful.
     public static func executeQuery(query: Query, parameters: [Any?]? = nil, using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?)-> Void ) {
         Self.executeTask() { connection, error in
             guard let connection = connection else {
@@ -599,7 +599,7 @@ public extension Model {
     /// - Parameter query: The `Query` to execute
     /// - Parameter parameters: An optional array of parameters to pass to the query
     /// - Parameter using: Optional Database to use
-    /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple containing an optional array of tuples containing an `Identifier` and `Self` and optional `RequestError`. On successful execution the arry will be non-nil and error nil, otherwise the array will be nil and error non-nil.
+    /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of ([Identifier, Self]?, RequestError?), of which one will be nil, depending on whether the query was successful.
     public static func executeQuery<I: Identifier>(query: Query, parameters: [Any?]? = nil, using db: Database? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void ) {
         Self.executeTask() { connection, error in
             guard let connection = connection else {
@@ -678,7 +678,7 @@ public extension Model {
     /// - Parameter query: The `Query` to execute
     /// - Parameter parameters: An optional array of parameters to pass to the query
     /// - Parameter using: Optional Database to use
-    /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed an optional `RequestError`. On successful execution the error will be nil, otherwise the error will be non-nil.
+    /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a RequestError? which may be nil, depending on whether the query was successful.
     public static func executeQuery(query: Query, parameters: [Any?]? = nil, using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void ) {
         Self.executeTask() { connection, error in
             guard let connection = connection else {
