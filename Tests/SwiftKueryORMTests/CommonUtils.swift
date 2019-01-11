@@ -38,6 +38,7 @@ class TestConnection: Connection {
         case returnThreeRows
         case returnError
         case returnValue
+        case returnOneOrder
     }
 
     init(result: Result, withDeleteRequiresUsing: Bool = false, withUpdateRequiresFrom: Bool = false, createAutoIncrement: ((String, Bool) -> String)? = nil) {
@@ -111,6 +112,8 @@ class TestConnection: Connection {
             onCompletion(.error(QueryError.noResult("Error in query execution.")))
         case .returnValue:
             onCompletion(.success(5))
+        case .returnOneOrder:
+            onCompletion(.resultSet(ResultSet(TestResultFetcher(numberOfOrders: 1), connection: self)))
         }
     }
 
@@ -146,13 +149,22 @@ class TestConnection: Connection {
 }
 
 class TestResultFetcher: ResultFetcher {
-    let numberOfRows: Int
+    let numberOfResults: Int
+    let returnRows: Bool
     let rows = [[1, "Joe", Int32(38)], [2, "Adam", Int32(28)], [3, "Chris", Int32(36)]]
-    let titles = ["id", "name", "age"]
+    let orders = [[Int32(32), "first address"]]
+    let rowTitles = ["id", "name", "age"]
+    let orderTitles = ["item", "deliveryAddress"]
     var fetched = 0
 
     init(numberOfRows: Int) {
-        self.numberOfRows = numberOfRows
+        self.numberOfResults = numberOfRows
+        self.returnRows = true
+    }
+
+    init(numberOfOrders: Int) {
+        self.numberOfResults = numberOfOrders
+        self.returnRows = false
     }
 
     func done() {
@@ -161,16 +173,18 @@ class TestResultFetcher: ResultFetcher {
 
     func fetchNext(callback: @escaping (([Any?]?, Error?)) -> ()) {
         DispatchQueue.global().async {
-            if self.fetched < self.numberOfRows {
+            if self.fetched < self.numberOfResults {
                 self.fetched += 1
-                return callback((self.rows[self.fetched - 1], nil))
+                let result = self.returnRows ? self.rows[self.fetched - 1] : self.orders[self.fetched - 1]
+                return callback((result, nil))
             }
             return callback((nil, nil))
         }
     }
 
     func fetchTitles(callback: @escaping (([String]?, Error?)) -> ()) {
-        callback((titles, nil))
+        let result = returnRows ? rowTitles : orderTitles
+        callback((result, nil))
     }
 }
 

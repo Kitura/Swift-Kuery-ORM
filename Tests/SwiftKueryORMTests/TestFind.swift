@@ -113,4 +113,35 @@ class TestFind: XCTestCase {
             }
         })
     }
+
+    struct Order: Model {
+        static var tableName = "Orders"
+        var item: Int
+        var deliveryAddress: String
+    }
+
+    /**
+     Testing that a Model can be decoded if it contains camel case property name.
+     */
+    func testCamelCaseProperty() {
+        let connection: TestConnection = createConnection(.returnOneOrder)
+        Database.default = Database(single: connection)
+        performTest(asyncTasks: { expectation in
+            Order.findAll { array, error in
+                XCTAssertNil(error, "Find Failed: \(String(describing: error))")
+                XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
+                if let query = connection.query {
+                    let expectedQuery = "SELECT * FROM \"Orders\""
+                    let resultQuery = connection.descriptionOf(query: query)
+                    XCTAssertEqual(resultQuery, expectedQuery, "Find Failed: Invalid query")
+                }
+                XCTAssertNotNil(array, "Find Failed: No array of models returned")
+                if let array = array {
+                    XCTAssertEqual(array.count, 1, "Find Failed: \(String(describing: array.count)) is not equal to 3")
+                }
+                expectation.fulfill()
+            }
+        })
+    }
+
 }
