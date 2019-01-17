@@ -192,9 +192,8 @@ open class DatabaseDecoder {
                 let uuid = UUID(uuidString: castValue)
                 return try castedValue(uuid, type, key)
             } else if type is Date.Type && value != nil {
-                let castValue = try castedValue(value, Double.self, key)
-                let date = Date(timeIntervalSinceReferenceDate: castValue)
-                return try castedValue(date, type, key)
+                let castValue = try castedValue(value, Date.self, key)
+                return try castedValue(castValue, type, key)
             } else {
                 throw RequestError(.ormDatabaseDecodingError, reason: "Unsupported type: \(String(describing: type)) for value: \(String(describing: value))")
             }
