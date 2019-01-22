@@ -296,6 +296,10 @@ open class DatabaseDecoder {
                 let castValue = try castedValue(value, String.self, key)
                 let url = URL(string: castValue)
                 return try castedValue(url, type, key)
+            } else if type is UUID.Type {
+                let castValue = try castedValue(value, String.self, key)
+                let uuid = UUID(uuidString: castValue)
+                return try castedValue(uuid, type, key)
             } else if type is Date.Type {
                 let castValue = try castedValue(value, Double.self, key)
                 let date = Date(timeIntervalSinceReferenceDate: castValue)
