@@ -177,7 +177,10 @@ open class DatabaseDecoder {
         }
         public func decode<T : Decodable>(_ type: T.Type, forKey key: Key) throws -> T {
             let value = try checkValueExitence(key)
-            if type is Data.Type && value != nil {
+            if let customValueType = T.self as? CustomCodable.Type, let (_,customDecoder) = customValueType.customCoders[key.stringValue] {
+                let decodedValue = customDecoder(value)
+                return try castedValue(decodedValue, type, key)
+            } else if type is Data.Type && value != nil {
                 let castValue = try castedValue(value, String.self, key)
                 guard let data = Data(base64Encoded: castValue) else {
                     throw RequestError(.ormCodableDecodingError, reason: "Error decoding value of Data Type for Key: \(String(describing: key)) , value: \(String(describing: value)) is not base64encoded")
