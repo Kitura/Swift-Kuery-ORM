@@ -26,7 +26,7 @@ import Dispatch
 
 public class TableInfo {
     private var codableMap = [String: (info: TypeInfo, table: Table)]()
-    private var codableMapLock = DispatchSemaphore(value: 1)
+    private var codableMapQueue = DispatchQueue(label: "codaleMap.queue", attributes: .concurrent)
 
     /// Get the table for a model
     func getTable<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, for type: T.Type) throws -> Table {
@@ -35,18 +35,33 @@ public class TableInfo {
 
     func getInfo<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, _ type: T.Type) throws -> (info: TypeInfo, table: Table) {
         let typeString = "\(type)"
-        if let result = codableMap[typeString] {
+        var result: (TypeInfo, Table)? = nil
+        // Read from codableMap when no concurrent write is occuring
+        codableMapQueue.sync {
+            result = codableMap[typeString]
+        }
+        if let result = result {
             return result
         }
 
-        codableMapLock.wait()
-        defer { codableMapLock.signal() }
-
-        let typeInfo = try TypeDecoder.decode(type)
-        let result = (info: typeInfo, table: try constructTable(idColumn, tableName, typeInfo))
-        codableMap[typeString] = result
-
-        return result
+        var decodeError: Error?
+        // Prevent concurrent access to codableMap while writing
+        do {
+            try codableMapQueue.sync(flags: .barrier) {
+                let typeInfo = try TypeDecoder.decode(type)
+                result = (info: typeInfo, table: try constructTable(idColumn, tableName, typeInfo))
+                codableMap[typeString] = result
+            }
+        } catch {
+            decodeError = error
+        }
+        guard let decodeResult = result else {
+            guard let decodeError = decodeError else {
+                throw RequestError(.ormInternalError, reason: "Unable to decode Table info")
+            }
+            throw decodeError
+        }
+        return decodeResult
     }
 
     /// Construct the table for a Model
