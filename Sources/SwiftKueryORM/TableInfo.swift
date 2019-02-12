@@ -26,7 +26,7 @@ import Dispatch
 
 public class TableInfo {
     private var codableMap = [String: (info: TypeInfo, table: Table)]()
-    private var codableMapQueue = DispatchQueue(label: "codaleMap.queue", attributes: .concurrent)
+    private var codableMapQueue = DispatchQueue(label: "codableMap.queue", attributes: .concurrent)
 
     /// Get the table for a model
     func getTable<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, for type: T.Type) throws -> Table {
@@ -36,7 +36,7 @@ public class TableInfo {
     func getInfo<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, _ type: T.Type) throws -> (info: TypeInfo, table: Table) {
         let typeString = "\(type)"
         var result: (TypeInfo, Table)? = nil
-        // Read from codableMap when no concurrent write is occuring
+        // Read from codableMap when no concurrent write is occurring
         codableMapQueue.sync {
             result = codableMap[typeString]
         }
@@ -44,22 +44,14 @@ public class TableInfo {
             return result
         }
 
-        var decodeError: Error?
-        // Prevent concurrent access to codableMap while writing
-        do {
-            try codableMapQueue.sync(flags: .barrier) {
-                let typeInfo = try TypeDecoder.decode(type)
-                result = (info: typeInfo, table: try constructTable(idColumn, tableName, typeInfo))
-                codableMap[typeString] = result
-            }
-        } catch {
-            decodeError = error
+        try codableMapQueue.sync(flags: .barrier) {
+            let typeInfo = try TypeDecoder.decode(type)
+            result = (info: typeInfo, table: try constructTable(idColumn, tableName, typeInfo))
+            codableMap[typeString] = result
         }
+
         guard let decodeResult = result else {
-            guard let decodeError = decodeError else {
-                throw RequestError(.ormInternalError, reason: "Unable to decode Table info")
-            }
-            throw decodeError
+            throw RequestError(.ormInternalError, reason: "Unable to decode Table info")
         }
         return decodeResult
     }
