@@ -95,6 +95,7 @@ public protocol Model: Codable {
     /// handler. The callback is passed a dictionary [id: model] or an error
     static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
 
+    mutating func setID(to value: String)
 }
 
 public extension Model {
@@ -111,6 +112,10 @@ public extension Model {
     static var idColumnName: String { return "id" }
     /// Defaults to Int64
     static var idColumnType: SQLDataType.Type { return Int64.self }
+
+    mutating func setID(to value: String) {
+        return
+    }
 
     private static func executeTask(using db: Database? = nil, task: @escaping ((Connection?, QueryError?) -> ())) {
         guard let database = db ?? Database.default else {
@@ -234,7 +239,9 @@ public extension Model {
         let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
         let parameters: [Any?] = columns.map({values[$0.name]!})
         let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
-        let query = Insert(into: table, columns: columns, values: parameterPlaceHolders)
+        let autoIncrementColumn = table.columns.filter { $0.isPrimaryKey && $0.autoIncrement }
+        let returnId = autoIncrementColumn.isEmpty ? false : true
+        let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: returnId)
         self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
     }
 
@@ -350,6 +357,7 @@ public extension Model {
     }
 
     private func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
+        var dictionaryTitleToValue = [String: Any?]()
         Self.executeTask() { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
@@ -367,7 +375,32 @@ public extension Model {
                     return
                 }
 
-                onCompletion(self, nil)
+                if let insertQuery = query as? Insert, insertQuery.returnID {
+                    result.asRows() { rows, error in
+                        guard let rows = rows, rows.count > 0 else {
+                            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve value for Query: \(String(describing: query))"))
+                            return
+                        }
+
+                        dictionaryTitleToValue = rows[0]
+
+                        guard let value = dictionaryTitleToValue[Self.idColumnName] else {
+                            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not find return id"))
+                            return
+                        }
+
+                        guard let unwrappedValue: Any = value else {
+                            onCompletion(nil, RequestError(.ormNotFound, reason: "Return id is nil"))
+                            return
+                        }
+
+                        var newSelf = self
+                        newSelf.setID(to: String(describing: unwrappedValue))
+
+                        return onCompletion(newSelf, nil)
+                    }
+                }
+                return onCompletion(self, nil)
             }
         }
     }
