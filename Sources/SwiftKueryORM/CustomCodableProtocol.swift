@@ -7,6 +7,8 @@
 
 import Foundation
 
+public protocol CustomCodableType {}
+
 public typealias CustomEncoder = (Any) -> Any?
 public typealias CustomDecoder = (Any) -> Any?
 
