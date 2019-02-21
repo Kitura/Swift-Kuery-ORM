@@ -236,7 +236,7 @@ public extension Model {
             return
         }
 
-        let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
+        let columns = table.columns.filter({values[$0.name] != nil})
         let parameters: [Any?] = columns.map({values[$0.name]!})
         let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
         let autoIncrementColumn = table.columns.filter { $0.isPrimaryKey && $0.autoIncrement }
@@ -371,7 +371,12 @@ public extension Model {
                         onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
                         return
                     }
-                    onCompletion(nil, Self.convertError(error))
+                    // If we have hit a duplicate key error we are probably using PostgreSQL and should retry the save.
+                    if String(describing: error).contains("duplicate key value violates unique constraint") {
+                        self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
+                    } else {
+                        onCompletion(nil, Self.convertError(error))
+                    }
                     return
                 }
 
@@ -399,8 +404,9 @@ public extension Model {
 
                         return onCompletion(newSelf, nil)
                     }
+                } else {
+                    return onCompletion(self, nil)
                 }
-                return onCompletion(self, nil)
             }
         }
     }
