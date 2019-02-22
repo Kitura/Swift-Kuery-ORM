@@ -95,7 +95,13 @@ public protocol Model: Codable {
     /// handler. The callback is passed a dictionary [id: model] or an error
     static func findAll<Q: QueryParams, I: Identifier>(using db: Database?, matching queryParams: Q?, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void)
 
+    /// User implemented call to set the Models id field.
+    /// Only requires implementation if the Model accepts optional values for the id field.
     mutating func setID(to value: String)
+
+    /// User implemented call to get the value of the Models id field.
+    /// Only requires implementation if the Model accepts optional values for the id field.
+    func getID() -> Any?
 }
 
 public extension Model {
@@ -115,6 +121,10 @@ public extension Model {
 
     mutating func setID(to value: String) {
         return
+    }
+
+    private func getID() -> Any? {
+        return nil
     }
 
     private static func executeTask(using db: Database? = nil, task: @escaping ((Connection?, QueryError?) -> ())) {
@@ -371,8 +381,8 @@ public extension Model {
                         onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
                         return
                     }
-                    // If we have hit a duplicate key error we are probably using PostgreSQL and should retry the save.
-                    if String(describing: error).contains("duplicate key value violates unique constraint") {
+                    // If we have hit a duplicate key error and the Models id field is nil the we should retry the save.
+                    if String(describing: error).contains("duplicate key value violates unique constraint"), (self.getID() == nil) {
                         self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
                     } else {
                         onCompletion(nil, Self.convertError(error))
