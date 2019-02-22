@@ -123,7 +123,7 @@ public extension Model {
         return
     }
 
-    private func getID() -> Any? {
+    func getID() -> Any? {
         return nil
     }
 
