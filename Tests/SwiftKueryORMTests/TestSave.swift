@@ -54,7 +54,7 @@ class TestSave: XCTestCase {
       Testing that the correct SQL Query is created to save a Model
     */
     func testSave() {
-        let connection: TestConnection = createConnection()
+        let connection: TestConnection = createConnection(.returnOneRow)
         Database.default = Database(single: connection)
         performTest(asyncTasks: { expectation in
             let person = Person(name: "Joe", age: 38)
