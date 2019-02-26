@@ -28,6 +28,9 @@ public protocol Model: Codable {
     /// Defines the id column type in the Database
     static var idColumnType: SQLDataType.Type {get}
 
+    /// Defines whether the Model embeds its id
+    var embeddedID: Bool {get}
+
     /// Call to create the table in the database synchronously
     static func createTableSync(using db: Database?) throws -> Bool
 
@@ -98,10 +101,6 @@ public protocol Model: Codable {
     /// User implemented call to set the Models id field.
     /// Only requires implementation if the Model accepts optional values for the id field.
     mutating func setID(to value: String)
-
-    /// User implemented call to get the value of the Models id field.
-    /// Only requires implementation if the Model accepts optional values for the id field.
-    func getID() -> Any?
 }
 
 public extension Model {
@@ -118,6 +117,9 @@ public extension Model {
     static var idColumnName: String { return "id" }
     /// Defaults to Int64
     static var idColumnType: SQLDataType.Type { return Int64.self }
+
+    /// Defaults to "false"
+    var embeddedID: Bool { return false }
 
     mutating func setID(to value: String) {
         return
@@ -249,9 +251,7 @@ public extension Model {
         let columns = table.columns.filter({values[$0.name] != nil})
         let parameters: [Any?] = columns.map({values[$0.name]!})
         let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
-        let autoIncrementColumn = table.columns.filter { $0.isPrimaryKey && $0.autoIncrement }
-        let returnId = autoIncrementColumn.isEmpty ? false : true
-        let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: returnId)
+        let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: self.embeddedID)
         self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
     }
 
@@ -381,13 +381,7 @@ public extension Model {
                         onCompletion(nil, Self.convertError(QueryError.databaseError("Query failed to execute but error was nil")))
                         return
                     }
-                    // If we have hit a duplicate key error and the Models id field is nil the we should retry the save.
-                    if String(describing: error).contains("duplicate key value violates unique constraint"), (self.getID() == nil) {
-                        self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
-                    } else {
-                        onCompletion(nil, Self.convertError(error))
-                    }
-                    return
+                    return onCompletion(nil, Self.convertError(error))
                 }
 
                 if let insertQuery = query as? Insert, insertQuery.returnID {
