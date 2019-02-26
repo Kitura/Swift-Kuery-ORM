@@ -29,7 +29,7 @@ public protocol Model: Codable {
     static var idColumnType: SQLDataType.Type {get}
 
     /// Defines whether the Model embeds its id
-    var embeddedID: Bool {get}
+    static var embeddedID: Bool {get}
 
     /// Call to create the table in the database synchronously
     static func createTableSync(using db: Database?) throws -> Bool
@@ -119,14 +119,10 @@ public extension Model {
     static var idColumnType: SQLDataType.Type { return Int64.self }
 
     /// Defaults to "false"
-    var embeddedID: Bool { return false }
+    static var embeddedID: Bool { return false }
 
     mutating func setID(to value: String) {
         return
-    }
-
-    func getID() -> Any? {
-        return nil
     }
 
     private static func executeTask(using db: Database? = nil, task: @escaping ((Connection?, QueryError?) -> ())) {
@@ -251,7 +247,7 @@ public extension Model {
         let columns = table.columns.filter({values[$0.name] != nil})
         let parameters: [Any?] = columns.map({values[$0.name]!})
         let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
-        let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: self.embeddedID)
+        let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: type(of: self).embeddedID)
         self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
     }
 
