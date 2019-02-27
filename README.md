@@ -351,7 +351,7 @@ person.save() { person, error in
 
 ### Using `optional` if fields
 
-If you would like an id field that allows you to specify specific values whilst also being automatic when an id is not explicitly set you can use an optional type for your id field, this requires an implementation of the `getID` and `setID` functions. For example:
+If you would like an id field that allows you to specify specific values whilst also being automatic when an id is not explicitly set you can use an optional Int for your id field and re-define the `idKeypath` property to point at the field. For example:
 
 ```swift
 struct Person: Model {
@@ -360,15 +360,11 @@ struct Person: Model {
     var surname: String
     var age: Int
 
-    mutating func setID(to value: String) {
-        self.id = Int(value)
-    }
-
-    func getID() -> Any? {
-        return id
-    }
+    static var idKeyPath: WritableKeyPath<Person, Int?>? = \Person.id
 }
 ```
+
+In the above example the `Model` is defined with an ID field matching the default `idColumnName` property, should you wish to use an alternative name you need to re-define `idColumnName` accordingly. The `optional` id field is limited to the `Int` type.
 
 When saving an instance of this `Person` you can either set a specific value for `id` or set `id` to `nil`, for example:
 
@@ -391,7 +387,7 @@ otherPerson.save() { savedPerson, error in
 }
 ```
 
-**NOTE** - When using manual or option id fields you need to ensure that the application is written to handle violation of unique identifier constraints which will occur if you attempt to save a model with an id that already exists in the database.
+**NOTE** - When using manual or option id fields you need to ensure that the application is written to handle violation of unique identifier constraints which will occur if you attempt to save a model with an id that already exists in the database. If you are using `SwiftKueryPostgreSQL` this error can occur when savinf with a `nil` value for the id property due to the way PostgreSQL implements `autoincrement` behaviour.
 
 
 ## List of plugins
