@@ -115,7 +115,7 @@ public extension Model {
     /// Defaults to Int64
     static var idColumnType: SQLDataType.Type { return Int64.self }
 
-    static var idKeypath: WritableKeyPath<Any, Int?>? { return nil }
+    static var idKeypath: WritableKeyPath<Self, Int?>? { return nil }
 
     private static func executeTask(using db: Database? = nil, task: @escaping ((Connection?, QueryError?) -> ())) {
         guard let database = db ?? Database.default else {
