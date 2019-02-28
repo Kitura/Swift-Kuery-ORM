@@ -291,6 +291,105 @@ Person.getOverTwenties() { result, error in
 
 If you'd like to learn more about how you can customize queries, check out the [Swift-Kuery](https://github.com/IBM-Swift/Swift-Kuery) repository for more information.
 
+## Model Identifiers
+
+The ORM has several options available for identifying an instance of a model.
+
+### Automatic id assignment
+
+If your `Model` is defined without specifying an id field using the `idColumnName` property or the default name of `id` then the ORM will create an auto incrementing column named `id` in the database table for the `Model`, eg.
+
+```swift
+struct Person: Model {
+    var firstname: String
+    var surname: String
+    var age: Int
+}
+```
+ 
+As the model does not contain a field for the id you cannot access it directly from an instance of your model. The ORM provides a specific `save` API that will return the instances id. It is important to note the ORM will not link the returned id to the instance of the Model in any way, the user is required to maintain this relationship if it is important for the application behaviour. Below is an example of retrieving an id for an instance of `Person` as defined above:
+
+```swift
+let person = Person(firstname: "example", surname: "person", age: 21)
+person.save() { (id: Int?, person: Person?, error: RequestError?) in
+    guard let id = id, let person = person else{
+        // Handle error
+        return
+    }
+    // Use person and id
+}
+```
+
+### Manual id assignment
+
+You can add an id field to your model and manage the assignment of id’s yourself by either specifying a property name for your id field using the `idColumnName` property or by defining a field named `id`, which is the default name for the aforementioned property. For example:
+
+```swift
+struct Person: Model {
+    var myIDField: Int
+    var firstname: String
+    var surname: String
+    var age: Int
+
+    static var idColumnName = "myIDField"
+    static var idColumnType = Int.self
+}
+```
+
+When using a `Model` defined in this way all the id management is the responsibility of the user. An example of saving an instance of this Person is below:
+
+```swift
+let person = Person(myIDField: 1, firstname: "example", surname: "person", age: 21)
+person.save() { person, error in
+    guard let person = person else{
+        // Handle error
+        return
+    }
+    // Use newly saved person
+}
+```
+
+### Using `optional` if fields
+
+If you would like an id field that allows you to specify specific values whilst also being automatic when an id is not explicitly set you can use an optional Int for your id field and re-define the `idKeypath` property to point at the field. For example:
+
+```swift
+struct Person: Model {
+    var id: Int?
+    var firstname: String
+    var surname: String
+    var age: Int
+
+    static var idKeyPath: WritableKeyPath<Person, Int?>? = \Person.id
+}
+```
+
+In the above example the `Model` is defined with an ID field matching the default `idColumnName` property, should you wish to use an alternative name you need to re-define `idColumnName` accordingly. The `optional` id field is limited to the `Int` type.
+
+When saving an instance of this `Person` you can either set a specific value for `id` or set `id` to `nil`, for example:
+
+```swift
+let person = Person(id: nil, firstname: “Banana”, surname: “Man”, age: 21)
+let otherPerson = Person(id: 5, firstname: “Super”, surname: “Ted”, age: 26)
+
+person.save() { savedPerson, error in
+        guard let newPerson = savedPerson else {
+            // Handle error
+        }
+        print(newPerson.id) // Prints the next value in the databases identifier sequence, for the first save this will be 1
+}
+
+otherPerson.save() { savedPerson, error in
+        guard let newOtherPerson = savedPerson else {
+            // Handle error
+        }
+        print(newOtherPerson.id) // Prints 5
+}
+```
+
+**NOTE** - When using manual or option id fields you need to ensure that the application is written to handle violation of unique identifier constraints which will occur if you attempt to save a model with an id that already exists in the database. If you are using `SwiftKueryPostgreSQL` this error can occur when savinf with a `nil` value for the id property due to the way PostgreSQL implements `autoincrement` behaviour.
+
+
 ## List of plugins
 
 * [PostgreSQL](https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL)
