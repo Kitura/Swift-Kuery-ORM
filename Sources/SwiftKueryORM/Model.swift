@@ -28,8 +28,11 @@ public protocol Model: Codable {
     /// Defines the id column type in the Database
     static var idColumnType: SQLDataType.Type {get}
 
+    /// Defines typealias for the id fields keypath
+    typealias IDKeyPath = WritableKeyPath<Self, Int?>?
+
     /// Defines the keypath to the Models id field
-    static var idKeypath: WritableKeyPath<Self, Int?>? {get}
+    static var idKeypath: IDKeyPath {get}
 
     /// Call to create the table in the database synchronously
     static func createTableSync(using db: Database?) throws -> Bool
@@ -115,7 +118,7 @@ public extension Model {
     /// Defaults to Int64
     static var idColumnType: SQLDataType.Type { return Int64.self }
 
-    static var idKeypath: WritableKeyPath<Any, Int?>? { return nil }
+    static var idKeypath: IDKeyPath { return nil }
 
     private static func executeTask(using db: Database? = nil, task: @escaping ((Connection?, QueryError?) -> ())) {
         guard let database = db ?? Database.default else {
