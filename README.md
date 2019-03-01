@@ -349,9 +349,9 @@ person.save() { person, error in
 }
 ```
 
-### Using `optional` if fields
+### Using `optional` id fields
 
-If you would like an id field that allows you to specify specific values whilst also being automatic when an id is not explicitly set you can use an optional Int for your id field and re-define the `idKeypath` property to point at the field. For example:
+If you would like an id field that allows you to specify specific values whilst also being automatic when an id is not explicitly set you can use an optional Int for your id field and re-define the `idKeypath` property to point at the field. `IDKeyPath` is a typealias for `WritableKeyPath<Self, Int?>?`, your re-definition must be explicity set this type. For example:
 
 ```swift
 struct Person: Model {
@@ -360,7 +360,7 @@ struct Person: Model {
     var surname: String
     var age: Int
 
-    static var idKeyPath: WritableKeyPath<Person, Int?>? = \Person.id
+    static var idKeyPath: IDKeyPath = \Person.id
 }
 ```
 
