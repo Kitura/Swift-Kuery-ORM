@@ -105,4 +105,28 @@ class TestId: XCTestCase {
             }
         })
     }
+
+    struct IdentifiedPerson: Model {
+        static var tableName = "People"
+        static var idKeypath: IDKeyPath = \IdentifiedPerson.id
+
+        var id: Int?
+        var name: String
+        var age: Int
+    }
+
+    func testNilIDInsert() {
+        let connection: TestConnection = createConnection(.returnOneRow) //[1, "Joe", Int32(38)]
+        Database.default = Database(single: connection)
+        performTest(asyncTasks: { expectation in
+            let myIPerson = IdentifiedPerson(id: nil, name: "Joe", age: 38)
+            myIPerson.save() { identifiedPerson, error in
+                XCTAssertNil(error, "Error on IdentifiedPerson.save")
+                if let newPerson = identifiedPerson {
+                    XCTAssertEqual(newPerson.id, 1, "Id not stored on IdentifiedPerson")
+                }
+                expectation.fulfill()
+            }
+        })
+    }
 }
