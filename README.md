@@ -297,7 +297,7 @@ The ORM has several options available for identifying an instance of a model.
 
 ### Automatic id assignment
 
-If your `Model` is defined without specifying an id field using the `idColumnName` property or the default name of `id` then the ORM will create an auto incrementing column named `id` in the database table for the `Model`, eg.
+If you define your `Model` without specifying an id field, either using the `idColumnName` property or the default name of `id`, then the ORM will create an auto incrementing column named `id` in the database table for the `Model`, eg.
 
 ```swift
 struct Person: Model {
@@ -322,7 +322,7 @@ person.save() { (id: Int?, person: Person?, error: RequestError?) in
 
 ### Manual id assignment
 
-You can add an id field to your model and manage the assignment of id’s yourself by either specifying a property name for your id field using the `idColumnName` property or by defining a field named `id`, which is the default name for the aforementioned property. For example:
+You can add an id field to your model and manage the assignment of ids yourself by either specifying a property name for your id field using the `idColumnName` property or by defining a field named `id`, which is the default name for the aforementioned property. For example:
 
 ```swift
 struct Person: Model {
@@ -351,7 +351,7 @@ person.save() { person, error in
 
 ### Using `optional` id fields
 
-If you would like an id field that allows you to specify specific values whilst also being automatic when an id is not explicitly set you can use an optional Int for your id field and re-define the `idKeypath` property to point at the field. `IDKeyPath` is a typealias for `WritableKeyPath<Self, Int?>?`, your re-definition must be explicity set this type. For example:
+If you would like an id field that allows you to specify specific values, whilst also being automatic when an id is not explicitly set, you can use an optional Int for your id field and define the `idKeypath` property to point at the field. Your definition must include the type `IDKeyPath` as in the example below:
 
 ```swift
 struct Person: Model {
@@ -387,8 +387,7 @@ otherPerson.save() { savedPerson, error in
 }
 ```
 
-**NOTE** - When using manual or option id fields you need to ensure that the application is written to handle violation of unique identifier constraints which will occur if you attempt to save a model with an id that already exists in the database. If you are using `SwiftKueryPostgreSQL` this error can occur when savinf with a `nil` value for the id property due to the way PostgreSQL implements `autoincrement` behaviour.
-
+**NOTE** - When using manual or option id fields you need to ensure that the application is written to handle violation of unique identifier constraints which will occur if you attempt to save a model with an id that already exists in the database. If you are using `SwiftKueryPostgreSQL` this error can occur when saving with a `nil` value for the id property due to the way PostgreSQL implements `autoincrement` behaviour (it assigns ids from a sequence and does not skip the next auto assiged value forward when a manual id insert is made).
 
 ## List of plugins
 
