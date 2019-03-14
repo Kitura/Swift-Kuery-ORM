@@ -295,9 +295,9 @@ If you'd like to learn more about how you can customize queries, check out the [
 
 The ORM has several options available for identifying an instance of a model.
 
-### Automatic id assignment
+### Automatic ID assignment
 
-If you define your `Model` without specifying an id field, either using the `idColumnName` property or the default name of `id`, then the ORM will create an auto incrementing column named `id` in the database table for the `Model`, eg.
+If you define your `Model` without specifying an ID property, either by using the `idColumnName` property or the default name of `id`, then the ORM will create an auto-incrementing column named `id` in the database table for the model, eg.
 
 ```swift
 struct Person: Model {
@@ -307,11 +307,11 @@ struct Person: Model {
 }
 ```
  
-As the model does not contain a field for the id you cannot access it directly from an instance of your model. The ORM provides a specific `save` API that will return the instances id. It is important to note the ORM will not link the returned id to the instance of the Model in any way, the user is required to maintain this relationship if it is important for the application behaviour. Below is an example of retrieving an id for an instance of `Person` as defined above:
+The model does not contain a property for the ID. The ORM provides a specific `save` API that will return the ID that was assigned. It is important to note the ORM will not link the returned ID to the instance of the Model in any way; you are responsible for maintaining this relationship if necessary. Below is an example of retrieving an ID for an instance of the `Person` model defined above:
 
 ```swift
 let person = Person(firstname: "example", surname: "person", age: 21)
-person.save() { (id: Int?, person: Person?, error: RequestError?) in
+person.save() { (id: Int?, person, error) in
     guard let id = id, let person = person else{
         // Handle error
         return
@@ -319,10 +319,11 @@ person.save() { (id: Int?, person: Person?, error: RequestError?) in
     // Use person and id
 }
 ```
+The compiler requires you to declare the type of the ID received by your completion handler; the type should be `Int?` for an ID that has been automatically assigned.
 
-### Manual id assignment
+### Manual ID assignment
 
-You can add an id field to your model and manage the assignment of ids yourself by either specifying a property name for your id field using the `idColumnName` property or by defining a field named `id`, which is the default name for the aforementioned property. For example:
+You can manage the assignment of IDs yourself by adding an `id` property to your model. You may customise the name of this property by defining `idColumnName`. For example:
 
 ```swift
 struct Person: Model {
@@ -336,12 +337,12 @@ struct Person: Model {
 }
 ```
 
-When using a `Model` defined in this way all the id management is the responsibility of the user. An example of saving an instance of this Person is below:
+When using a `Model` defined in this way, you are responsible for the assignment and management of IDs. Below is an example of saving an instance of the `Person` model defined above:
 
 ```swift
 let person = Person(myIDField: 1, firstname: "example", surname: "person", age: 21)
-person.save() { person, error in
-    guard let person = person else{
+person.save() { (person, error) in
+    guard let person = person else {
         // Handle error
         return
     }
@@ -349,9 +350,13 @@ person.save() { person, error in
 }
 ```
 
-### Using `optional` id fields
+### Using `optional` ID properties
 
-If you would like an id field that allows you to specify specific values, whilst also being automatic when an id is not explicitly set, you can use an optional Int for your id field and define the `idKeypath` property to point at the field. Your definition must include the type `IDKeyPath` as in the example below:
+Declaring your ID property as optional allows the ORM to assign the ID automatically when the model is saved. If the value of ID is `nil`, the database will assign an auto-incremented value. At present this is only support for an `Int?` type.
+
+You may instead provide an explicit value, which will be used instead of automatic assignment.
+
+Optional IDs must be identified by defining the `idKeypath: IDKeyPath` property, as in the example below:
 
 ```swift
 struct Person: Model {
@@ -364,30 +369,30 @@ struct Person: Model {
 }
 ```
 
-In the above example the `Model` is defined with an ID field matching the default `idColumnName` property, should you wish to use an alternative name you need to re-define `idColumnName` accordingly. The `optional` id field is limited to the `Int` type.
+In the example above, the `Model` is defined with an ID property matching the default `idColumnName` value, but should you wish to use an alternative name you must define `idColumnName` accordingly.
 
-When saving an instance of this `Person` you can either set a specific value for `id` or set `id` to `nil`, for example:
+Below is an example of saving an instance of the `Person` defined above, both with an explicitly defined ID and without:
 
 ```swift
 let person = Person(id: nil, firstname: “Banana”, surname: “Man”, age: 21)
-let otherPerson = Person(id: 5, firstname: “Super”, surname: “Ted”, age: 26)
+let specificPerson = Person(id: 5, firstname: “Super”, surname: “Ted”, age: 26)
 
-person.save() { savedPerson, error in
+person.save() { (savedPerson, error) in
         guard let newPerson = savedPerson else {
             // Handle error
         }
-        print(newPerson.id) // Prints the next value in the databases identifier sequence, for the first save this will be 1
+        print(newPerson.id) // Prints the next value in the databases identifier sequence, eg. 1
 }
 
-otherPerson.save() { savedPerson, error in
-        guard let newOtherPerson = savedPerson else {
+specificPerson.save() { (savedPerson, error) in
+        guard let newPerson = savedPerson else {
             // Handle error
         }
-        print(newOtherPerson.id) // Prints 5
+        print(newPerson.id) // Prints 5
 }
 ```
 
-**NOTE** - When using manual or option id fields you need to ensure that the application is written to handle violation of unique identifier constraints which will occur if you attempt to save a model with an id that already exists in the database. If you are using `SwiftKueryPostgreSQL` this error can occur when saving with a `nil` value for the id property due to the way PostgreSQL implements `autoincrement` behaviour (it assigns ids from a sequence and does not skip the next auto assiged value forward when a manual id insert is made).
+**NOTE** - When using manual or optional ID properties, you should be prepared to handle violation of unique identifier constraints. These can occur if you attempt to save a model with an ID that already exists, or in the case of Postgres, if the auto-incremented value collides with an ID that was previously inserted explicitly.
 
 ## List of plugins
 
