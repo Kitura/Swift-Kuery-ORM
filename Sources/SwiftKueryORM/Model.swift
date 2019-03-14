@@ -753,7 +753,8 @@ public extension Model {
     }
 
     static func getTable() throws -> Table {
-        return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType), Self.tableName, for: Self.self)
+        let idKeyPathSet: Bool = Self.idKeypath != nil
+        return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType, idKeyPathSet), Self.tableName, for: Self.self)
     }
 
     /**
