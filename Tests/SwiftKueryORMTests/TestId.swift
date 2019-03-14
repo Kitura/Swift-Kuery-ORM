@@ -10,6 +10,8 @@ class TestId: XCTestCase {
             ("testFind", testFind),
             ("testUpdate", testUpdate),
             ("testDelete", testDelete),
+            ("testNilIDInsert", testNilIDInsert),
+            ("testNonAutoNilIDInsert", testNonAutoNilIDInsert),
         ]
     }
 
@@ -124,6 +126,29 @@ class TestId: XCTestCase {
                 XCTAssertNil(error, "Error on IdentifiedPerson.save")
                 if let newPerson = identifiedPerson {
                     XCTAssertEqual(newPerson.id, 1, "Id not stored on IdentifiedPerson")
+                }
+                expectation.fulfill()
+            }
+        })
+    }
+
+    struct NonAutoIDPerson: Model {
+        static var tableName = "People"
+
+        var id: Int?
+        var name: String
+        var age: Int
+    }
+
+    func testNonAutoNilIDInsert() {
+        let connection: TestConnection = createConnection(.returnOneRow) //[1, "Joe", Int32(38)]
+        Database.default = Database(single: connection)
+        performTest(asyncTasks: { expectation in
+            let myIPerson = NonAutoIDPerson(id: nil, name: "Joe", age: 38)
+            myIPerson.save() { identifiedPerson, error in
+                XCTAssertNil(error, "Error on IdentifiedPerson.save")
+                if let newPerson = identifiedPerson {
+                    XCTAssertEqual(newPerson.id, nil, "Id stored on NonAutoIDPerson")
                 }
                 expectation.fulfill()
             }
