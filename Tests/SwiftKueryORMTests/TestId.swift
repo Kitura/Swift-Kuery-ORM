@@ -144,11 +144,12 @@ class TestId: XCTestCase {
         let connection: TestConnection = createConnection(.returnOneRow) //[1, "Joe", Int32(38)]
         Database.default = Database(single: connection)
         performTest(asyncTasks: { expectation in
-            let myIPerson = NonAutoIDPerson(id: nil, name: "Joe", age: 38)
-            myIPerson.save() { identifiedPerson, error in
-                XCTAssertNil(error, "Error on IdentifiedPerson.save")
-                if let newPerson = identifiedPerson {
-                    XCTAssertEqual(newPerson.id, nil, "Id stored on NonAutoIDPerson")
+            NonAutoIDPerson.createTable { result, error in
+                XCTAssertNil(error, "Table Creation Failed: \(String(describing: error))")
+                XCTAssertNotNil(connection.raw, "Table Creation Failed: Query is nil")
+                if let raw = connection.raw {
+                    let expectedQuery = "CREATE TABLE \"People\" (\"id\" type PRIMARY KEY, \"name\" type NOT NULL, \"age\" type NOT NULL)"
+                    XCTAssertEqual(raw, expectedQuery, "Table Creation Failed: Invalid query")
                 }
                 expectation.fulfill()
             }
