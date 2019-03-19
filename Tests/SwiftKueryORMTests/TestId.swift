@@ -10,6 +10,8 @@ class TestId: XCTestCase {
             ("testFind", testFind),
             ("testUpdate", testUpdate),
             ("testDelete", testDelete),
+            ("testNilIDInsert", testNilIDInsert),
+            ("testNonAutoNilIDInsert", testNonAutoNilIDInsert),
         ]
     }
 
@@ -100,6 +102,54 @@ class TestId: XCTestCase {
                   let expectedQuery = "DELETE FROM \"People\" WHERE \"People\".\"name\" = ?1"
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertEqual(resultQuery, expectedQuery, "Expected query \(String(describing: expectedQuery)) did not match result query: \(String(describing: resultQuery))")
+                }
+                expectation.fulfill()
+            }
+        })
+    }
+
+    struct IdentifiedPerson: Model {
+        static var tableName = "People"
+        static var idKeypath: IDKeyPath = \IdentifiedPerson.id
+
+        var id: Int?
+        var name: String
+        var age: Int
+    }
+
+    func testNilIDInsert() {
+        let connection: TestConnection = createConnection(.returnOneRow) //[1, "Joe", Int32(38)]
+        Database.default = Database(single: connection)
+        performTest(asyncTasks: { expectation in
+            let myIPerson = IdentifiedPerson(id: nil, name: "Joe", age: 38)
+            myIPerson.save() { identifiedPerson, error in
+                XCTAssertNil(error, "Error on IdentifiedPerson.save")
+                if let newPerson = identifiedPerson {
+                    XCTAssertEqual(newPerson.id, 1, "Id not stored on IdentifiedPerson")
+                }
+                expectation.fulfill()
+            }
+        })
+    }
+
+    struct NonAutoIDPerson: Model {
+        static var tableName = "People"
+
+        var id: Int?
+        var name: String
+        var age: Int
+    }
+
+    func testNonAutoNilIDInsert() {
+        let connection: TestConnection = createConnection(.returnOneRow) //[1, "Joe", Int32(38)]
+        Database.default = Database(single: connection)
+        performTest(asyncTasks: { expectation in
+            NonAutoIDPerson.createTable { result, error in
+                XCTAssertNil(error, "Table Creation Failed: \(String(describing: error))")
+                XCTAssertNotNil(connection.raw, "Table Creation Failed: Query is nil")
+                if let raw = connection.raw {
+                    let expectedQuery = "CREATE TABLE \"People\" (\"id\" type PRIMARY KEY, \"name\" type NOT NULL, \"age\" type NOT NULL)"
+                    XCTAssertEqual(raw, expectedQuery, "Table Creation Failed: Invalid query")
                 }
                 expectation.fulfill()
             }
