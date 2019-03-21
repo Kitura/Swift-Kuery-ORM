@@ -39,6 +39,25 @@ class TestTable: XCTestCase {
     }
 
     /**
+     Testing that the correct SQL Query is created to create a table when using a non-default database
+     */
+    func testCreateTableUsingDB() {
+        let connection: TestConnection = createConnection(.returnEmpty)
+        let db = Database(single: connection)
+        performTest(asyncTasks: { expectation in
+            User.createTable(using: db) { result, error in
+                XCTAssertNil(error, "Table Creation Failed: \(String(describing: error))")
+                XCTAssertNotNil(connection.raw, "Table Creation Failed: Query is nil")
+                if let raw = connection.raw {
+                    let expectedQuery = "CREATE TABLE \"Users\" (\"username\" type NOT NULL, \"password\" type NOT NULL, \"id\" type AUTO_INCREMENT PRIMARY KEY)"
+                    XCTAssertEqual(raw, expectedQuery, "Table Creation Failed: Invalid query")
+                }
+                expectation.fulfill()
+            }
+        })
+    }
+
+    /**
       Testing that the correct SQL Query is created to drop a table
     */
     func testDropTable() {
@@ -52,6 +71,26 @@ class TestTable: XCTestCase {
                   let expectedQuery = "DROP TABLE \"Users\""
                   let resultQuery = connection.descriptionOf(query: query)
                   XCTAssertEqual(resultQuery, expectedQuery, "Table Drop Failed: Invalid query")
+                }
+                expectation.fulfill()
+            }
+        })
+    }
+
+    /**
+     Testing that the correct SQL Query is created to drop a table when using a non-default database
+     */
+    func testDropTableUsingDB() {
+        let connection: TestConnection = createConnection(.returnEmpty)
+        let db = Database(single: connection)
+        performTest(asyncTasks: { expectation in
+            User.dropTable(using: db) { result, error in
+                XCTAssertNil(error, "Table Drop Failed: \(String(describing: error))")
+                XCTAssertNotNil(connection.query, "Table Drop Failed: Query is nil")
+                if let query = connection.query {
+                    let expectedQuery = "DROP TABLE \"Users\""
+                    let resultQuery = connection.descriptionOf(query: query)
+                    XCTAssertEqual(resultQuery, expectedQuery, "Table Drop Failed: Invalid query")
                 }
                 expectation.fulfill()
             }

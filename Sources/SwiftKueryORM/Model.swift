@@ -157,7 +157,7 @@ public extension Model {
         } catch let error {
             return onCompletion(nil, Self.convertError(error))
         }
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -207,7 +207,7 @@ public extension Model {
         } catch let error {
             return onCompletion(nil, Self.convertError(error))
         }
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -360,7 +360,7 @@ public extension Model {
 
     private func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
         var dictionaryTitleToValue = [String: Any?]()
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -418,7 +418,7 @@ public extension Model {
     }
 
     private func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -473,7 +473,7 @@ public extension Model {
     /// - Parameter using: Optional Database to use
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of (Self?, RequestError?), of which one will be nil, depending on whether the query was successful.
     public static func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -518,7 +518,7 @@ public extension Model {
     /// - Parameter using: Optional Database to use
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of (Identifier?, Self?, RequestError?), of which some will be nil, depending on whether the query was successful.
     public static func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -581,7 +581,7 @@ public extension Model {
     /// - Parameter using: Optional Database to use
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of ([Self]?, RequestError?), of which one will be nil, depending on whether the query was successful.
     public static func executeQuery(query: Query, parameters: [Any?]? = nil, using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?)-> Void ) {
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -646,7 +646,7 @@ public extension Model {
     /// - Parameter using: Optional Database to use
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of ([Identifier, Self]?, RequestError?), of which one will be nil, depending on whether the query was successful.
     public static func executeQuery<I: Identifier>(query: Query, parameters: [Any?]? = nil, using db: Database? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void ) {
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -725,7 +725,7 @@ public extension Model {
     /// - Parameter using: Optional Database to use
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a RequestError? which may be nil, depending on whether the query was successful.
     public static func executeQuery(query: Query, parameters: [Any?]? = nil, using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void ) {
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
