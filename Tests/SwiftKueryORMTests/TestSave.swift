@@ -82,6 +82,37 @@ class TestSave: XCTestCase {
     }
 
     /**
+     Testing that the correct SQL Query is created to save a Model when using a non-default database
+     */
+    func testSaveUsingDB() {
+        let connection: TestConnection = createConnection()
+        let db = Database(single: connection)
+        performTest(asyncTasks: { expectation in
+            let person = Person(name: "Joe", age: 38)
+            person.save(using: db) { p, error in
+                XCTAssertNil(error, "Save Failed: \(String(describing: error))")
+                XCTAssertNotNil(connection.query, "Save Failed: Query is nil")
+                if let query = connection.query {
+                    let expectedPrefix = "INSERT INTO \"People\""
+                    let expectedSQLStatement = "VALUES"
+                    let expectedDictionary = ["\"name\"": "?1,?2", "\"age\"": "?1,?2"]
+
+                    let resultQuery = connection.descriptionOf(query: query)
+                    XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
+                    XCTAssertTrue(resultQuery.contains(expectedSQLStatement))
+                    self.verifyColumnsAndValues(resultQuery: resultQuery, expectedDictionary: expectedDictionary)
+                }
+                XCTAssertNotNil(p, "Save Failed: No model returned")
+                if let p = p {
+                    XCTAssertEqual(p.name, person.name, "Save Failed: \(String(describing: p.name)) is not equal to \(String(describing: person.name))")
+                    XCTAssertEqual(p.age, person.age, "Save Failed: \(String(describing: p.age)) is not equal to \(String(describing: person.age))")
+                }
+                expectation.fulfill()
+            }
+        })
+    }
+
+    /**
       Testing that the correct SQL Query is created to save a Model
       Testing that an id is correcly returned
     */

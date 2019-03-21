@@ -46,6 +46,32 @@ class TestFind: XCTestCase {
     }
 
     /**
+     Testing that the correct SQL Query is created to retrieve a specific model when using a non-default database.
+     Testing that the model can be retrieved
+     */
+    func testFindUsingDB() {
+        let connection: TestConnection = createConnection(.returnOneRow)
+        let db = Database(single: connection)
+        performTest(asyncTasks: { expectation in
+            Person.find(id: 1, using: db) { p, error in
+                XCTAssertNil(error, "Find Failed: \(String(describing: error))")
+                XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
+                if let query = connection.query {
+                    let expectedQuery = "SELECT * FROM \"People\" WHERE \"People\".\"id\" = ?1"
+                    let resultQuery = connection.descriptionOf(query: query)
+                    XCTAssertEqual(resultQuery, expectedQuery, "Find Failed: Invalid query")
+                }
+                XCTAssertNotNil(p, "Find Failed: No model returned")
+                if let p = p {
+                    XCTAssertEqual(p.name, "Joe", "Find Failed: \(String(describing: p.name)) is not equal to Joe")
+                    XCTAssertEqual(p.age, 38, "Find Failed: \(String(describing: p.age)) is not equal to 38")
+                }
+                expectation.fulfill()
+            }
+        })
+    }
+
+    /**
       Testing that the correct SQL Query is created to retrieve all the models.
       Testing that correct amount of models are retrieved
     */
