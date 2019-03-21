@@ -29,11 +29,11 @@ public class TableInfo {
     private var codableMapQueue = DispatchQueue(label: "codableMap.queue", attributes: .concurrent)
 
     /// Get the table for a model
-    func getTable<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, for type: T.Type) throws -> Table {
+    func getTable<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type, idKeyPathSet: Bool), _ tableName: String, for type: T.Type) throws -> Table {
         return try getInfo(idColumn, tableName, type).table
     }
 
-    func getInfo<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, _ type: T.Type) throws -> (info: TypeInfo, table: Table) {
+    func getInfo<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type, idKeyPathSet: Bool), _ tableName: String, _ type: T.Type) throws -> (info: TypeInfo, table: Table) {
         let typeString = "\(type)"
         var result: (TypeInfo, Table)? = nil
         // Read from codableMap when no concurrent write is occurring
@@ -57,7 +57,7 @@ public class TableInfo {
     }
 
     /// Construct the table for a Model
-    func constructTable(_ idColumn: (name: String, type: SQLDataType.Type), _ tableName: String, _ typeInfo: TypeInfo) throws -> Table {
+    func constructTable(_ idColumn: (name: String, type: SQLDataType.Type, idKeyPathSet: Bool), _ tableName: String, _ typeInfo: TypeInfo) throws -> Table {
         var columns: [Column] = []
         var idColumnIsSet = false
         switch typeInfo {
@@ -91,7 +91,12 @@ public class TableInfo {
                 }
                 if let SQLType = valueType as? SQLDataType.Type {
                     if key == idColumn.name && !idColumnIsSet {
-                        columns.append(Column(key, SQLType, primaryKey: true, notNull: !optionalBool))
+                        // If this is an optional id field create an autoincrementing column
+                        if optionalBool && idColumn.idKeyPathSet {
+                            columns.append(Column(key, SQLType, autoIncrement: true, primaryKey: true))
+                        } else {
+                            columns.append(Column(key, SQLType, primaryKey: true, notNull: !optionalBool))
+                        }
                         idColumnIsSet = true
                     } else {
                         columns.append(Column(key, SQLType, notNull: !optionalBool))
