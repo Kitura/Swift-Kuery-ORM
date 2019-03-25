@@ -28,6 +28,12 @@ public protocol Model: Codable {
     /// Defines the id column type in the Database
     static var idColumnType: SQLDataType.Type {get}
 
+    /// Defines typealias for the id fields keypath
+    typealias IDKeyPath = WritableKeyPath<Self, Int?>?
+
+    /// Defines the keypath to the Models id field
+    static var idKeypath: IDKeyPath {get}
+
     /// Call to create the table in the database synchronously
     static func createTableSync(using db: Database?) throws -> Bool
 
@@ -112,6 +118,8 @@ public extension Model {
     /// Defaults to Int64
     static var idColumnType: SQLDataType.Type { return Int64.self }
 
+    static var idKeypath: IDKeyPath { return nil }
+
     private static func executeTask(using db: Database? = nil, task: @escaping ((Connection?, QueryError?) -> ())) {
         guard let database = db ?? Database.default else {
 
@@ -149,7 +157,7 @@ public extension Model {
         } catch let error {
             return onCompletion(nil, Self.convertError(error))
         }
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -199,7 +207,7 @@ public extension Model {
         } catch let error {
             return onCompletion(nil, Self.convertError(error))
         }
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -231,10 +239,11 @@ public extension Model {
             return
         }
 
-        let columns = table.columns.filter({$0.autoIncrement != true && values[$0.name] != nil})
+        let columns = table.columns.filter({values[$0.name] != nil})
         let parameters: [Any?] = columns.map({values[$0.name]!})
         let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
-        let query = Insert(into: table, columns: columns, values: parameterPlaceHolders)
+        let returnID: Bool = Self.idKeypath != nil
+        let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: returnID)
         self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
     }
 
@@ -350,7 +359,8 @@ public extension Model {
     }
 
     private func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
-        Self.executeTask() { connection, error in
+        var dictionaryTitleToValue = [String: Any?]()
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -366,14 +376,49 @@ public extension Model {
                     onCompletion(nil, Self.convertError(error))
                     return
                 }
+                if let insertQuery = query as? Insert, insertQuery.returnID {
+                    result.asRows() { rows, error in
+                        guard let rows = rows, rows.count > 0 else {
+                            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not retrieve value for Query: \(String(describing: query))"))
+                            return
+                        }
 
-                onCompletion(self, nil)
+                        dictionaryTitleToValue = rows[0]
+
+                        guard let value = dictionaryTitleToValue[Self.idColumnName] else {
+                            onCompletion(nil, RequestError(.ormNotFound, reason: "Could not find return id"))
+                            return
+                        }
+
+                        guard let unwrappedValue: Any = value else {
+                            onCompletion(nil, RequestError(.ormNotFound, reason: "Return id is nil"))
+                            return
+                        }
+
+                        guard let idKeyPath = Self.idKeypath else {
+                            // We should not be here if keypath is nil
+                            return onCompletion(nil, RequestError(.ormInternalError, reason: "id Keypath is nil"))
+                        }
+                        var newValue: Int? = nil
+                        do {
+                            newValue = try Int(value: String(describing: unwrappedValue))
+                        } catch {
+                            return onCompletion(nil, RequestError(.ormInternalError, reason: "Unable to convert identifier"))
+                        }
+                        var newSelf = self
+                        newSelf[keyPath: idKeyPath] = newValue
+
+                        return onCompletion(newSelf, nil)
+                    }
+                } else {
+                    return onCompletion(self, nil)
+                }
             }
         }
     }
 
     private func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -428,7 +473,7 @@ public extension Model {
     /// - Parameter using: Optional Database to use
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of (Self?, RequestError?), of which one will be nil, depending on whether the query was successful.
     public static func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -473,7 +518,7 @@ public extension Model {
     /// - Parameter using: Optional Database to use
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of (Identifier?, Self?, RequestError?), of which some will be nil, depending on whether the query was successful.
     public static func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -536,7 +581,7 @@ public extension Model {
     /// - Parameter using: Optional Database to use
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of ([Self]?, RequestError?), of which one will be nil, depending on whether the query was successful.
     public static func executeQuery(query: Query, parameters: [Any?]? = nil, using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?)-> Void ) {
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -601,7 +646,7 @@ public extension Model {
     /// - Parameter using: Optional Database to use
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of ([Identifier, Self]?, RequestError?), of which one will be nil, depending on whether the query was successful.
     public static func executeQuery<I: Identifier>(query: Query, parameters: [Any?]? = nil, using db: Database? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void ) {
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(nil, RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -680,7 +725,7 @@ public extension Model {
     /// - Parameter using: Optional Database to use
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a RequestError? which may be nil, depending on whether the query was successful.
     public static func executeQuery(query: Query, parameters: [Any?]? = nil, using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void ) {
-        Self.executeTask() { connection, error in
+        Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
                     return onCompletion(RequestError(.ormInternalError, reason: "Unknow error when getting connection"))
@@ -708,7 +753,8 @@ public extension Model {
     }
 
     static func getTable() throws -> Table {
-        return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType), Self.tableName, for: Self.self)
+        let idKeyPathSet: Bool = Self.idKeypath != nil
+        return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType, idKeyPathSet), Self.tableName, for: Self.self)
     }
 
     /**
