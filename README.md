@@ -365,7 +365,7 @@ struct Person: Model {
     var surname: String
     var age: Int
 
-    static var idKeyPath: IDKeyPath = \Person.id
+    static var idKeypath: IDKeyPath = \Person.id
 }
 ```
 
