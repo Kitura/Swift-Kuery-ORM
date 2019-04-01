@@ -254,6 +254,67 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:13SwiftKueryORM5ModelP9IDKeyPatha"></a>
+                    <a name="//apple_ref/swift/Alias/IDKeyPath" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM5ModelP9IDKeyPatha">IDKeyPath</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Defines typealias for the id fields keypath</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">typealias</span> <span class="kt">IDKeyPath</span> <span class="o">=</span> <span class="kt">WritableKeyPath</span><span class="o">&lt;</span><span class="k">Self</span><span class="p">,</span> <span class="kt">Int</span><span class="p">?</span><span class="o">&gt;</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:13SwiftKueryORM5ModelP9idKeypaths15WritableKeyPathCyxSiSgGSgvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/idKeypath" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM5ModelP9idKeypaths15WritableKeyPathCyxSiSgGSgvpZ">idKeypath</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Defines the keypath to the Models id field</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="k">var</span> <span class="nv">idKeypath</span><span class="p">:</span> <span class="kt"><a href="../Protocols/Model.html#/s:13SwiftKueryORM5ModelP9IDKeyPatha">IDKeyPath</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:13SwiftKueryORM5ModelP15createTableSyncSbAA8DatabaseCSg5using_tKFZ"></a>
                     <a name="//apple_ref/swift/Method/createTableSync(using:)" class="dashAnchor"></a>
                     <a class="token" href="#/s:13SwiftKueryORM5ModelP15createTableSyncSbAA8DatabaseCSg5using_tKFZ">createTableSync(using:)</a>
@@ -850,13 +911,442 @@ handler. The callback is passed a dictionary [id: model] or an error</p>
                 </li>
               </ul>
             </div>
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:13SwiftKueryORM5ModelPAAE12executeQueryy0aB00F0_p5query_SayypSgG10parametersAA8DatabaseCSg5usingyxSg_15KituraContracts12RequestErrorVSgtctFZ"></a>
+                    <a name="//apple_ref/swift/Method/executeQuery(query:parameters:using:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM5ModelPAAE12executeQueryy0aB00F0_p5query_SayypSgG10parametersAA8DatabaseCSg5usingyxSg_15KituraContracts12RequestErrorVSgtctFZ">executeQuery(query:parameters:using:_:)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Allows custom functions on a model to query the database directly.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">executeQuery</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="kt">Query</span><span class="p">,</span> <span class="nv">parameters</span><span class="p">:</span> <span class="p">[</span><span class="kt">Any</span><span class="p">?],</span> <span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="k">Self</span><span class="p">?,</span> <span class="kt">RequestError</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span> <span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>query</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>Query</code> to execute</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>parameters</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional array of parameters to pass to the query</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>using</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Optional Database to use</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>onCompletion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The function to be called when the execution of the query has completed. The function will be passed a tuple of (Self?, RequestError?), of which one will be nil, depending on whether the query was successful.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:13SwiftKueryORM5ModelPAAE12executeQueryy0aB00F0_p5query_SayypSgG10parametersAA8DatabaseCSg5usingyqd__Sg_xSg15KituraContracts12RequestErrorVSgtctAQ10IdentifierRd__lFZ"></a>
+                    <a name="//apple_ref/swift/Method/executeQuery(query:parameters:using:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM5ModelPAAE12executeQueryy0aB00F0_p5query_SayypSgG10parametersAA8DatabaseCSg5usingyqd__Sg_xSg15KituraContracts12RequestErrorVSgtctAQ10IdentifierRd__lFZ">executeQuery(query:parameters:using:_:)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Allows custom functions on a model to query the database directly.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="n">executeQuery</span><span class="o">&lt;</span><span class="kt">I</span><span class="p">:</span> <span class="kt">Identifier</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="kt">Query</span><span class="p">,</span> <span class="nv">parameters</span><span class="p">:</span> <span class="p">[</span><span class="kt">Any</span><span class="p">?],</span> <span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">I</span><span class="p">?,</span> <span class="k">Self</span><span class="p">?,</span> <span class="kt">RequestError</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span> <span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>query</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>Query</code> to execute</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>parameters</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional array of parameters to pass to the query</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>using</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Optional Database to use</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>onCompletion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The function to be called when the execution of the query has completed. The function will be passed a tuple of (Identifier?, Self?, RequestError?), of which some will be nil, depending on whether the query was successful.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:13SwiftKueryORM5ModelPAAE12executeQueryy0aB00F0_p5query_SayypSgGSg10parametersAA8DatabaseCSg5usingySayxGSg_15KituraContracts12RequestErrorVSgtctFZ"></a>
+                    <a name="//apple_ref/swift/Method/executeQuery(query:parameters:using:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM5ModelPAAE12executeQueryy0aB00F0_p5query_SayypSgGSg10parametersAA8DatabaseCSg5usingySayxGSg_15KituraContracts12RequestErrorVSgtctFZ">executeQuery(query:parameters:using:_:)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Allows custom functions on a model to query the database directly.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">executeQuery</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="kt">Query</span><span class="p">,</span> <span class="nv">parameters</span><span class="p">:</span> <span class="p">[</span><span class="kt">Any</span><span class="p">?]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">([</span><span class="k">Self</span><span class="p">]?,</span> <span class="kt">RequestError</span><span class="p">?)</span><span class="o">-&gt;</span> <span class="kt">Void</span> <span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>query</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>Query</code> to execute</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>parameters</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional array of parameters to pass to the query</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>using</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Optional Database to use</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>onCompletion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The function to be called when the execution of the query has completed. The function will be passed a tuple of ([Self]?, RequestError?), of which one will be nil, depending on whether the query was successful.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:13SwiftKueryORM5ModelPAAE12executeQueryy0aB00F0_p5query_SayypSgGSg10parametersAA8DatabaseCSg5usingySayqd___xtGSg_15KituraContracts12RequestErrorVSgtctAR10IdentifierRd__lFZ"></a>
+                    <a name="//apple_ref/swift/Method/executeQuery(query:parameters:using:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM5ModelPAAE12executeQueryy0aB00F0_p5query_SayypSgGSg10parametersAA8DatabaseCSg5usingySayqd___xtGSg_15KituraContracts12RequestErrorVSgtctAR10IdentifierRd__lFZ">executeQuery(query:parameters:using:_:)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Allows custom functions on a model to query the database directly.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="n">executeQuery</span><span class="o">&lt;</span><span class="kt">I</span><span class="p">:</span> <span class="kt">Identifier</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="kt">Query</span><span class="p">,</span> <span class="nv">parameters</span><span class="p">:</span> <span class="p">[</span><span class="kt">Any</span><span class="p">?]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">([(</span><span class="kt">I</span><span class="p">,</span> <span class="k">Self</span><span class="p">)]?,</span> <span class="kt">RequestError</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span> <span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>query</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>Query</code> to execute</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>parameters</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional array of parameters to pass to the query</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>using</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Optional Database to use</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>onCompletion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The function to be called when the execution of the query has completed. The function will be passed a tuple of ([Identifier, Self]?, RequestError?), of which one will be nil, depending on whether the query was successful.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:13SwiftKueryORM5ModelPAAE12executeQueryy0aB00F0_p5query_SayypSgGSg10parametersAA8DatabaseCSg5usingy15KituraContracts12RequestErrorVSgctFZ"></a>
+                    <a name="//apple_ref/swift/Method/executeQuery(query:parameters:using:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM5ModelPAAE12executeQueryy0aB00F0_p5query_SayypSgGSg10parametersAA8DatabaseCSg5usingy15KituraContracts12RequestErrorVSgctFZ">executeQuery(query:parameters:using:_:)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Allows custom functions on a model to query the database directly.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">executeQuery</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="kt">Query</span><span class="p">,</span> <span class="nv">parameters</span><span class="p">:</span> <span class="p">[</span><span class="kt">Any</span><span class="p">?]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="n">using</span> <span class="nv">db</span><span class="p">:</span> <span class="kt"><a href="../Classes/Database.html">Database</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="n">_</span> <span class="nv">onCompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">RequestError</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">Void</span> <span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>query</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The <code>Query</code> to execute</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>parameters</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An optional array of parameters to pass to the query</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>using</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Optional Database to use</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>onCompletion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The function to be called when the execution of the query has completed. The function will be passed a RequestError? which may be nil, depending on whether the query was successful.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </div>
         </section>
 
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="" target="_blank" rel="external">IBM</a>. All rights reserved. (Last updated: 2019-01-03)</p>
+      <p>&copy; 2019 <a class="link" href="" target="_blank" rel="external">IBM</a>. All rights reserved. (Last updated: 2019-04-01)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.1</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

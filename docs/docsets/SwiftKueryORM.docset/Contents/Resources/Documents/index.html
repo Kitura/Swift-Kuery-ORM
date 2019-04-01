@@ -305,33 +305,158 @@ createdb school
   <span class="o">...</span>
 <span class="p">}</span>
 </code></pre>
-<h3 id='customization' class='heading'>Customization</h3>
+<h3 id='customizing-your-model' class='heading'>Customizing your Model</h3>
 
-<p>The ORM uses <a href="https://github.com/IBM-Swift/Swift-Kuery">Swift-Kuery</a> which allows you to customize and execute your own queries without breaking any existing ORM functionality. You&rsquo;ll want to have access to the table for your object, which you can get with the <code>getTable()</code> function:</p>
-<pre class="highlight swift"><code><span class="k">do</span> <span class="p">{</span>
-  <span class="k">let</span> <span class="nv">table</span> <span class="o">=</span> <span class="kt">Grade</span><span class="o">.</span><span class="nf">getTable</span><span class="p">()</span>
-<span class="p">}</span> <span class="k">catch</span> <span class="p">{</span>
-  <span class="c1">// Error</span>
+<p>The ORM defines an extension to <code><a href="Protocols/Model.html">Model</a></code> which provides a number of <code>public static executeQuery(…)</code> functions. These can be used to create custom functions within your model that perform more complex database operations. The example below defines a Person model and with a custom function that will retrieve all records which have age &gt; 20:</p>
+<pre class="highlight swift"><code><span class="c1">// define the Person struct</span>
+<span class="kd">struct</span> <span class="kt">Person</span><span class="p">:</span> <span class="kt">Codable</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nv">firstname</span><span class="p">:</span> <span class="kt">String</span>
+    <span class="k">var</span> <span class="nv">surname</span><span class="p">:</span> <span class="kt">String</span>
+    <span class="k">var</span> <span class="nv">age</span><span class="p">:</span> <span class="kt">Int</span>
+<span class="p">}</span>
+
+<span class="c1">// extend Person to conform to model and add overTwenties function</span>
+<span class="kd">extension</span> <span class="kt">Person</span><span class="p">:</span> <span class="kt">Model</span> <span class="p">{</span>
+
+    <span class="c1">// Define a synchronous function to retrieve all records of Person with age &gt; 20</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">getOverTwenties</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">Person</span><span class="p">]?</span> <span class="p">{</span>
+        <span class="k">let</span> <span class="nv">wait</span> <span class="o">=</span> <span class="kt">DispatchSemaphore</span><span class="p">(</span><span class="nv">value</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1">// First get the table</span>
+        <span class="k">var</span> <span class="nv">table</span><span class="p">:</span> <span class="kt">Table</span>
+        <span class="k">do</span> <span class="p">{</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="k">try</span> <span class="kt">Person</span><span class="o">.</span><span class="nf">getTable</span><span class="p">()</span>
+        <span class="p">}</span> <span class="k">catch</span> <span class="p">{</span>
+            <span class="c1">// Handle error</span>
+        <span class="p">}</span>
+        <span class="c1">// Define result, query and execute</span>
+        <span class="k">var</span> <span class="nv">overTwenties</span><span class="p">:</span> <span class="p">[</span><span class="kt">Person</span><span class="p">]?</span> <span class="o">=</span> <span class="kc">nil</span>
+        <span class="k">let</span> <span class="nv">query</span> <span class="o">=</span> <span class="kt">Select</span><span class="p">(</span><span class="nv">from</span><span class="p">:</span> <span class="n">table</span><span class="p">)</span><span class="o">.</span><span class="nf">where</span><span class="p">(</span><span class="s">"age &gt; 20"</span><span class="p">)</span>
+
+        <span class="kt">Person</span><span class="o">.</span><span class="nf">executeQuery</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="n">query</span><span class="p">,</span> <span class="nv">parameters</span><span class="p">:</span> <span class="kc">nil</span><span class="p">)</span> <span class="p">{</span> <span class="n">results</span><span class="p">,</span> <span class="n">error</span> <span class="k">in</span>
+            <span class="k">guard</span> <span class="k">let</span> <span class="nv">results</span> <span class="o">=</span> <span class="n">results</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="c1">// Handle error</span>
+            <span class="p">}</span>
+            <span class="n">overTwenties</span> <span class="o">=</span> <span class="n">results</span>
+            <span class="n">wait</span><span class="o">.</span><span class="nf">signal</span><span class="p">()</span>
+            <span class="k">return</span>
+        <span class="p">}</span>
+        <span class="n">wait</span><span class="o">.</span><span class="nf">wait</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">overTwenties</span>
+    <span class="p">}</span>
 <span class="p">}</span>
 </code></pre>
 
-<p>After you retrieve your table, you can create a <code>Query</code> object to specify what you want to execute on your database, and perform it like so:</p>
-<pre class="highlight swift"><code><span class="nf">executeQuery</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="kt">Query</span><span class="p">)</span> <span class="p">{</span> <span class="p">(</span><span class="nv">grade</span><span class="p">:</span> <span class="kt">Grade</span><span class="p">?,</span> <span class="nv">error</span><span class="p">:</span> <span class="kt">RequestError</span><span class="p">?)</span> <span class="k">in</span>
-  <span class="o">...</span>
+<p>Alternatively you can define and asynchronous getOverTwenties function:</p>
+<pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">getOverTwenties</span><span class="p">(</span><span class="nv">oncompletion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">([</span><span class="kt">Person</span><span class="p">]?,</span> <span class="kt">RequestError</span><span class="p">?)</span><span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nv">table</span><span class="p">:</span> <span class="kt">Table</span>
+    <span class="k">do</span> <span class="p">{</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="k">try</span> <span class="kt">Person</span><span class="o">.</span><span class="nf">getTable</span><span class="p">()</span>
+    <span class="p">}</span> <span class="k">catch</span> <span class="p">{</span>
+        <span class="c1">// Handle error</span>
+    <span class="p">}</span>
+    <span class="k">let</span> <span class="nv">query</span> <span class="o">=</span> <span class="kt">Select</span><span class="p">(</span><span class="nv">from</span><span class="p">:</span> <span class="n">table</span><span class="p">)</span><span class="o">.</span><span class="nf">where</span><span class="p">(</span><span class="s">"age &gt; 20"</span><span class="p">)</span>
+    <span class="kt">Person</span><span class="o">.</span><span class="nf">executeQuery</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="n">query</span><span class="p">,</span> <span class="nv">parameters</span><span class="p">:</span> <span class="kc">nil</span><span class="p">,</span> <span class="n">oncompletion</span><span class="p">)</span>
 <span class="p">}</span>
 </code></pre>
 
-<p>You can customize the parameters passed into your closure after you execute a <code>Query</code> like so:</p>
-<pre class="highlight swift"><code><span class="nf">executeQuery</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="kt">Query</span><span class="p">)</span> <span class="p">{</span> <span class="n">grade</span><span class="p">,</span> <span class="n">error</span> <span class="k">in</span>
-  <span class="o">...</span>
-<span class="p">}</span>
-
-<span class="nf">executeQuery</span><span class="p">(</span><span class="nv">query</span><span class="p">:</span> <span class="kt">Query</span><span class="p">)</span> <span class="p">{</span> <span class="n">error</span> <span class="k">in</span>
-  <span class="o">...</span>
+<p>which can be called in a fashion similar to the following:</p>
+<pre class="highlight swift"><code><span class="kt">Person</span><span class="o">.</span><span class="nf">getOverTwenties</span><span class="p">()</span> <span class="p">{</span> <span class="n">result</span><span class="p">,</span> <span class="n">error</span> <span class="k">in</span>
+    <span class="k">guard</span> <span class="k">let</span> <span class="nv">result</span> <span class="o">=</span> <span class="n">result</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="c1">// Handle error</span>
+    <span class="p">}</span>
+    <span class="c1">// Use result</span>
 <span class="p">}</span>
 </code></pre>
 
 <p>If you&rsquo;d like to learn more about how you can customize queries, check out the <a href="https://github.com/IBM-Swift/Swift-Kuery">Swift-Kuery</a> repository for more information.</p>
+<h2 id='model-identifiers' class='heading'>Model Identifiers</h2>
+
+<p>The ORM has several options available for identifying an instance of a model.</p>
+<h3 id='automatic-id-assignment' class='heading'>Automatic ID assignment</h3>
+
+<p>If you define your <code><a href="Protocols/Model.html">Model</a></code> without specifying an ID property, either by using the <code>idColumnName</code> property or the default name of <code>id</code>, then the ORM will create an auto-incrementing column named <code>id</code> in the database table for the model, eg.</p>
+<pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">Person</span><span class="p">:</span> <span class="kt">Model</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nv">firstname</span><span class="p">:</span> <span class="kt">String</span>
+    <span class="k">var</span> <span class="nv">surname</span><span class="p">:</span> <span class="kt">String</span>
+    <span class="k">var</span> <span class="nv">age</span><span class="p">:</span> <span class="kt">Int</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>The model does not contain a property for the ID. The ORM provides a specific <code>save</code> API that will return the ID that was assigned. It is important to note the ORM will not link the returned ID to the instance of the Model in any way; you are responsible for maintaining this relationship if necessary. Below is an example of retrieving an ID for an instance of the <code>Person</code> model defined above:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">person</span> <span class="o">=</span> <span class="kt">Person</span><span class="p">(</span><span class="nv">firstname</span><span class="p">:</span> <span class="s">"example"</span><span class="p">,</span> <span class="nv">surname</span><span class="p">:</span> <span class="s">"person"</span><span class="p">,</span> <span class="nv">age</span><span class="p">:</span> <span class="mi">21</span><span class="p">)</span>
+<span class="n">person</span><span class="o">.</span><span class="nf">save</span><span class="p">()</span> <span class="p">{</span> <span class="p">(</span><span class="nv">id</span><span class="p">:</span> <span class="kt">Int</span><span class="p">?,</span> <span class="n">person</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span> <span class="k">in</span>
+    <span class="k">guard</span> <span class="k">let</span> <span class="nv">id</span> <span class="o">=</span> <span class="n">id</span><span class="p">,</span> <span class="k">let</span> <span class="nv">person</span> <span class="o">=</span> <span class="n">person</span> <span class="k">else</span><span class="p">{</span>
+        <span class="c1">// Handle error</span>
+        <span class="k">return</span>
+    <span class="p">}</span>
+    <span class="c1">// Use person and id</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>The compiler requires you to declare the type of the ID received by your completion handler; the type should be <code>Int?</code> for an ID that has been automatically assigned.</p>
+<h3 id='manual-id-assignment' class='heading'>Manual ID assignment</h3>
+
+<p>You can manage the assignment of IDs yourself by adding an <code>id</code> property to your model. You may customise the name of this property by defining <code>idColumnName</code>. For example:</p>
+<pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">Person</span><span class="p">:</span> <span class="kt">Model</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nv">myIDField</span><span class="p">:</span> <span class="kt">Int</span>
+    <span class="k">var</span> <span class="nv">firstname</span><span class="p">:</span> <span class="kt">String</span>
+    <span class="k">var</span> <span class="nv">surname</span><span class="p">:</span> <span class="kt">String</span>
+    <span class="k">var</span> <span class="nv">age</span><span class="p">:</span> <span class="kt">Int</span>
+
+    <span class="kd">static</span> <span class="k">var</span> <span class="nv">idColumnName</span> <span class="o">=</span> <span class="s">"myIDField"</span>
+    <span class="kd">static</span> <span class="k">var</span> <span class="nv">idColumnType</span> <span class="o">=</span> <span class="kt">Int</span><span class="o">.</span><span class="k">self</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>When using a <code><a href="Protocols/Model.html">Model</a></code> defined in this way, you are responsible for the assignment and management of IDs. Below is an example of saving an instance of the <code>Person</code> model defined above:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">person</span> <span class="o">=</span> <span class="kt">Person</span><span class="p">(</span><span class="nv">myIDField</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nv">firstname</span><span class="p">:</span> <span class="s">"example"</span><span class="p">,</span> <span class="nv">surname</span><span class="p">:</span> <span class="s">"person"</span><span class="p">,</span> <span class="nv">age</span><span class="p">:</span> <span class="mi">21</span><span class="p">)</span>
+<span class="n">person</span><span class="o">.</span><span class="nf">save</span><span class="p">()</span> <span class="p">{</span> <span class="p">(</span><span class="n">person</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span> <span class="k">in</span>
+    <span class="k">guard</span> <span class="k">let</span> <span class="nv">person</span> <span class="o">=</span> <span class="n">person</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="c1">// Handle error</span>
+        <span class="k">return</span>
+    <span class="p">}</span>
+    <span class="c1">// Use newly saved person</span>
+<span class="p">}</span>
+</code></pre>
+<h3 id='using-code-optional-code-id-properties' class='heading'>Using <code>optional</code> ID properties</h3>
+
+<p>Declaring your ID property as optional allows the ORM to assign the ID automatically when the model is saved. If the value of ID is <code>nil</code>, the database will assign an auto-incremented value. At present this is only support for an <code>Int?</code> type.</p>
+
+<p>You may instead provide an explicit value, which will be used instead of automatic assignment.</p>
+
+<p>Optional IDs must be identified by defining the <code>idKeypath: IDKeyPath</code> property, as in the example below:</p>
+<pre class="highlight swift"><code><span class="kd">struct</span> <span class="kt">Person</span><span class="p">:</span> <span class="kt">Model</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="nv">id</span><span class="p">:</span> <span class="kt">Int</span><span class="p">?</span>
+    <span class="k">var</span> <span class="nv">firstname</span><span class="p">:</span> <span class="kt">String</span>
+    <span class="k">var</span> <span class="nv">surname</span><span class="p">:</span> <span class="kt">String</span>
+    <span class="k">var</span> <span class="nv">age</span><span class="p">:</span> <span class="kt">Int</span>
+
+    <span class="kd">static</span> <span class="k">var</span> <span class="nv">idKeypath</span><span class="p">:</span> <span class="kt">IDKeyPath</span> <span class="o">=</span> <span class="p">\</span><span class="kt">Person</span><span class="o">.</span><span class="n">id</span>
+<span class="p">}</span>
+</code></pre>
+
+<p>In the example above, the <code><a href="Protocols/Model.html">Model</a></code> is defined with an ID property matching the default <code>idColumnName</code> value, but should you wish to use an alternative name you must define <code>idColumnName</code> accordingly.</p>
+
+<p>Below is an example of saving an instance of the <code>Person</code> defined above, both with an explicitly defined ID and without:</p>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">person</span> <span class="o">=</span> <span class="kt">Person</span><span class="p">(</span><span class="nv">id</span><span class="p">:</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">firstname</span><span class="p">:</span> <span class="err">“</span><span class="kt">Banana</span><span class="err">”</span><span class="p">,</span> <span class="nv">surname</span><span class="p">:</span> <span class="err">“</span><span class="kt">Man</span><span class="err">”</span><span class="p">,</span> <span class="nv">age</span><span class="p">:</span> <span class="mi">21</span><span class="p">)</span>
+<span class="k">let</span> <span class="nv">specificPerson</span> <span class="o">=</span> <span class="kt">Person</span><span class="p">(</span><span class="nv">id</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="nv">firstname</span><span class="p">:</span> <span class="err">“</span><span class="kt">Super</span><span class="err">”</span><span class="p">,</span> <span class="nv">surname</span><span class="p">:</span> <span class="err">“</span><span class="kt">Ted</span><span class="err">”</span><span class="p">,</span> <span class="nv">age</span><span class="p">:</span> <span class="mi">26</span><span class="p">)</span>
+
+<span class="n">person</span><span class="o">.</span><span class="nf">save</span><span class="p">()</span> <span class="p">{</span> <span class="p">(</span><span class="n">savedPerson</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span> <span class="k">in</span>
+        <span class="k">guard</span> <span class="k">let</span> <span class="nv">newPerson</span> <span class="o">=</span> <span class="n">savedPerson</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="c1">// Handle error</span>
+        <span class="p">}</span>
+        <span class="nf">print</span><span class="p">(</span><span class="n">newPerson</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="c1">// Prints the next value in the databases identifier sequence, eg. 1</span>
+<span class="p">}</span>
+
+<span class="n">specificPerson</span><span class="o">.</span><span class="nf">save</span><span class="p">()</span> <span class="p">{</span> <span class="p">(</span><span class="n">savedPerson</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span> <span class="k">in</span>
+        <span class="k">guard</span> <span class="k">let</span> <span class="nv">newPerson</span> <span class="o">=</span> <span class="n">savedPerson</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="c1">// Handle error</span>
+        <span class="p">}</span>
+        <span class="nf">print</span><span class="p">(</span><span class="n">newPerson</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="c1">// Prints 5</span>
+<span class="p">}</span>
+</code></pre>
+
+<p><strong>NOTE</strong> - When using manual or optional ID properties, you should be prepared to handle violation of unique identifier constraints. These can occur if you attempt to save a model with an ID that already exists, or in the case of Postgres, if the auto-incremented value collides with an ID that was previously inserted explicitly.</p>
 <h2 id='list-of-plugins' class='heading'>List of plugins</h2>
 
 <ul>
@@ -356,7 +481,7 @@ createdb school
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="" target="_blank" rel="external">IBM</a>. All rights reserved. (Last updated: 2019-01-03)</p>
+      <p>&copy; 2019 <a class="link" href="" target="_blank" rel="external">IBM</a>. All rights reserved. (Last updated: 2019-04-01)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.1</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>
