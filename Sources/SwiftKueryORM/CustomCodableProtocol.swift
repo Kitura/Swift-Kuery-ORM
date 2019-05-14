@@ -15,9 +15,3 @@ public protocol CustomCodable {
     static var customCoders: [String: (CustomEncoder,CustomDecoder)]  {get}
 
 }
-
-public extension CustomCodable {
-
-    static var customCoders: [String: (CustomEncoder,CustomDecoder)] { return [:] }
-
-}
