@@ -19,6 +19,9 @@ import KituraContracts
 import Foundation
 import Dispatch
 
+public typealias CustomEncoder = (Any) -> Any?
+public typealias CustomDecoder = (Any) -> Any?
+
 /// Protocol Model conforming to Codable defining the available operations
 public protocol Model: Codable {
     /// Defines the tableName in the Database
@@ -27,6 +30,8 @@ public protocol Model: Codable {
     static var idColumnName: String {get}
     /// Defines the id column type in the Database
     static var idColumnType: SQLDataType.Type {get}
+
+    static var customCoders: [String: (CustomEncoder,CustomDecoder)]  {get}
 
     /// Call to create the table in the database synchronously
     static func createTableSync(using db: Database?) throws -> Bool
@@ -111,6 +116,8 @@ public extension Model {
     static var idColumnName: String { return "id" }
     /// Defaults to Int64
     static var idColumnType: SQLDataType.Type { return Int64.self }
+
+    static var customCoders: [String: (CustomEncoder,CustomDecoder)]  { return [:] }
 
     private static func executeTask(using db: Database? = nil, task: @escaping ((Connection?, QueryError?) -> ())) {
         guard let database = db ?? Database.default else {
@@ -225,7 +232,7 @@ public extension Model {
         var values: [String : Any]
         do {
             table = try Self.getTable()
-            values = try DatabaseEncoder().encode(self)
+            values = try DatabaseEncoder().encode(self, customCoders: Self.customCoders)
         } catch let error {
             onCompletion(nil, Self.convertError(error))
             return
@@ -243,7 +250,7 @@ public extension Model {
         var values: [String : Any]
         do {
             table = try Self.getTable()
-            values = try DatabaseEncoder().encode(self)
+            values = try DatabaseEncoder().encode(self, customCoders: Self.customCoders)
         } catch let error {
             onCompletion(nil, nil, Self.convertError(error))
             return
@@ -261,7 +268,7 @@ public extension Model {
         var values: [String: Any]
         do {
             table = try Self.getTable()
-            values = try DatabaseEncoder().encode(self)
+            values = try DatabaseEncoder().encode(self, customCoders: Self.customCoders)
         } catch let error {
             onCompletion(nil, Self.convertError(error))
             return
@@ -455,7 +462,7 @@ public extension Model {
 
                     var decodedModel: Self
                     do {
-                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
+                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue, customCoders: Self.customCoders)
                     } catch {
                         onCompletion(nil, Self.convertError(error))
                         return
@@ -518,7 +525,7 @@ public extension Model {
 
                     var decodedModel: Self
                     do {
-                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
+                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue, customCoders: Self.customCoders)
                     } catch {
                         onCompletion(nil, nil, Self.convertError(error))
                         return
@@ -574,7 +581,7 @@ public extension Model {
                     for dictionary in dictionariesTitleToValue {
                         var decodedModel: Self
                         do {
-                            decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
+                            decodedModel = try DatabaseDecoder().decode(Self.self, dictionary, customCoders: Self.customCoders)
                         } catch {
                             onCompletion(nil, Self.convertError(error))
                             return
@@ -639,7 +646,7 @@ public extension Model {
                     for dictionary in dictionariesTitleToValue {
                         var decodedModel: Self
                         do {
-                            decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
+                            decodedModel = try DatabaseDecoder().decode(Self.self, dictionary, customCoders: Self.customCoders)
                         } catch let error {
                             onCompletion(nil, Self.convertError(error))
                             return

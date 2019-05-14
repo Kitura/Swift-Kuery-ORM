@@ -23,11 +23,9 @@ open class DatabaseDecoder {
     fileprivate let decoder = _DatabaseDecoder()
 
     /// Decode from a dictionary [String: Any] to a Decodable type
-    open func decode<T : Decodable>(_ type: T.Type, _ values: [String : Any?]) throws -> T {
+    open func decode<T : Decodable>(_ type: T.Type, _ values: [String : Any?], customCoders: [String:(CustomEncoder,CustomDecoder)]) throws -> T {
         decoder.values = values
-        if let customValueType = T.self as? CustomCodable.Type {
-            decoder.customCoders = customValueType.customCoders
-        }
+        decoder.customCoders = customCoders
         return try T(from: decoder)
     }
 

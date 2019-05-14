@@ -23,10 +23,8 @@ open class DatabaseEncoder {
     private var databaseEncoder = _DatabaseEncoder()
 
     /// Encode a Encodable type to a dictionary [String: Any]
-    open func encode<T: Encodable>(_ value: T) throws -> [String: Any] {
-        if let customValueType = T.self as? CustomCodable.Type {
-            databaseEncoder.customCoders = customValueType.customCoders
-        }
+    open func encode<T: Encodable>(_ value: T, customCoders: [String:(CustomEncoder,CustomDecoder)]) throws -> [String: Any] {
+        databaseEncoder.customCoders = customCoders
         try value.encode(to: databaseEncoder)
         return databaseEncoder.values
     }
