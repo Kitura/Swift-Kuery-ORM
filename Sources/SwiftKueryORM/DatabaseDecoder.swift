@@ -25,6 +25,9 @@ open class DatabaseDecoder {
     /// Decode from a dictionary [String: Any] to a Decodable type
     open func decode<T : Decodable>(_ type: T.Type, _ values: [String : Any?]) throws -> T {
         decoder.values = values
+        if let customValueType = T.self as? CustomCodable.Type {
+            decoder.customCoders = customValueType.customCoders
+        }
         return try T(from: decoder)
     }
 
@@ -32,6 +35,7 @@ open class DatabaseDecoder {
         public var codingPath: [CodingKey]
         public var userInfo: [CodingUserInfoKey:Any] = [:]
         public var values = [String:Any?]()
+        public var customCoders: [String:(CustomEncoder,CustomDecoder)] = [:]
 
         fileprivate init(at codingPath: [CodingKey] = []){
             self.codingPath = codingPath
@@ -177,8 +181,8 @@ open class DatabaseDecoder {
         }
         public func decode<T : Decodable>(_ type: T.Type, forKey key: Key) throws -> T {
             let value = try checkValueExitence(key)
-            if let customValueType = T.self as? CustomCodable.Type, let (_,customDecoder) = customValueType.customCoders[key.stringValue] {
-                let decodedValue = customDecoder(value)
+            if let (_, customDecoder) = decoder.customCoders[key.stringValue] {
+                let decodedValue = customDecoder(value as Any)
                 return try castedValue(decodedValue, type, key)
             } else if type is Data.Type && value != nil {
                 let castValue = try castedValue(value, String.self, key)

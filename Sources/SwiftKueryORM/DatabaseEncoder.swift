@@ -24,6 +24,9 @@ open class DatabaseEncoder {
 
     /// Encode a Encodable type to a dictionary [String: Any]
     open func encode<T: Encodable>(_ value: T) throws -> [String: Any] {
+        if let customValueType = T.self as? CustomCodable.Type {
+            databaseEncoder.customCoders = customValueType.customCoders
+        }
         try value.encode(to: databaseEncoder)
         return databaseEncoder.values
     }
@@ -33,6 +36,7 @@ fileprivate class _DatabaseEncoder: Encoder {
     public var codingPath = [CodingKey]()
 
     public var values: [String: Any] = [:]
+    public var customCoders: [String:(CustomEncoder,CustomDecoder)] = [:]
 
     public var userInfo: [CodingUserInfoKey: Any] = [:]
     public func container<Key>(keyedBy: Key.Type) -> KeyedEncodingContainer<Key> {
@@ -58,7 +62,7 @@ fileprivate struct _DatabaseKeyedEncodingContainer<K: CodingKey> : KeyedEncoding
     public mutating func encodeNil(forKey key: Key) throws {}
 
     public mutating func encode<T: Encodable>(_ value: T, forKey key: Key) throws {
-        if let customValueType = T.self as? CustomCodable.Type, let (customEncoder,_) = customValueType.customCoders[key.stringValue] {
+        if let (customEncoder, _) = encoder.customCoders[key.stringValue] {
             encoder.values[key.stringValue] = customEncoder(value)
         } else if let dataValue = value as? Data {
             encoder.values[key.stringValue] = dataValue.base64EncodedString()
