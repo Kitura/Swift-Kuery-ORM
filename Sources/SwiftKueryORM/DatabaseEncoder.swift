@@ -23,7 +23,8 @@ open class DatabaseEncoder {
     private var databaseEncoder = _DatabaseEncoder()
 
     /// Encode a Encodable type to a dictionary [String: Any]
-    open func encode<T: Encodable>(_ value: T) throws -> [String: Any] {
+    open func encode<T: Encodable>(_ value: T, dateEncodingStrategy: DateEncodingFormat) throws -> [String: Any] {
+        databaseEncoder.dateEncodingStrategy = dateEncodingStrategy
         try value.encode(to: databaseEncoder)
         return databaseEncoder.values
     }
@@ -33,6 +34,8 @@ fileprivate class _DatabaseEncoder: Encoder {
     public var codingPath = [CodingKey]()
 
     public var values: [String: Any] = [:]
+
+    public var dateEncodingStrategy: DateEncodingFormat = .double
 
     public var userInfo: [CodingUserInfoKey: Any] = [:]
     public func container<Key>(keyedBy: Key.Type) -> KeyedEncodingContainer<Key> {
@@ -65,7 +68,22 @@ fileprivate struct _DatabaseKeyedEncodingContainer<K: CodingKey> : KeyedEncoding
         } else if let uuidValue = value as? UUID {
             encoder.values[key.stringValue] = uuidValue.uuidString
         } else if let dateValue = value as? Date {
-            encoder.values[key.stringValue] = dateValue.timeIntervalSinceReferenceDate
+            switch encoder.dateEncodingStrategy {
+            case .double:
+                encoder.values[key.stringValue] = dateValue.timeIntervalSinceReferenceDate
+            case .datetime, .timestamp:
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+                encoder.values[key.stringValue] = dateFormatter.string(from: dateValue)
+            case .date:
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "yyyy-MM-dd"
+                encoder.values[key.stringValue] = dateFormatter.string(from: dateValue)
+            case .time:
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "HH:mm:ss"
+                encoder.values[key.stringValue] = dateFormatter.string(from: dateValue)
+            }
         } else if value is [Any] {
             throw RequestError(.ormDatabaseEncodingError, reason: "Encoding an array is not currently supported")
         } else if value is [AnyHashable: Any] {

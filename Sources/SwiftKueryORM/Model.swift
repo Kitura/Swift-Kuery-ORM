@@ -19,6 +19,13 @@ import KituraContracts
 import Foundation
 import Dispatch
 
+public enum DateEncodingFormat {
+    case time
+    case date
+    case timestamp, datetime
+    case double
+}
+
 /// Protocol Model conforming to Codable defining the available operations
 public protocol Model: Codable {
     /// Defines the tableName in the Database
@@ -33,6 +40,9 @@ public protocol Model: Codable {
 
     /// Defines the keypath to the Models id field
     static var idKeypath: IDKeyPath {get}
+
+    /// Defines the date encoding strategy for the Model. Defaults to .double
+    static var dateEncodingStrategy: DateEncodingFormat { get }
 
     /// Call to create the table in the database synchronously
     static func createTableSync(using db: Database?) throws -> Bool
@@ -119,6 +129,8 @@ public extension Model {
     static var idColumnType: SQLDataType.Type { return Int64.self }
 
     static var idKeypath: IDKeyPath { return nil }
+
+    static var dateEncodingStrategy: DateEncodingFormat { return .double }
 
     private static func executeTask(using db: Database? = nil, task: @escaping ((Connection?, QueryError?) -> ())) {
         guard let database = db ?? Database.default else {
@@ -233,7 +245,7 @@ public extension Model {
         var values: [String : Any]
         do {
             table = try Self.getTable()
-            values = try DatabaseEncoder().encode(self)
+            values = try DatabaseEncoder().encode(self, dateEncodingStrategy: Self.dateEncodingStrategy)
         } catch let error {
             onCompletion(nil, Self.convertError(error))
             return
@@ -252,7 +264,7 @@ public extension Model {
         var values: [String : Any]
         do {
             table = try Self.getTable()
-            values = try DatabaseEncoder().encode(self)
+            values = try DatabaseEncoder().encode(self, dateEncodingStrategy: Self.dateEncodingStrategy)
         } catch let error {
             onCompletion(nil, nil, Self.convertError(error))
             return
@@ -270,7 +282,7 @@ public extension Model {
         var values: [String: Any]
         do {
             table = try Self.getTable()
-            values = try DatabaseEncoder().encode(self)
+            values = try DatabaseEncoder().encode(self, dateEncodingStrategy: Self.dateEncodingStrategy)
         } catch let error {
             onCompletion(nil, Self.convertError(error))
             return
@@ -500,7 +512,7 @@ public extension Model {
 
                     var decodedModel: Self
                     do {
-                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
+                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue, dateEncodingStrategy: Self.dateEncodingStrategy)
                     } catch {
                         onCompletion(nil, Self.convertError(error))
                         return
@@ -563,7 +575,7 @@ public extension Model {
 
                     var decodedModel: Self
                     do {
-                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue)
+                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue, dateEncodingStrategy: Self.dateEncodingStrategy)
                     } catch {
                         onCompletion(nil, nil, Self.convertError(error))
                         return
@@ -619,7 +631,7 @@ public extension Model {
                     for dictionary in dictionariesTitleToValue {
                         var decodedModel: Self
                         do {
-                            decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
+                            decodedModel = try DatabaseDecoder().decode(Self.self, dictionary, dateEncodingStrategy: Self.dateEncodingStrategy)
                         } catch {
                             onCompletion(nil, Self.convertError(error))
                             return
@@ -684,7 +696,7 @@ public extension Model {
                     for dictionary in dictionariesTitleToValue {
                         var decodedModel: Self
                         do {
-                            decodedModel = try DatabaseDecoder().decode(Self.self, dictionary)
+                            decodedModel = try DatabaseDecoder().decode(Self.self, dictionary, dateEncodingStrategy: Self.dateEncodingStrategy)
                         } catch let error {
                             onCompletion(nil, Self.convertError(error))
                             return

@@ -23,7 +23,8 @@ open class DatabaseDecoder {
     fileprivate let decoder = _DatabaseDecoder()
 
     /// Decode from a dictionary [String: Any] to a Decodable type
-    open func decode<T : Decodable>(_ type: T.Type, _ values: [String : Any?]) throws -> T {
+    open func decode<T : Decodable>(_ type: T.Type, _ values: [String : Any?], dateEncodingStrategy: DateEncodingFormat) throws -> T {
+        decoder.dateEncodingStrategy = dateEncodingStrategy
         decoder.values = values
         return try T(from: decoder)
     }
@@ -32,6 +33,8 @@ open class DatabaseDecoder {
         public var codingPath: [CodingKey]
         public var userInfo: [CodingUserInfoKey:Any] = [:]
         public var values = [String:Any?]()
+
+        public var dateEncodingStrategy: DateEncodingFormat = .double
 
         fileprivate init(at codingPath: [CodingKey] = []){
             self.codingPath = codingPath
@@ -192,9 +195,30 @@ open class DatabaseDecoder {
                 let uuid = UUID(uuidString: castValue)
                 return try castedValue(uuid, type, key)
             } else if type is Date.Type && value != nil {
-                let castValue = try castedValue(value, Double.self, key)
-                let date = Date(timeIntervalSinceReferenceDate: castValue)
-                return try castedValue(date, type, key)
+                switch decoder.dateEncodingStrategy {
+                case .double:
+                    let castValue = try castedValue(value, Double.self, key)
+                    let date = Date(timeIntervalSinceReferenceDate: castValue)
+                    return try castedValue(date, type, key)
+                case .datetime, .timestamp:
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+                    let castValue = try castedValue(value, String.self, key)
+                    let date = dateFormatter.date(from: castValue)
+                    return try castedValue(date, type, key)
+                case .date:
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "yyyy-MM-dd"
+                    let castValue = try castedValue(value, String.self, key)
+                    let date = dateFormatter.date(from: castValue)
+                    return try castedValue(date, type, key)
+                case .time:
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "HH:mm:ss"
+                    let castValue = try castedValue(value, String.self, key)
+                    let date = dateFormatter.date(from: castValue)
+                    return try castedValue(date, type, key)
+                }
             } else {
                 throw RequestError(.ormDatabaseDecodingError, reason: "Unsupported type: \(String(describing: type)) for value: \(String(describing: value))")
             }
