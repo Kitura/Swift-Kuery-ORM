@@ -400,7 +400,7 @@ By default any property on your Model that is declared as a `Date` will be encod
 
 You can change this behaviour by overriding the default value of the property `dateEncodingStrategy`. The dateEncodingStrategy will apply to all Date properties on your Model.
 
-The example below declares a model which will have its Date properties endowed and decoded as a timestamp”
+The example below defines a model which will have its Date properties encoded and decoded as a timestamp”
 
 ```swift
 
