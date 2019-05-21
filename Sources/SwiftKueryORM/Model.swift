@@ -42,7 +42,7 @@ public protocol Model: Codable {
     static var idKeypath: IDKeyPath {get}
 
     /// Defines the date encoding strategy for the Model. Defaults to .double
-    static var dateEncodingStrategy: DateEncodingFormat { get }
+    static var dateEncodingFormat: DateEncodingFormat { get }
 
     /// Call to create the table in the database synchronously
     static func createTableSync(using db: Database?) throws -> Bool
@@ -130,7 +130,7 @@ public extension Model {
 
     static var idKeypath: IDKeyPath { return nil }
 
-    static var dateEncodingStrategy: DateEncodingFormat { return .double }
+    static var dateEncodingFormat: DateEncodingFormat { return .double }
 
     private static func executeTask(using db: Database? = nil, task: @escaping ((Connection?, QueryError?) -> ())) {
         guard let database = db ?? Database.default else {
@@ -245,7 +245,7 @@ public extension Model {
         var values: [String : Any]
         do {
             table = try Self.getTable()
-            values = try DatabaseEncoder().encode(self, dateEncodingStrategy: Self.dateEncodingStrategy)
+            values = try DatabaseEncoder().encode(self, dateEncodingStrategy: Self.dateEncodingFormat)
         } catch let error {
             onCompletion(nil, Self.convertError(error))
             return
@@ -264,7 +264,7 @@ public extension Model {
         var values: [String : Any]
         do {
             table = try Self.getTable()
-            values = try DatabaseEncoder().encode(self, dateEncodingStrategy: Self.dateEncodingStrategy)
+            values = try DatabaseEncoder().encode(self, dateEncodingStrategy: Self.dateEncodingFormat)
         } catch let error {
             onCompletion(nil, nil, Self.convertError(error))
             return
@@ -282,7 +282,7 @@ public extension Model {
         var values: [String: Any]
         do {
             table = try Self.getTable()
-            values = try DatabaseEncoder().encode(self, dateEncodingStrategy: Self.dateEncodingStrategy)
+            values = try DatabaseEncoder().encode(self, dateEncodingStrategy: Self.dateEncodingFormat)
         } catch let error {
             onCompletion(nil, Self.convertError(error))
             return
@@ -512,7 +512,7 @@ public extension Model {
 
                     var decodedModel: Self
                     do {
-                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue, dateEncodingStrategy: Self.dateEncodingStrategy)
+                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue, dateEncodingStrategy: Self.dateEncodingFormat)
                     } catch {
                         onCompletion(nil, Self.convertError(error))
                         return
@@ -575,7 +575,7 @@ public extension Model {
 
                     var decodedModel: Self
                     do {
-                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue, dateEncodingStrategy: Self.dateEncodingStrategy)
+                        decodedModel = try DatabaseDecoder().decode(Self.self, dictionaryTitleToValue, dateEncodingStrategy: Self.dateEncodingFormat)
                     } catch {
                         onCompletion(nil, nil, Self.convertError(error))
                         return
@@ -631,7 +631,7 @@ public extension Model {
                     for dictionary in dictionariesTitleToValue {
                         var decodedModel: Self
                         do {
-                            decodedModel = try DatabaseDecoder().decode(Self.self, dictionary, dateEncodingStrategy: Self.dateEncodingStrategy)
+                            decodedModel = try DatabaseDecoder().decode(Self.self, dictionary, dateEncodingStrategy: Self.dateEncodingFormat)
                         } catch {
                             onCompletion(nil, Self.convertError(error))
                             return
@@ -696,7 +696,7 @@ public extension Model {
                     for dictionary in dictionariesTitleToValue {
                         var decodedModel: Self
                         do {
-                            decodedModel = try DatabaseDecoder().decode(Self.self, dictionary, dateEncodingStrategy: Self.dateEncodingStrategy)
+                            decodedModel = try DatabaseDecoder().decode(Self.self, dictionary, dateEncodingStrategy: Self.dateEncodingFormat)
                         } catch let error {
                             onCompletion(nil, Self.convertError(error))
                             return
@@ -766,7 +766,7 @@ public extension Model {
 
     static func getTable() throws -> Table {
         let idKeyPathSet: Bool = Self.idKeypath != nil
-        return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType, idKeyPathSet), Self.tableName, for: Self.self, with: Self.dateEncodingStrategy)
+        return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType, idKeyPathSet), Self.tableName, for: Self.self, with: Self.dateEncodingFormat)
     }
 
     /**
