@@ -19,6 +19,7 @@ import KituraContracts
 import Foundation
 import Dispatch
 
+/// Defines the supported formats for persisiting properties of type `Date`.
 public enum DateEncodingFormat {
     case time
     case date
@@ -41,7 +42,7 @@ public protocol Model: Codable {
     /// Defines the keypath to the Models id field
     static var idKeypath: IDKeyPath {get}
 
-    /// Defines the date encoding strategy for the Model. Defaults to .double
+    /// Defines the format in which `Date` properties of the `Model` will be written to the Database. Defaults to .double
     static var dateEncodingFormat: DateEncodingFormat { get }
 
     /// Call to create the table in the database synchronously
