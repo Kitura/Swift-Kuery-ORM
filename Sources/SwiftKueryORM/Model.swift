@@ -22,7 +22,7 @@ import Dispatch
 public enum DateEncodingFormat {
     case time
     case date
-    case timestamp, datetime
+    case timestamp
     case double
 }
 
@@ -766,7 +766,7 @@ public extension Model {
 
     static func getTable() throws -> Table {
         let idKeyPathSet: Bool = Self.idKeypath != nil
-        return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType, idKeyPathSet), Self.tableName, for: Self.self)
+        return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType, idKeyPathSet), Self.tableName, for: Self.self, with: Self.dateEncodingStrategy)
     }
 
     /**

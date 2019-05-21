@@ -71,7 +71,7 @@ fileprivate struct _DatabaseKeyedEncodingContainer<K: CodingKey> : KeyedEncoding
             switch encoder.dateEncodingStrategy {
             case .double:
                 encoder.values[key.stringValue] = dateValue.timeIntervalSinceReferenceDate
-            case .datetime, .timestamp:
+            case .timestamp:
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
                 encoder.values[key.stringValue] = dateFormatter.string(from: dateValue)

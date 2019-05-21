@@ -200,7 +200,7 @@ open class DatabaseDecoder {
                     let castValue = try castedValue(value, Double.self, key)
                     let date = Date(timeIntervalSinceReferenceDate: castValue)
                     return try castedValue(date, type, key)
-                case .datetime, .timestamp:
+                case .timestamp:
                     if let dateValue = value as? Date {
                         return try castedValue(dateValue, type.self, key)
                     } else {
