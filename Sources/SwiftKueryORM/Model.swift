@@ -21,9 +21,13 @@ import Dispatch
 
 /// Defines the supported formats for persisiting properties of type `Date`.
 public enum DateEncodingFormat {
+    // time - Corresponds to the `time` column type
     case time
+    // date - Corresponds to the `date` column type
     case date
+    // timestamp - Corresponds to the `timestamp` column type.
     case timestamp
+    // double - This is the default encoding type and corresponds to Swifts encoding of `Date`.
     case double
 }
 
