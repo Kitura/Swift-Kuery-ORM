@@ -29,11 +29,11 @@ public class TableInfo {
     private var codableMapQueue = DispatchQueue(label: "codableMap.queue", attributes: .concurrent)
 
     /// Get the table for a model
-    func getTable<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type, idKeyPathSet: Bool), _ tableName: String, for type: T.Type) throws -> Table {
-        return try getInfo(idColumn, tableName, type).table
+    func getTable<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type, idKeyPathSet: Bool), _ tableName: String, for type: T.Type, with dateEncodingFormat: DateEncodingFormat) throws -> Table {
+        return try getInfo(idColumn, tableName, type, dateEncodingFormat).table
     }
 
-    func getInfo<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type, idKeyPathSet: Bool), _ tableName: String, _ type: T.Type) throws -> (info: TypeInfo, table: Table) {
+    func getInfo<T: Decodable>(_ idColumn: (name: String, type: SQLDataType.Type, idKeyPathSet: Bool), _ tableName: String, _ type: T.Type, _ dateEncodingFormat: DateEncodingFormat) throws -> (info: TypeInfo, table: Table) {
         let typeString = "\(type)"
         var result: (TypeInfo, Table)? = nil
         // Read from codableMap when no concurrent write is occurring
@@ -46,7 +46,7 @@ public class TableInfo {
 
         try codableMapQueue.sync(flags: .barrier) {
             let typeInfo = try TypeDecoder.decode(type)
-            result = (info: typeInfo, table: try constructTable(idColumn, tableName, typeInfo))
+            result = (info: typeInfo, table: try constructTable(idColumn, tableName, typeInfo, dateEncodingFormat))
             codableMap[typeString] = result
         }
 
@@ -57,7 +57,7 @@ public class TableInfo {
     }
 
     /// Construct the table for a Model
-    func constructTable(_ idColumn: (name: String, type: SQLDataType.Type, idKeyPathSet: Bool), _ tableName: String, _ typeInfo: TypeInfo) throws -> Table {
+    func constructTable(_ idColumn: (name: String, type: SQLDataType.Type, idKeyPathSet: Bool), _ tableName: String, _ typeInfo: TypeInfo, _ dateEncodingFormat: DateEncodingFormat) throws -> Table {
         var columns: [Column] = []
         var idColumnIsSet = false
         switch typeInfo {
@@ -73,6 +73,17 @@ public class TableInfo {
                 switch keyedTypeInfo {
                 case .single(_ as UUID.Type, _):
                     valueType = UUID.self
+                case .single(_ as Date.Type, _):
+                    switch dateEncodingFormat {
+                    case .double:
+                        valueType = Double.self
+                    case .timestamp:
+                        valueType = Timestamp.self
+                    case .date:
+                        valueType = SQLDate.self
+                    case .time:
+                        valueType = Time.self
+                    }
                 case .single(_, let singleType):
                     valueType = singleType
                     if valueType is Int.Type {
