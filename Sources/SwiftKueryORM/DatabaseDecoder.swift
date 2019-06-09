@@ -98,13 +98,26 @@ open class DatabaseDecoder {
 
         /// Cast value from database to expect type in the model
         private func castedValue<T : Any>(_ value: Any?, _ type: T.Type, _ key: Key) throws -> T {
-            guard let castedValue = value as? T else {
-                throw DecodingError.typeMismatch(type, DecodingError.Context(
-                    codingPath: [key],
-                    debugDescription: "Could not cast " + String(describing: value)
-                ))
+            if T.self is Bool.Type {
+                if let intValue = value as? UInt8, (intValue == 0 || intValue == 1) {
+                    return (intValue == 1) as! T
+                } else if let intValue = value as? Int8, (intValue == 0 || intValue == 1)  {
+                    return (intValue == 1) as! T
+                } else {
+                    throw DecodingError.typeMismatch(type, DecodingError.Context(
+                        codingPath: [key],
+                        debugDescription: "Could not cast " + String(describing: value)
+                    ))
+                }
+            } else {
+                guard let castedValue = value as? T else {
+                    throw DecodingError.typeMismatch(type, DecodingError.Context(
+                        codingPath: [key],
+                        debugDescription: "Could not cast " + String(describing: value)
+                    ))
+                }
+                return castedValue
             }
-            return castedValue
         }
 
         /// Special case for integer, no integer type in database
