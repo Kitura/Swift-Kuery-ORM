@@ -170,9 +170,9 @@ class TestFind: XCTestCase {
                         var success = false
                         for whereClause in whereClauses where resultQuery.contains(whereClause) {
                             success = true
+                            numberOfClauses += 1
                         }
                         XCTAssertTrue(success)
-                        numberOfClauses += 1
                     }
                     XCTAssertTrue(resultQuery.contains(expectedOperator))
                     XCTAssertEqual(numberOfFilters, numberOfClauses, "Incorrect number of where clauses in query")
