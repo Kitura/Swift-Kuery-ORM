@@ -901,10 +901,12 @@ public extension Model {
             }
         case .or:
             let array = value.split(separator: ",")
-            if array.count > 1 {
+            var requiredFilters = array.count
+            if requiredFilters > 1 {
                 var newFilter: Filter = (column == Parameter())
-                for _ in array {
+                while (requiredFilters - 1) > 0 {
                     newFilter = newFilter || (column == Parameter())
+                    requiredFilters -= 1
                 }
                 filter = newFilter
                 parameters = array.map { String($0) }
