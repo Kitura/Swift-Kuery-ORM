@@ -901,18 +901,15 @@ public extension Model {
             }
         case .or:
             let array = value.split(separator: ",")
-            if array.count > 1 {
-                var newFilter: Filter = (column == Parameter())
-                for _ in array {
-                    newFilter = newFilter || (column == Parameter())
-                }
-                filter = newFilter
-                parameters = array.map { String($0) }
-            } else {
-                filter = (column == Parameter())
-            }
-        }
 
+            var newFilter: Filter = (column == Parameter())
+            // For every additional element we need to add an OR clause for the next parameter.
+            for _ in 1 ..< array.count {
+                newFilter = newFilter || (column == Parameter())
+            }
+            filter = newFilter
+            parameters = array.map { String($0) }
+        }
         return (filter, parameters)
     }
 
