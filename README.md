@@ -406,7 +406,7 @@ The example below defines a model which will have its Date properties encoded an
 
 struct Person: Model {
 
-    static var dateEncodingStrategy: DateEncodingFormat = .timestamp
+    static var dateEncodingFormat: DateEncodingFormat = .timestamp
 
     var firstname: String
     var surname: String
