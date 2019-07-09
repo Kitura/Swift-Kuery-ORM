@@ -837,6 +837,9 @@ public extension Model {
                     opr = operation.getOperator()
                     stringValue = operation.getStringValue()
                 } else if var array = value as? Array<Any> {
+                    if array.count < 1 {
+                        throw RequestError(.ormQueryError, reason: "Empty array cannot be used in QueryParams")
+                    }
                     opr = .or
                     stringValue = String(describing: array.removeFirst())
                     for val in array {
