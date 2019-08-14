@@ -337,10 +337,43 @@ open class DatabaseDecoder {
                 let uuid = UUID(uuidString: castValue)
                 return try castedValue(uuid, type, key)
             } else if type is Date.Type {
-                let castValue = try castedValue(value, Double.self, key)
-                let date = Date(timeIntervalSinceReferenceDate: castValue)
-                return try castedValue(date, type, key)
-            } else {
+                    switch decoder.dateEncodingStrategy {
+                    case .double:
+                        let castValue = try castedValue(value, Double.self, key)
+                        let date = Date(timeIntervalSinceReferenceDate: castValue)
+                        return try castedValue(date, type, key)
+                    case .timestamp:
+                        if let dateValue = value as? Date {
+                            return try castedValue(dateValue, type.self, key)
+                        } else {
+                            let castValue = try castedValue(value, String.self, key)
+                            let dateFormatter = DateFormatter()
+                            dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+                            let date = dateFormatter.date(from: castValue)
+                            return try castedValue(date, type.self, key)
+                        }
+                    case .date:
+                        if let dateValue = value as? Date {
+                            return try castedValue(dateValue, type.self, key)
+                        } else {
+                            let castValue = try castedValue(value, String.self, key)
+                            let dateFormatter = DateFormatter()
+                            dateFormatter.dateFormat = "yyyy-MM-dd"
+                            let date = dateFormatter.date(from: castValue)
+                            return try castedValue(date, type.self, key)
+                        }
+                    case .time:
+                        if let dateValue = value as? Date {
+                            return try castedValue(dateValue, type.self, key)
+                        } else {
+                            let castValue = try castedValue(value, String.self, key)
+                            let dateFormatter = DateFormatter()
+                            dateFormatter.dateFormat = "HH:mm:ss"
+                            let date = dateFormatter.date(from: castValue)
+                            return try castedValue(date, type.self, key)
+                        }
+                    }
+                }  else {
                 throw RequestError(.ormDatabaseDecodingError, reason: "Unsupported type: \(String(describing: type)) for value: \(String(describing: value))")
             }
         }
