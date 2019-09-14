@@ -44,7 +44,7 @@ public protocol Model: Codable {
     typealias IDKeyPath = WritableKeyPath<Self, Int?>?
 
     /// Defines the keypath to the Models id field
-    static var idKeypath: IDKeyPath {get}
+    static var idKeyPath: IDKeyPath {get}
 
     /// Defines the format in which `Date` properties of the `Model` will be written to the Database. Defaults to .double
     static var dateEncodingFormat: DateEncodingFormat { get }
@@ -133,7 +133,7 @@ public extension Model {
     /// Defaults to Int64
     static var idColumnType: SQLDataType.Type { return Int64.self }
 
-    static var idKeypath: IDKeyPath { return nil }
+    static var idKeyPath: IDKeyPath { return nil }
 
     static var dateEncodingFormat: DateEncodingFormat { return .double }
 
@@ -259,7 +259,7 @@ public extension Model {
         let columns = table.columns.filter({values[$0.name] != nil})
         let parameters: [Any?] = columns.map({values[$0.name]!})
         let parameterPlaceHolders: [Parameter] = parameters.map {_ in return Parameter()}
-        let returnID: Bool = Self.idKeypath != nil
+        let returnID: Bool = Self.idKeyPath != nil
         let query = Insert(into: table, columns: columns, values: parameterPlaceHolders, returnID: returnID)
         self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
     }
@@ -412,7 +412,7 @@ public extension Model {
                             return
                         }
 
-                        guard let idKeyPath = Self.idKeypath else {
+                        guard let idKeyPath = Self.idKeyPath else {
                             // We should not be here if keypath is nil
                             return onCompletion(nil, RequestError(.ormInternalError, reason: "id Keypath is nil"))
                         }
@@ -770,7 +770,7 @@ public extension Model {
     }
 
     static func getTable() throws -> Table {
-        let idKeyPathSet: Bool = Self.idKeypath != nil
+        let idKeyPathSet: Bool = Self.idKeyPath != nil
         return try Database.tableInfo.getTable((Self.idColumnName, Self.idColumnType, idKeyPathSet), Self.tableName, for: Self.self, with: Self.dateEncodingFormat)
     }
 

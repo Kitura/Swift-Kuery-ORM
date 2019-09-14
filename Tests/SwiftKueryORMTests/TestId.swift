@@ -110,7 +110,7 @@ class TestId: XCTestCase {
 
     struct IdentifiedPerson: Model {
         static var tableName = "People"
-        static var idKeypath: IDKeyPath = \IdentifiedPerson.id
+        static var idKeyPath: IDKeyPath = \IdentifiedPerson.id
 
         var id: Int?
         var name: String
