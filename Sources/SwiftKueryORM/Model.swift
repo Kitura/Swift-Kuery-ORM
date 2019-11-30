@@ -33,6 +33,9 @@ public enum DateEncodingFormat {
 
 /// Protocol Model conforming to Codable defining the available operations
 public protocol Model: Codable {
+    /// Defines the default using database
+    static var defaultDatabase: Database? { get }
+    
     /// Defines the tableName in the Database
     static var tableName: String {get}
     /// Defines the id column name in the Database
@@ -119,6 +122,9 @@ public protocol Model: Codable {
 }
 
 public extension Model {
+    /// Defaults to Database.default
+    static var defaultDatabase: Database? { return Database.default }
+    
     /// Defaults to the name of the model + "s"
     static var tableName: String {
         let structName = String(describing: self)
@@ -138,7 +144,7 @@ public extension Model {
     static var dateEncodingFormat: DateEncodingFormat { return .double }
 
     private static func executeTask(using db: Database? = nil, task: @escaping ((Connection?, QueryError?) -> ())) {
-        guard let database = db ?? Database.default else {
+        guard let database = db ?? defaultDatabase else {
 
             return task(nil, QueryError.databaseError("ORM database not initialised"))
         }
