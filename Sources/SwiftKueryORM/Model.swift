@@ -1108,7 +1108,7 @@ public extension Model {
     /// Find all the models matching the QueryParams
     /// - Parameter using: Optional Database to use
     /// - Returns: A dictionary [id: model]
-    static func findAll<Q:QueryParams, I: Identifier>(using db: Database? = Self.sdefaultDatabase, matching queryParams: Q? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
+    static func findAll<Q:QueryParams, I: Identifier>(using db: Database? = Self.defaultDatabase, matching queryParams: Q? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
         var table: Table
         do {
             table = try Self.getTable()
