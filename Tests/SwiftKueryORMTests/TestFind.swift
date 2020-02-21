@@ -10,6 +10,7 @@ class TestFind: XCTestCase {
             ("testFind", testFind),
             ("testFindAll", testFindAll),
             ("testFindAllMatching", testFindAllMatching),
+            ("testFindAllMatchingArrayFilter", testFindAllMatchingArrayFilter),
         ]
     }
 
@@ -134,6 +135,51 @@ class TestFind: XCTestCase {
                   let user = array[0]
                   XCTAssertEqual(user.name, "Joe")
                   XCTAssertEqual(user.age, 38)
+                }
+                expectation.fulfill()
+            }
+        })
+    }
+
+    struct AgeFilter: QueryParams {
+        let age: [Int]
+    }
+
+    /**
+     Testing that the correct SQL Query is created to retrieve all the models.
+     Testing that correct amount of models are retrieved
+     */
+    func testFindAllMatchingArrayFilter() {
+        let connection: TestConnection = createConnection(.returnThreeRows)
+        Database.default = Database(single: connection)
+        let filterArray = [38,28,36]
+        let filter = AgeFilter(age: filterArray)
+        let numberOfFilters = filterArray.count
+        performTest(asyncTasks: { expectation in
+            Person.findAll(matching: filter) { array, error in
+                XCTAssertNil(error, "Find Failed: \(String(describing: error))")
+                XCTAssertNotNil(connection.query, "Find Failed: Query is nil")
+                if let query = connection.query {
+                    let expectedPrefix = "SELECT * FROM \"People\" WHERE"
+                    let expectedClauses = [["\"People\".\"age\" = ?1", "\"People\".\"age\" = ?2", "\"People\".\"age\" = ?3"]]
+                    let expectedOperator = "OR"
+                    let resultQuery = connection.descriptionOf(query: query)
+                    XCTAssertTrue(resultQuery.hasPrefix(expectedPrefix))
+                    var numberOfClauses = 0
+                    for whereClauses in expectedClauses {
+                        var success = false
+                        for whereClause in whereClauses where resultQuery.contains(whereClause) {
+                            success = true
+                            numberOfClauses += 1
+                        }
+                        XCTAssertTrue(success)
+                    }
+                    XCTAssertTrue(resultQuery.contains(expectedOperator))
+                    XCTAssertEqual(numberOfFilters, numberOfClauses, "Incorrect number of where clauses in query")
+                }
+                XCTAssertNotNil(array, "Find Failed: No array of models returned")
+                if let array = array {
+                    XCTAssertEqual(array.count, 3, "Find Failed: \(String(describing: array.count)) is not equal to 1")
                 }
                 expectation.fulfill()
             }

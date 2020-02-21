@@ -394,6 +394,27 @@ specificPerson.save() { (savedPerson, error) in
 
 **NOTE** - When using manual or optional ID properties, you should be prepared to handle violation of unique identifier constraints. These can occur if you attempt to save a model with an ID that already exists, or in the case of Postgres, if the auto-incremented value collides with an ID that was previously inserted explicitly.
 
+## Alternative encoding for `Date` properties
+
+By default any property on your Model that is declared as a `Date` will be encoded and decoded as a `Double`.
+
+You can change this behaviour by overriding the default value of the property `dateEncodingStrategy`. The dateEncodingStrategy will apply to all Date properties on your Model.
+
+The example below defines a model which will have its Date properties encoded and decoded as a timestamp:
+
+```swift
+
+struct Person: Model {
+
+    static var dateEncodingFormat: DateEncodingFormat = .timestamp
+
+    var firstname: String
+    var surname: String
+    var age: Int
+    var dob: Date
+}
+```
+
 ## List of plugins
 
 * [PostgreSQL](https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL)
