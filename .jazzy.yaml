@@ -1,6 +1,6 @@
 module: SwiftKueryORM
-author: IBM
-github_url: https://github.com/IBM-Swift/Swift-Kuery-ORM
+author: IBM & Kitura Project Authors
+github_url: https://github.com/Kitura/Swift-Kuery-ORM
 
 theme: fullwidth
 clean: true
@@ -10,5 +10,3 @@ readme: README.md
 
 skip_undocumented: false
 hide_documentation_coverage: false
-
-xcodebuild_arguments: [-project, SwiftKueryORM.xcodeproj, -target, SwiftKueryORM, LIBRARY_SEARCH_PATHS=.build/debug]

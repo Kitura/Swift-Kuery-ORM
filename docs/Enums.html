@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Classes  Reference</title>
+    <title>Enumerations  Reference</title>
     <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="css/highlight.css" />
     <meta charset="utf-8">
@@ -14,9 +14,9 @@
   </head>
   <body>
 
-    <a name="//apple_ref/swift/Section/Classes" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Section/Enumerations" class="dashAnchor"></a>
 
-    <a title="Classes  Reference"></a>
+    <a title="Enumerations  Reference"></a>
 
     <header class="header">
       <p class="header-col header-col--primary">
@@ -44,7 +44,7 @@
     <p class="breadcrumbs">
       <a class="breadcrumb" href="index.html">SwiftKueryORM Reference</a>
       <img class="carat" src="img/carat.png" />
-      Classes  Reference
+      Enumerations  Reference
     </p>
 
     <div class="content-wrapper">
@@ -138,8 +138,8 @@
 
         <section class="section">
           <div class="section-content top-matter">
-            <h1>Classes</h1>
-            <p>The following classes are available globally.</p>
+            <h1>Enumerations</h1>
+            <p>The following enumerations are available globally.</p>
 
           </div>
         </section>
@@ -151,9 +151,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:13SwiftKueryORM8DatabaseC"></a>
-                    <a name="//apple_ref/swift/Class/Database" class="dashAnchor"></a>
-                    <a class="token" href="#/s:13SwiftKueryORM8DatabaseC">Database</a>
+                    <a name="/s:13SwiftKueryORM18DateEncodingFormatO"></a>
+                    <a name="//apple_ref/swift/Enum/DateEncodingFormat" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM18DateEncodingFormatO">DateEncodingFormat</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -161,110 +161,15 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Class defining the connection to the database.</p>
+                        <p>The DateEncodingFormat enumeration defines the supported formats for persisiting properties of type <code>Date</code>.</p>
 
-<p>To setup the database, in this case using <a href="https://github.com/Kitura/Swift-Kuery-PostgreSQL">PostgreSQL</a>:</p>
-<pre class="highlight swift"><code><span class="kd">import</span> <span class="kt">SwiftKueryORM</span>
-<span class="kd">import</span> <span class="kt">SwiftKueryPostgreSQL</span>
-<span class="k">let</span> <span class="nv">pool</span> <span class="o">=</span> <span class="kt">PostgreSQLConnection</span><span class="o">.</span><span class="nf">createPool</span><span class="p">(</span><span class="nv">host</span><span class="p">:</span> <span class="s">"localhost"</span><span class="p">,</span> <span class="nv">port</span><span class="p">:</span> <span class="mi">5432</span><span class="p">,</span>
-                                           <span class="nv">options</span><span class="p">:</span> <span class="p">[</span><span class="o">.</span><span class="nf">databaseName</span><span class="p">(</span><span class="s">"FoodDatabase"</span><span class="p">)],</span>
-                                           <span class="nv">poolOptions</span><span class="p">:</span> <span class="kt">ConnectionPoolOptions</span><span class="p">(</span>
-                                                                      <span class="nv">initialCapacity</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
-                                                                      <span class="nv">maxCapacity</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
-                                                                      <span class="nv">timeout</span><span class="p">:</span> <span class="mi">10000</span><span class="p">))</span>
-<span class="kt">Database</span><span class="o">.</span><span class="k">default</span> <span class="o">=</span> <span class="kt">Database</span><span class="p">(</span><span class="n">pool</span><span class="p">)</span>
-</code></pre>
-
-                        <a href="Classes/Database.html" class="slightly-smaller">See more</a>
+                        <a href="Enums/DateEncodingFormat.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Database</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:13SwiftKueryORM15DatabaseDecoderC"></a>
-                    <a name="//apple_ref/swift/Class/DatabaseDecoder" class="dashAnchor"></a>
-                    <a class="token" href="#/s:13SwiftKueryORM15DatabaseDecoderC">DatabaseDecoder</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Class used to construct a Model from a row in the database</p>
-
-                        <a href="Classes/DatabaseDecoder.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">open</span> <span class="kd">class</span> <span class="kt">DatabaseDecoder</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:13SwiftKueryORM15DatabaseEncoderC"></a>
-                    <a name="//apple_ref/swift/Class/DatabaseEncoder" class="dashAnchor"></a>
-                    <a class="token" href="#/s:13SwiftKueryORM15DatabaseEncoderC">DatabaseEncoder</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Class used to construct a dictionary [String: Any] from a Model</p>
-
-                        <a href="Classes/DatabaseEncoder.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">open</span> <span class="kd">class</span> <span class="kt">DatabaseEncoder</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:13SwiftKueryORM9TableInfoC"></a>
-                    <a name="//apple_ref/swift/Class/TableInfo" class="dashAnchor"></a>
-                    <a class="token" href="#/s:13SwiftKueryORM9TableInfoC">TableInfo</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Class caching the tables for the models of the application</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">TableInfo</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">DateEncodingFormat</span></code></pre>
 
                         </div>
                       </div>
