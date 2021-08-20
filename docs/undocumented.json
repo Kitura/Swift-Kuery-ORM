@@ -1,19 +1,19 @@
 {
   "warnings": [
     {
-      "file": "/Users/travis/build/IBM-Swift/Swift-Kuery-ORM/Sources/SwiftKueryORM/Model.swift",
+      "file": "/Users/travis/build/Kitura/Swift-Kuery-ORM/Sources/SwiftKueryORM/Model.swift",
       "line": 231,
       "symbol": "Model.save(using:_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/travis/build/IBM-Swift/Swift-Kuery-ORM/Sources/SwiftKueryORM/Model.swift",
+      "file": "/Users/travis/build/Kitura/Swift-Kuery-ORM/Sources/SwiftKueryORM/Model.swift",
       "line": 250,
       "symbol": "Model.save(using:_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     }
   ],
-  "source_directory": "/Users/travis/build/IBM-Swift/Swift-Kuery-ORM"
+  "source_directory": "/Users/travis/build/Kitura/Swift-Kuery-ORM"
 }

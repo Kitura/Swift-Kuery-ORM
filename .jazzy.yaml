@@ -1,6 +1,6 @@
 module: SwiftKueryORM
 author: IBM
-github_url: https://github.com/IBM-Swift/Swift-Kuery-ORM
+github_url: https://github.com/Kitura/Swift-Kuery-ORM
 
 theme: fullwidth
 clean: true
