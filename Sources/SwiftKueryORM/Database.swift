@@ -20,7 +20,7 @@ public typealias ConnectionPoolOptions = SwiftKuery.ConnectionPoolOptions
 
 /// Class defining the connection to the database.
 ///
-/// To setup the database, in this case using [PostgreSQL](https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL):
+/// To setup the database, in this case using [PostgreSQL](https://github.com/Kitura/Swift-Kuery-PostgreSQL):
 /// ```
 /// import SwiftKueryORM
 /// import SwiftKueryPostgreSQL

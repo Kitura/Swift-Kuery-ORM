@@ -1141,7 +1141,7 @@ public extension Model {
 }
 
 /**
- Extension of the RequestError from [KituraContracts](https://github.com/IBM-Swift/KituraContracts.git)
+ Extension of the RequestError from [KituraContracts](https://github.com/Kitura/KituraContracts.git)
  */
 extension RequestError {
     init(_ base: RequestError, reason: String) {
