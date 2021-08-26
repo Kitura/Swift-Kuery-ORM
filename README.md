@@ -4,7 +4,6 @@
     </a>
 </p>
 
-
 <p align="center">
     <a href="https://kitura.github.io/Swift-Kuery-ORM/index.html">
     <img src="https://img.shields.io/badge/apidoc-SwiftKueryORM-1FBCE4.svg?style=flat" alt="APIDoc">
