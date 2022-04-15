@@ -25,10 +25,10 @@ import SwiftKuery
 /// Type Alias for Database (See [#22](https://github.com/Kitura/Swift-Kuery-ORM/issues/22))
 public typealias ORMDatabase = Database
 
-/// Type Alias for RequestError from [KituraContracts](https://github.com/IBM-Swift/KituraContracts)
+/// Type Alias for RequestError from [KituraContracts](https://github.com/Kitura/KituraContracts)
 public typealias RequestError = KituraContracts.RequestError
 
-/// Type Alias for SQLDataType from [SwiftKuery](https://github.com/IBM-Swift/Swift-Kuery)
+/// Type Alias for SQLDataType from [SwiftKuery](https://github.com/Kitura/Swift-Kuery)
 public typealias SQLDataType = SwiftKuery.SQLDataType
 
 /// Public TypeAlias for QueryParams Type from KituraContracts

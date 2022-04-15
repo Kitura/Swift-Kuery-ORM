@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>DatabaseDecoder Class Reference</title>
+    <title>DateEncodingFormat Enumeration Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset="utf-8">
@@ -14,9 +14,9 @@
   </head>
   <body>
 
-    <a name="//apple_ref/swift/Class/DatabaseDecoder" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Enum/DateEncodingFormat" class="dashAnchor"></a>
 
-    <a title="DatabaseDecoder Class Reference"></a>
+    <a title="DateEncodingFormat Enumeration Reference"></a>
 
     <header class="header">
       <p class="header-col header-col--primary">
@@ -44,7 +44,7 @@
     <p class="breadcrumbs">
       <a class="breadcrumb" href="../index.html">SwiftKueryORM Reference</a>
       <img class="carat" src="../img/carat.png" />
-      DatabaseDecoder Class Reference
+      DateEncodingFormat Enumeration Reference
     </p>
 
     <div class="content-wrapper">
@@ -138,15 +138,15 @@
 
         <section class="section">
           <div class="section-content top-matter">
-            <h1>DatabaseDecoder</h1>
+            <h1>DateEncodingFormat</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">open</span> <span class="kd">class</span> <span class="kt">DatabaseDecoder</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">DateEncodingFormat</span></code></pre>
 
                 </div>
               </div>
-            <p>Class used to construct a Model from a row in the database</p>
+            <p>The DateEncodingFormat enumeration defines the supported formats for persisiting properties of type <code>Date</code>.</p>
 
           </div>
         </section>
@@ -158,9 +158,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:13SwiftKueryORM15DatabaseDecoderC6decode__20dateEncodingStrategyxxm_SDySSypSgGAA04DateH6FormatOtKSeRzlF"></a>
-                    <a name="//apple_ref/swift/Method/decode(_:_:dateEncodingStrategy:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:13SwiftKueryORM15DatabaseDecoderC6decode__20dateEncodingStrategyxxm_SDySSypSgGAA04DateH6FormatOtKSeRzlF">decode(_:<wbr>_:<wbr>dateEncodingStrategy:<wbr>)</a>
+                    <a name="/s:13SwiftKueryORM18DateEncodingFormatO4timeyA2CmF"></a>
+                    <a name="//apple_ref/swift/Element/time" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM18DateEncodingFormatO4timeyA2CmF">time</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -168,14 +168,95 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Decode from a dictionary [String: Any] to a Decodable type</p>
+                        <p>time - Corresponds to the <code>time</code> column type</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">open</span> <span class="kd">func</span> <span class="n">decode</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">_</span> <span class="nv">type</span><span class="p">:</span> <span class="kt">T</span><span class="o">.</span><span class="k">Type</span><span class="p">,</span> <span class="n">_</span> <span class="nv">values</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">?],</span> <span class="nv">dateEncodingStrategy</span><span class="p">:</span> <span class="kt"><a href="../Enums/DateEncodingFormat.html">DateEncodingFormat</a></span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">T</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">Decodable</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">time</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:13SwiftKueryORM18DateEncodingFormatO4dateyA2CmF"></a>
+                    <a name="//apple_ref/swift/Element/date" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM18DateEncodingFormatO4dateyA2CmF">date</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>date - Corresponds to the <code>date</code> column type</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">date</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:13SwiftKueryORM18DateEncodingFormatO9timestampyA2CmF"></a>
+                    <a name="//apple_ref/swift/Element/timestamp" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM18DateEncodingFormatO9timestampyA2CmF">timestamp</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>timestamp - Corresponds to the <code>timestamp</code> column type.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">timestamp</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:13SwiftKueryORM18DateEncodingFormatO6doubleyA2CmF"></a>
+                    <a name="//apple_ref/swift/Element/double" class="dashAnchor"></a>
+                    <a class="token" href="#/s:13SwiftKueryORM18DateEncodingFormatO6doubleyA2CmF">double</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>double - This is the default encoding type and corresponds to Swifts encoding of <code>Date</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">double</span></code></pre>
 
                         </div>
                       </div>

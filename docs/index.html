@@ -32,7 +32,7 @@
       </p>
     
         <p class="header-col header-col--secondary">
-          <a class="header-link" href="https://github.com/IBM-Swift/Swift-Kuery-ORM">
+          <a class="header-link" href="https://github.com/Kitura/Swift-Kuery-ORM">
             <img class="header-icon" src="img/gh.png"/>
             View on GitHub
           </a>
@@ -63,6 +63,14 @@
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Classes.html#/s:13SwiftKueryORM9TableInfoC">TableInfo</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Enums/DateEncodingFormat.html">DateEncodingFormat</a>
               </li>
             </ul>
           </li>
@@ -128,25 +136,27 @@
       <article class="main-content">
 
         <section class="section">
-          <div class="section-content">
+          <div class="section-content top-matter">
             
             <p align="center">
-    <a href="http://kitura.io/">
-        <img src="https://raw.githubusercontent.com/IBM-Swift/Kitura/master/Sources/Kitura/resources/kitura-bird.svg?sanitize=true" height="100" alt="Kitura">
+
+    <a href="https://www.kitura.dev/">
+        <img src="https://raw.githubusercontent.com/Kitura/Kitura/master/Sources/Kitura/resources/kitura-bird.svg?sanitize=true" height="100" alt="Kitura">
     </a>
+
 </p>
 
 <p align="center">
-    <a href="https://ibm-swift.github.io/Swift-Kuery-ORM/index.html">
+    <a href="https://kitura.github.io/Swift-Kuery-ORM/index.html">
     <img src="https://img.shields.io/badge/apidoc-SwiftKueryORM-1FBCE4.svg?style=flat" alt="APIDoc">
     </a>
-    <a href="https://travis-ci.org/IBM-Swift/Swift-Kuery-ORM">
-    <img src="https://travis-ci.org/IBM-Swift/Swift-Kuery-ORM.svg?branch=master" alt="Build Status - Master">
+    <a href="https://travis-ci.org/Kitura/Swift-Kuery-ORM">
+    <img src="https://travis-ci.org/Kitura/Swift-Kuery-ORM.svg?branch=master" alt="Build Status - Master">
     </a>
     <img src="https://img.shields.io/badge/os-macOS-green.svg?style=flat" alt="macOS">
     <img src="https://img.shields.io/badge/os-linux-green.svg?style=flat" alt="Linux">
     <img src="https://img.shields.io/badge/license-Apache2-blue.svg?style=flat" alt="Apache 2">
-    <a href="http://swift-at-ibm-slack.mybluemix.net/">
+    <a href="https://slack.kitura.dev">
     <img src="http://swift-at-ibm-slack.mybluemix.net/badge.svg" alt="Slack Status">
     </a>
 </p>
@@ -154,7 +164,7 @@
 
 <p>Swift-Kuery-ORM is an ORM (Object Relational Mapping) library built for Swift. Using it allows you to simplify persistence of model objects with your server.</p>
 
-<p>Swift-Kuery-ORM is built on top of <a href="http://github.com/IBM-Swift/Swift-Kuery">Swift-Kuery</a>, which means that its possible to use Swift-Kuery to customize SQL queries made to the database, if the functionality of the ORM is insufficient.</p>
+<p>Swift-Kuery-ORM is built on top of <a href="http://github.com/Kitura/Swift-Kuery">Swift-Kuery</a>, which means that its possible to use Swift-Kuery to customize SQL queries made to the database, if the functionality of the ORM is insufficient.</p>
 <h2 id='the-model-protocol' class='heading'>The Model Protocol</h2>
 
 <p>The key component of Swift-Kuery-ORM is the protocol <code><a href="Protocols/Model.html">Model</a></code>.</p>
@@ -183,15 +193,16 @@
 <p>The <code><a href="Protocols/Model.html">Model</a></code> protocol is the key to using the ORM. Let&rsquo;s walk through how to fully set up an application to make use of the ORM.</p>
 <h2 id='example' class='heading'>Example</h2>
 
-<p>Follow <a href="https://www.kitura.io/guides/gettingstarted.html">Getting Started</a> to create a Kitura server. In this example you&rsquo;ll be using the <a href="https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL">Swift Kuery PostgreSQL plugin</a>, so you will need PostgreSQL running on your local machine, which you can install with <code>brew install postgresql</code>. The default port for PostgreSQL is 5432.</p>
+<p>Follow <a href="https://www.kitura.dev/docs/getting-started/installation">Getting Started</a> to create a Kitura server. In this example you&rsquo;ll be using the <a href="https://github.com/Kitura/Swift-Kuery-PostgreSQL">Swift Kuery PostgreSQL plugin</a>, so you will need PostgreSQL running on your local machine, which you can install with <code>brew install postgresql</code>. The default port for PostgreSQL is 5432.</p>
+
 <h3 id='update-your-package-swift-file' class='heading'>Update your Package.swift file</h3>
 
-<p>Add Swift-Kuery-ORM and Swift-Kuery-PostgreSQL to your application&rsquo;s <code>Package.swift</code>. Substitute <code>&quot;x.x.x&quot;</code> with the latest <code>Swift-Kuery-ORM</code> <a href="https://github.com/IBM-Swift/Swift-Kuery-ORM/releases">release</a> and the latest <code>Swift-Kuery-PostgreSQL</code> <a href="https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL/releases">release</a>.</p>
+<p>Add Swift-Kuery-ORM and Swift-Kuery-PostgreSQL to your application&rsquo;s <code>Package.swift</code>. Substitute <code>&quot;x.x.x&quot;</code> with the latest <code>Swift-Kuery-ORM</code> <a href="https://github.com/Kitura/Swift-Kuery-ORM/releases">release</a> and the latest <code>Swift-Kuery-PostgreSQL</code> <a href="https://github.com/Kitura/Swift-Kuery-PostgreSQL/releases">release</a>.</p>
 <pre class="highlight swift"><code><span class="nv">dependencies</span><span class="p">:</span> <span class="p">[</span>
     <span class="o">...</span>
     <span class="c1">// Add these two lines</span>
-    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/IBM-Swift/Swift-Kuery-ORM.git"</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span> <span class="s">"x.x.x"</span><span class="p">),</span>
-    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL.git"</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span> <span class="s">"x.x.x"</span><span class="p">),</span>
+    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/Kitura/Swift-Kuery-ORM.git"</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span> <span class="s">"x.x.x"</span><span class="p">),</span>
+    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/Kitura/Swift-Kuery-PostgreSQL.git"</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span> <span class="s">"x.x.x"</span><span class="p">),</span>
   <span class="p">],</span>
   <span class="nv">targets</span><span class="p">:</span> <span class="p">[</span>
     <span class="o">.</span><span class="nf">target</span><span class="p">(</span>
@@ -368,7 +379,7 @@ createdb school
 <span class="p">}</span>
 </code></pre>
 
-<p>If you&rsquo;d like to learn more about how you can customize queries, check out the <a href="https://github.com/IBM-Swift/Swift-Kuery">Swift-Kuery</a> repository for more information.</p>
+<p>If you&rsquo;d like to learn more about how you can customize queries, check out the <a href="https://github.com/Kitura/Swift-Kuery">Swift-Kuery</a> repository for more information.</p>
 <h2 id='model-identifiers' class='heading'>Model Identifiers</h2>
 
 <p>The ORM has several options available for identifying an instance of a model.</p>
@@ -457,19 +468,37 @@ createdb school
 </code></pre>
 
 <p><strong>NOTE</strong> - When using manual or optional ID properties, you should be prepared to handle violation of unique identifier constraints. These can occur if you attempt to save a model with an ID that already exists, or in the case of Postgres, if the auto-incremented value collides with an ID that was previously inserted explicitly.</p>
+<h2 id='alternative-encoding-for-code-date-code-properties' class='heading'>Alternative encoding for <code>Date</code> properties</h2>
+
+<p>By default any property on your Model that is declared as a <code>Date</code> will be encoded and decoded as a <code>Double</code>.</p>
+
+<p>You can change this behaviour by overriding the default value of the property <code>dateEncodingStrategy</code>. The dateEncodingStrategy will apply to all Date properties on your Model.</p>
+
+<p>The example below defines a model which will have its Date properties encoded and decoded as a timestamp:</p>
+<pre class="highlight swift"><code>
+<span class="kd">struct</span> <span class="kt">Person</span><span class="p">:</span> <span class="kt">Model</span> <span class="p">{</span>
+
+    <span class="kd">static</span> <span class="k">var</span> <span class="nv">dateEncodingFormat</span><span class="p">:</span> <span class="kt">DateEncodingFormat</span> <span class="o">=</span> <span class="o">.</span><span class="n">timestamp</span>
+
+    <span class="k">var</span> <span class="nv">firstname</span><span class="p">:</span> <span class="kt">String</span>
+    <span class="k">var</span> <span class="nv">surname</span><span class="p">:</span> <span class="kt">String</span>
+    <span class="k">var</span> <span class="nv">age</span><span class="p">:</span> <span class="kt">Int</span>
+    <span class="k">var</span> <span class="nv">dob</span><span class="p">:</span> <span class="kt">Date</span>
+<span class="p">}</span>
+</code></pre>
 <h2 id='list-of-plugins' class='heading'>List of plugins</h2>
 
 <ul>
-<li><p><a href="https://github.com/IBM-Swift/Swift-Kuery-PostgreSQL">PostgreSQL</a></p></li>
-<li><p><a href="https://github.com/IBM-Swift/Swift-Kuery-SQLite">SQLite</a></p></li>
-<li><p><a href="https://github.com/IBM-Swift/SwiftKueryMySQL">MySQL</a></p></li>
+<li><p><a href="https://github.com/Kitura/Swift-Kuery-PostgreSQL">PostgreSQL</a></p></li>
+<li><p><a href="https://github.com/Kitura/Swift-Kuery-SQLite">SQLite</a></p></li>
+<li><p><a href="https://github.com/Kitura/SwiftKueryMySQL">MySQL</a></p></li>
 </ul>
 <h2 id='api-documentation' class='heading'>API Documentation</h2>
 
-<p>For more information visit our <a href="https://ibm-swift.github.io/Swift-Kuery-ORM/index.html">API reference</a>.</p>
+<p>For more information visit our <a href="https://kitura.github.io/Swift-Kuery-ORM/index.html">API reference</a>.</p>
 <h2 id='community' class='heading'>Community</h2>
 
-<p>We love to talk server-side Swift, and Kitura. Join our <a href="http://swift-at-ibm-slack.mybluemix.net/">Slack</a> to meet the team!</p>
+<p>We love to talk server-side Swift, and Kitura. Join our <a href="https://slack.kitura.dev">Slack</a> to meet the team!</p>
 <h2 id='license' class='heading'>License</h2>
 
 <p>This library is licensed under Apache 2.0. Full license text is available in <a href="LICENSE.txt">LICENSE</a>.</p>
@@ -481,8 +510,8 @@ createdb school
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2019 <a class="link" href="" target="_blank" rel="external">IBM</a>. All rights reserved. (Last updated: 2019-04-01)</p>
-      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.1</a>, a <a class="link" href="http://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+      <p>&copy; 2021 <a class="link" href="" target="_blank" rel="external">IBM &amp; Kitura Project Authors</a>. All rights reserved. (Last updated: 2021-08-19)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.7</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>
 </div>

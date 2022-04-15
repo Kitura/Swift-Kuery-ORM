@@ -1,12 +1,11 @@
 <p align="center">
-    <a href="http://kitura.io/">
-        <img src="https://raw.githubusercontent.com/IBM-Swift/Kitura/master/Sources/Kitura/resources/kitura-bird.svg?sanitize=true" height="100" alt="Kitura">
+    <a href="https://www.kitura.dev/">
+        <img src="https://raw.githubusercontent.com/Kitura/Kitura/master/Sources/Kitura/resources/kitura-bird.svg?sanitize=true" height="100" alt="Kitura">
     </a>
 </p>
 
-
 <p align="center">
-    <a href="https://ibm-swift.github.io/Swift-Kuery-ORM/index.html">
+    <a href="https://kitura.github.io/Swift-Kuery-ORM/index.html">
     <img src="https://img.shields.io/badge/apidoc-SwiftKueryORM-1FBCE4.svg?style=flat" alt="APIDoc">
     </a>
     <a href="https://travis-ci.org/Kitura/Swift-Kuery-ORM">
@@ -15,7 +14,7 @@
     <img src="https://img.shields.io/badge/os-macOS-green.svg?style=flat" alt="macOS">
     <img src="https://img.shields.io/badge/os-linux-green.svg?style=flat" alt="Linux">
     <img src="https://img.shields.io/badge/license-Apache2-blue.svg?style=flat" alt="Apache 2">
-    <a href="http://swift-at-ibm-slack.mybluemix.net/">
+    <a href="https://slack.kitura.dev">
     <img src="http://swift-at-ibm-slack.mybluemix.net/badge.svg" alt="Slack Status">
     </a>
 </p>
@@ -62,7 +61,7 @@ The `Model` protocol is the key to using the ORM. Let's walk through how to full
 
 ## Example
 
-Follow [Getting Started](https://www.kitura.io/guides/gettingstarted.html) to create a Kitura server. In this example you'll be using the [Swift Kuery PostgreSQL plugin](https://github.com/Kitura/Swift-Kuery-PostgreSQL), so you will need PostgreSQL running on your local machine, which you can install with `brew install postgresql`. The default port for PostgreSQL is 5432.
+Follow [Getting Started](https://www.kitura.dev/docs/getting-started/installation) to create a Kitura server. In this example you'll be using the [Swift Kuery PostgreSQL plugin](https://github.com/Kitura/Swift-Kuery-PostgreSQL), so you will need PostgreSQL running on your local machine, which you can install with `brew install postgresql`. The default port for PostgreSQL is 5432.
 
 ### Update your Package.swift file
 
@@ -424,11 +423,11 @@ struct Person: Model {
 * [MySQL](https://github.com/Kitura/SwiftKueryMySQL)
 
 ## API Documentation
-For more information visit our [API reference](https://ibm-swift.github.io/Swift-Kuery-ORM/index.html).
+For more information visit our [API reference](https://kitura.github.io/Swift-Kuery-ORM/index.html).
 
 ## Community
 
-We love to talk server-side Swift, and Kitura. Join our [Slack](http://swift-at-ibm-slack.mybluemix.net/) to meet the team!
+We love to talk server-side Swift, and Kitura. Join our [Slack](https://slack.kitura.dev) to meet the team!
 
 ## License
 This library is licensed under Apache 2.0. Full license text is available in [LICENSE](LICENSE.txt).
