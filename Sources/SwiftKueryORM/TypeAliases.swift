@@ -22,6 +22,9 @@ import SwiftKuery
  The purpose is to expose these types at the top level without having to import a specific dependency.
  */
 
+/// Type Alias for Database (See [#22](https://github.com/Kitura/Swift-Kuery-ORM/issues/22))
+public typealias ORMDatabase = Database
+
 /// Type Alias for RequestError from [KituraContracts](https://github.com/Kitura/KituraContracts)
 public typealias RequestError = KituraContracts.RequestError
 
