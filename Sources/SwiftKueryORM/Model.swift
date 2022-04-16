@@ -33,6 +33,9 @@ public enum DateEncodingFormat {
 
 /// Protocol Model conforming to Codable defining the available operations
 public protocol Model: Codable {
+    /// Defines the default using database
+    static var defaultDatabase: Database? { get }
+    
     /// Defines the tableName in the Database
     static var tableName: String {get}
     /// Defines the id column name in the Database
@@ -119,6 +122,9 @@ public protocol Model: Codable {
 }
 
 public extension Model {
+    /// Defaults to Database.default
+    static var defaultDatabase: Database? { return Database.default }
+    
     /// Defaults to the name of the model + "s"
     static var tableName: String {
         let structName = String(describing: self)
@@ -137,8 +143,8 @@ public extension Model {
 
     static var dateEncodingFormat: DateEncodingFormat { return .double }
 
-    private static func executeTask(using db: Database? = nil, task: @escaping ((Connection?, QueryError?) -> ())) {
-        guard let database = db ?? Database.default else {
+    private static func executeTask(using db: Database? = Self.defaultDatabase, task: @escaping ((Connection?, QueryError?) -> ())) {
+        guard let database = db ?? defaultDatabase else {
 
             return task(nil, QueryError.databaseError("ORM database not initialised"))
         }
@@ -146,7 +152,7 @@ public extension Model {
     }
 
     @discardableResult
-    static func createTableSync(using db: Database? = nil) throws -> Bool {
+    static func createTableSync(using db: Database? = Self.defaultDatabase) throws -> Bool {
         var result: Bool?
         var error: RequestError?
         let semaphore = DispatchSemaphore(value: 0)
@@ -167,7 +173,7 @@ public extension Model {
         return resultUnwrapped
     }
 
-    static func createTable(using db: Database? = nil, _ onCompletion: @escaping (Bool?, RequestError?) -> Void) {
+    static func createTable(using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping (Bool?, RequestError?) -> Void) {
         var table: Table
         do {
             table = try Self.getTable()
@@ -196,7 +202,7 @@ public extension Model {
     }
 
     @discardableResult
-    static func dropTableSync(using db: Database? = nil) throws -> Bool {
+    static func dropTableSync(using db: Database? = Self.defaultDatabase) throws -> Bool {
         var result: Bool?
         var error: RequestError?
         let semaphore = DispatchSemaphore(value: 0)
@@ -217,7 +223,7 @@ public extension Model {
         return resultUnwrapped
     }
 
-    static func dropTable(using db : Database? = nil, _ onCompletion: @escaping (Bool?, RequestError?) -> Void) {
+    static func dropTable(using db : Database? = Self.defaultDatabase, _ onCompletion: @escaping (Bool?, RequestError?) -> Void) {
         var table: Table
         do {
             table = try Self.getTable()
@@ -245,7 +251,7 @@ public extension Model {
         }
     }
 
-    func save(using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
+    func save(using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
         var table: Table
         var values: [String : Any]
         do {
@@ -264,7 +270,7 @@ public extension Model {
         self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
     }
 
-    func save<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
+    func save<I: Identifier>(using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void) {
         var table: Table
         var values: [String : Any]
         do {
@@ -282,7 +288,7 @@ public extension Model {
         self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
     }
 
-    func update<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
+    func update<I: Identifier>(id: I, using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
         var table: Table
         var values: [String: Any]
         do {
@@ -306,7 +312,7 @@ public extension Model {
         executeQuery(query: query, parameters: parameters, using: db, onCompletion)
     }
 
-    static func delete(id: Identifier, using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void) {
+    static func delete(id: Identifier, using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping (RequestError?) -> Void) {
         var table: Table
         do {
             table = try Self.getTable()
@@ -325,7 +331,7 @@ public extension Model {
         Self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
     }
 
-    static func deleteAll(using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void) {
+    static func deleteAll(using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping (RequestError?) -> Void) {
         var table: Table
         do {
             table = try Self.getTable()
@@ -341,7 +347,7 @@ public extension Model {
     /// Delete all the models matching the QueryParams
     /// - Parameter using: Optional Database to use
     /// - Returns: An optional RequestError
-    static func deleteAll<Q: QueryParams>(using db: Database? = nil, matching queryParams: Q?, _ onCompletion: @escaping (RequestError?) -> Void) {
+    static func deleteAll<Q: QueryParams>(using db: Database? = Self.defaultDatabase, matching queryParams: Q?, _ onCompletion: @escaping (RequestError?) -> Void) {
         var table: Table
         do {
             table = try Self.getTable()
@@ -375,7 +381,7 @@ public extension Model {
         Self.executeQuery(query: query, parameters: parameters, using: db, onCompletion)
     }
 
-    private func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
+    private func executeQuery(query: Query, parameters: [Any?], using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
         var dictionaryTitleToValue = [String: Any?]()
         Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
@@ -434,7 +440,7 @@ public extension Model {
         }
     }
 
-    private func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
+    private func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
         Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
@@ -489,7 +495,7 @@ public extension Model {
     /// - Parameter parameters: An optional array of parameters to pass to the query
     /// - Parameter using: Optional Database to use
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of (Self?, RequestError?), of which one will be nil, depending on whether the query was successful.
-    static func executeQuery(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
+    static func executeQuery(query: Query, parameters: [Any?], using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping (Self?, RequestError?) -> Void ) {
         Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
@@ -534,7 +540,7 @@ public extension Model {
     /// - Parameter parameters: An optional array of parameters to pass to the query
     /// - Parameter using: Optional Database to use
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of (Identifier?, Self?, RequestError?), of which some will be nil, depending on whether the query was successful.
-    static func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = nil, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
+    static func executeQuery<I: Identifier>(query: Query, parameters: [Any?], using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping (I?, Self?, RequestError?) -> Void ) {
         Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
@@ -597,7 +603,7 @@ public extension Model {
     /// - Parameter parameters: An optional array of parameters to pass to the query
     /// - Parameter using: Optional Database to use
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of ([Self]?, RequestError?), of which one will be nil, depending on whether the query was successful.
-    static func executeQuery(query: Query, parameters: [Any?]? = nil, using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?)-> Void ) {
+    static func executeQuery(query: Query, parameters: [Any?]? = nil, using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping ([Self]?, RequestError?)-> Void ) {
         Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
@@ -662,7 +668,7 @@ public extension Model {
     /// - Parameter parameters: An optional array of parameters to pass to the query
     /// - Parameter using: Optional Database to use
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a tuple of ([Identifier, Self]?, RequestError?), of which one will be nil, depending on whether the query was successful.
-    static func executeQuery<I: Identifier>(query: Query, parameters: [Any?]? = nil, using db: Database? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void ) {
+    static func executeQuery<I: Identifier>(query: Query, parameters: [Any?]? = nil, using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void ) {
         Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
@@ -741,7 +747,7 @@ public extension Model {
     /// - Parameter parameters: An optional array of parameters to pass to the query
     /// - Parameter using: Optional Database to use
     /// - Parameter onCompletion: The function to be called when the execution of the query has completed. The function will be passed a RequestError? which may be nil, depending on whether the query was successful.
-    static func executeQuery(query: Query, parameters: [Any?]? = nil, using db: Database? = nil, _ onCompletion: @escaping (RequestError?) -> Void ) {
+    static func executeQuery(query: Query, parameters: [Any?]? = nil, using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping (RequestError?) -> Void ) {
         Self.executeTask(using: db) { connection, error in
             guard let connection = connection else {
                 guard let error = error else {
@@ -972,7 +978,7 @@ public extension Model {
     /// Find a model with an id
     /// - Parameter using: Optional Database to use
     /// - Returns: A tuple (Model, RequestError)
-    static func find<I: Identifier>(id: I, using db: Database? = nil, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
+    static func find<I: Identifier>(id: I, using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping (Self?, RequestError?) -> Void) {
         var table: Table
         do {
             table = try Self.getTable()
@@ -993,7 +999,7 @@ public extension Model {
 
 
     ///
-    static func findAll(using db: Database? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
+    static func findAll(using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
         var table: Table
         do {
             table = try Self.getTable()
@@ -1009,7 +1015,7 @@ public extension Model {
     /// Find all the models
     /// - Parameter using: Optional Database to use
     /// - Returns: An array of tuples (id, model)
-    static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
+    static func findAll<I: Identifier>(using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
         var table: Table
         do {
             table = try Self.getTable()
@@ -1023,7 +1029,7 @@ public extension Model {
     }
 
     /// :nodoc:
-    static func findAll<I: Identifier>(using db: Database? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
+    static func findAll<I: Identifier>(using db: Database? = Self.defaultDatabase, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
         var table: Table
         do {
             table = try Self.getTable()
@@ -1052,7 +1058,7 @@ public extension Model {
 
     /// - Parameter matching: Optional QueryParams to use
     /// - Returns: An array of model
-    static func findAll<Q: QueryParams>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
+    static func findAll<Q: QueryParams>(using db: Database? = Self.defaultDatabase, matching queryParams: Q? = nil, _ onCompletion: @escaping ([Self]?, RequestError?) -> Void) {
         var table: Table
         do {
             table = try Self.getTable()
@@ -1077,7 +1083,7 @@ public extension Model {
     /// Find all the models matching the QueryParams
     /// - Parameter using: Optional Database to use
     /// - Returns: An array of tuples (id, model)
-    static func findAll<Q: QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
+    static func findAll<Q: QueryParams, I: Identifier>(using db: Database? = Self.defaultDatabase, matching queryParams: Q? = nil, _ onCompletion: @escaping ([(I, Self)]?, RequestError?) -> Void) {
         var table: Table
         do {
             table = try Self.getTable()
@@ -1102,7 +1108,7 @@ public extension Model {
     /// Find all the models matching the QueryParams
     /// - Parameter using: Optional Database to use
     /// - Returns: A dictionary [id: model]
-    static func findAll<Q:QueryParams, I: Identifier>(using db: Database? = nil, matching queryParams: Q? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
+    static func findAll<Q:QueryParams, I: Identifier>(using db: Database? = Self.defaultDatabase, matching queryParams: Q? = nil, _ onCompletion: @escaping ([I: Self]?, RequestError?) -> Void) {
         var table: Table
         do {
             table = try Self.getTable()
