@@ -126,3 +126,47 @@ public class Database {
         }
     }
 }
+
+extension Query {
+    
+    /// Execute the query.
+    ///
+    /// - Parameter using: Optional Database to use, if none specified the default database will be used
+    /// - Parameter onCompletion: The function to be called when the execution of the query has completed.
+    public func execute(using db: Database?, onCompletion: @escaping ((SwiftKuery.QueryResult) -> ())) {
+        guard let db = db ?? Database.default else {
+            return onCompletion(.error(QueryError.databaseError("ORM database not initialised")))
+        }
+        db.executeTask { (connection, error) in
+            guard let connection = connection else {
+                onCompletion(.error(error ?? QueryError.connection("Failed to get database connection")))
+                return
+            }
+            self.execute(connection, onCompletion: { (result) in
+                onCompletion(result)
+            })
+        }
+    }
+    
+    
+    /// Execute the query with parameters.
+    ///
+    /// - Parameter using: Optional Database to use, if none specified the default database will be used
+    /// - Parameter parameters: An array of the query parameters.
+    /// - Parameter onCompletion: The function to be called when the execution of the query has completed.
+    public func execute(using db: Database?, parameters: [Any], onCompletion: @escaping ((SwiftKuery.QueryResult) -> ())) {
+        guard let db = db ?? Database.default else {
+            return onCompletion(.error(QueryError.databaseError("ORM database not initialised")))
+        }
+        db.executeTask { (connection, error) in
+            guard let connection = connection else {
+                onCompletion(.error(error ?? QueryError.connection("Failed to get database connection")))
+                return
+            }
+            self.execute(connection, parameters: parameters, onCompletion: { (result) in
+                onCompletion(result)
+            })
+        }
+    }
+}
+
